@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Comparativo de Proveedores v2 — IES Internacional</title>
+<title>Comparativo de Proveedores v3 — IES Internacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -24,22 +24,15 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;height:100vh;overflow:hidden}
-a{color:var(--acc);text-decoration:none}
-
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
-
-/* ── HEADER ── */
 header{height:54px;background:var(--surf);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:fixed;top:0;width:100%;z-index:100}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-badge{background:var(--acc);color:#0d1117;font-weight:800;font-size:10px;padding:3px 7px;border-radius:4px;letter-spacing:1px}
 .logo-title{font-size:14px;font-weight:700}
 .logo-sub{font-size:10px;color:var(--dim);font-family:'JetBrains Mono',monospace}
 .hdr-right{display:flex;gap:8px;align-items:center}
-
-/* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:.15s all;font-family:inherit}
 .btn-acc{background:var(--acc);color:#0d1117}.btn-acc:hover{background:var(--acc2)}
 .btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--bd2)}.btn-ghost:hover{background:var(--surf2);color:var(--text)}
@@ -47,11 +40,7 @@ header{height:54px;background:var(--surf);border-bottom:1px solid var(--bd);disp
 .btn-danger{background:transparent;color:var(--red);border:1px solid #5c2020}.btn-danger:hover{background:var(--red-bg)}
 .btn-sm{padding:5px 9px;font-size:11px}
 .btn:disabled{opacity:.35;cursor:not-allowed}
-
-/* ── LAYOUT ── */
 .main{display:flex;height:calc(100vh - 54px);margin-top:54px}
-
-/* ── SIDEBAR ── */
 aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid var(--bd);display:flex;flex-direction:column}
 .sb-head{padding:12px 14px 8px;font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
 .folio-list{flex:1;overflow-y:auto;padding:6px 0}
@@ -67,42 +56,31 @@ aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid 
 .folio-gear{opacity:0;font-size:11px;color:var(--muted);cursor:pointer;padding:2px 3px;border-radius:3px;transition:.12s;flex-shrink:0}
 .folio-item:hover .folio-gear{opacity:1}
 .folio-gear:hover{color:var(--red);background:var(--red-bg)}
-
-/* ── CONTENT ── */
 .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
-
-/* ── FOLIO TOPBAR ── */
 .folio-bar{padding:10px 20px;background:var(--surf);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .folio-bar-name{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
 .fbadge{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;background:var(--acc-bg);color:var(--acc2);font-weight:600}
+.tipo-chip{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:.5px}
+.tipo-ref{background:#0f2a1a;color:#5eca80;border:1px solid #1a4d2e}
+.tipo-srv{background:var(--blu-bg);color:var(--blue);border:1px solid var(--p1bd)}
 .folio-bar-desc{font-size:11px;color:var(--dim);flex:1}
-.folio-bar-actions{display:flex;gap:6px;margin-left:auto}
 .prov-pills{display:flex;gap:5px;align-items:center}
-.prov-pill{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;display:flex;align-items:center;gap:4px;transition:.15s}
+.prov-pill{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;display:flex;align-items:center;gap:4px}
 .pp1{background:var(--p1bg);color:var(--p1);border:1px solid var(--p1bd)}
 .pp2{background:var(--p2bg);color:var(--p2);border:1px solid var(--p2bd)}
 .pp3{background:var(--p3bg);color:var(--p3);border:1px solid var(--p3bd)}
 .prov-pill.empty{opacity:.35}
-
-/* ── TABS ── */
 .tabs{display:flex;border-bottom:1px solid var(--bd);padding:0 18px;background:var(--surf);gap:2px}
 .tab{padding:11px 14px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;white-space:nowrap}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--acc);border-bottom-color:var(--acc)}
-.tab.disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
-
-/* ── PANELS ── */
 .panel{display:none;flex:1;overflow-y:auto;padding:18px 22px}
 .panel.active{display:block}
-
-/* ── EMPTY STATE ── */
 .empty-hero{text-align:center;padding:80px 20px}
 .empty-hero .icon{font-size:40px;margin-bottom:14px}
 .empty-hero h3{font-size:17px;font-weight:700;margin-bottom:6px}
 .empty-hero p{font-size:13px;color:var(--dim)}
-
-/* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:14px}
 .kpi{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:14px}
 .kpi-label{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
 .kpi-val{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
@@ -111,25 +89,27 @@ aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid 
 .kpi.green{border-color:#2a6e36}.kpi.green .kpi-val{color:var(--green)}
 .kpi.red{border-color:#5c2020}.kpi.red .kpi-val{color:var(--red)}
 .kpi.blue{border-color:var(--p1bd)}.kpi.blue .kpi-val{color:var(--p1)}
-
-/* ── CAPTURE FORM ── */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.chart-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px}
+.chart-title{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.chart-title::before{content:'';display:inline-block;width:3px;height:11px;background:var(--acc);border-radius:2px}
+.chart-filter{display:flex;gap:4px;margin-left:auto}
+.cf-btn{font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--bd2);background:transparent;color:var(--dim);cursor:pointer;font-family:inherit;transition:.12s}
+.cf-btn.on{background:var(--acc);color:#0d1117;border-color:var(--acc)}
 .accordion{display:flex;flex-direction:column;gap:10px;max-width:900px}
 .acc-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden}
 .acc-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;transition:.12s}
 .acc-head:hover{background:var(--surf2)}
-.acc-icon{font-size:15px}
 .acc-title{font-size:13px;font-weight:700;flex:1}
 .acc-status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
 .sts-empty{background:var(--surf2);color:var(--muted)}
-.sts-partial{background:#3a2010;color:#f0883e}
+.sts-partial{background:#3a2010;color:var(--orange)}
 .sts-done{background:var(--grn-bg);color:var(--green)}
 .acc-arrow{color:var(--muted);font-size:11px;transition:transform .2s}
 .acc-card.open .acc-arrow{transform:rotate(180deg)}
-.acc-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
-.acc-card.open .acc-body{max-height:3000px}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.acc-card.open .acc-body{max-height:4000px}
 .acc-inner{padding:16px;border-top:1px solid var(--bd)}
-
-/* ── FORM GRID ── */
 .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
 .fg .full{grid-column:1/-1}
 .fg .half{grid-column:span 2}
@@ -137,102 +117,84 @@ aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid 
 label{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
 input,select,textarea{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);color:var(--text);font-size:13px;padding:8px 10px;outline:none;transition:border-color .15s;font-family:inherit;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--acc)}
-input[readonly]{opacity:.6;cursor:default}
+input[readonly]{opacity:.65;cursor:default;background:var(--surf2)}
 textarea{resize:vertical;min-height:56px}
-select option{background:var(--surf2);color:var(--text)}
+select option{background:var(--surf2)}
+.add-new-row{display:none;margin-top:4px;gap:4px;align-items:center}
+.add-new-row.show{display:flex}
+.add-new-row input{flex:1;margin:0}
 .calc-badge{font-size:10px;color:var(--acc-d);margin-top:2px}
-
-/* ── PROVIDER HEADER COLORS ── */
+.section-sep{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;padding:10px 0 6px;border-bottom:1px solid var(--bd);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.section-sep::before{content:'';display:inline-block;width:3px;height:11px;background:var(--acc);border-radius:2px}
 .prov-head-1{border-left:3px solid var(--p1)}
 .prov-head-2{border-left:3px solid var(--p2)}
 .prov-head-3{border-left:3px solid var(--p3)}
-.ph1-title{color:var(--p1)}
-.ph2-title{color:var(--p2)}
-.ph3-title{color:var(--p3)}
-
-/* ── COMPARISON TABLE ── */
+.ph1{color:var(--p1)}.ph2{color:var(--p2)}.ph3{color:var(--p3)}
+.star-row{display:flex;gap:3px;align-items:center}
+.star{font-size:17px;cursor:pointer;color:var(--muted);transition:.1s;line-height:1;user-select:none}
+.star.on{color:var(--acc)}
+.star:hover{color:var(--acc2)}
+.rating-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:8px}
+.rating-item{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:10px}
+.rating-item-label{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.rating-score{font-size:10px;color:var(--muted);margin-left:6px;font-family:'JetBrains Mono',monospace}
 .comp-wrap{overflow-x:auto}
-.comp-table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
-.comp-table th{padding:10px 14px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.3px;border-bottom:2px solid var(--bd)}
-.comp-table th.field-col{text-align:left;background:var(--surf2);color:var(--dim);width:160px}
+.comp-table{width:100%;border-collapse:collapse;font-size:12px;min-width:580px}
+.comp-table th{padding:10px 14px;text-align:center;font-size:11px;font-weight:700;border-bottom:2px solid var(--bd)}
+.comp-table th.fc{text-align:left;background:var(--surf2);color:var(--dim);width:155px}
 .comp-table td{padding:8px 14px;border-bottom:1px solid var(--bd);text-align:center;font-size:12px;vertical-align:middle}
-.comp-table td.field-name{text-align:left;color:var(--dim);background:var(--surf);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.comp-table td.fn{text-align:left;color:var(--dim);background:var(--surf);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
 .comp-table td.best{font-weight:700}
 .comp-table th.h1{background:var(--p1bg);color:var(--p1);border-bottom-color:var(--p1)}
 .comp-table th.h2{background:var(--p2bg);color:var(--p2);border-bottom-color:var(--p2)}
 .comp-table th.h3{background:var(--p3bg);color:var(--p3);border-bottom-color:var(--p3)}
-.comp-table td.col1{border-left:1px solid var(--p1bd)}
-.comp-table td.col2{border-left:1px solid var(--p2bd)}
-.comp-table td.col3{border-left:1px solid var(--p3bd)}
-.comp-table td.best1{background:rgba(121,192,255,.07)}
-.comp-table td.best2{background:rgba(188,140,255,.07)}
-.comp-table td.best3{background:rgba(240,136,62,.07)}
-.win-crown{font-size:14px}
-.mono-num{font-family:'JetBrains Mono',monospace;font-size:11px}
-.comp-separator td{background:var(--surf2);font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;padding:6px 14px}
+.comp-table td.c1{border-left:1px solid var(--p1bd)}
+.comp-table td.c2{border-left:1px solid var(--p2bd)}
+.comp-table td.c3{border-left:1px solid var(--p3bd)}
+.comp-table td.b1{background:rgba(121,192,255,.07)}
+.comp-table td.b2{background:rgba(188,140,255,.07)}
+.comp-table td.b3{background:rgba(240,136,62,.07)}
+.csep td{background:var(--surf2);font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;padding:5px 14px}
+.mn{font-family:'JetBrains Mono',monospace;font-size:11px}
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
-.b-green{background:var(--grn-bg);color:var(--green)}
-.b-red{background:var(--red-bg);color:var(--red)}
-.b-yellow{background:var(--acc-bg);color:var(--acc2)}
-.b-blue{background:var(--blu-bg);color:var(--blue)}
-.b-gray{background:var(--surf2);color:var(--dim)}
-
-/* ── DECISION BANNER ── */
-.decision-banner{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.decision-label{font-size:11px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.decision-value{font-size:15px;font-weight:700}
-.decision-btns{display:flex;gap:6px}
-.select-btn{padding:6px 12px;border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:.15s;font-family:inherit}
-.select-btn.sel1{border-color:var(--p1);color:var(--p1);background:var(--p1bg)}.select-btn.sel1:hover,.select-btn.sel1.selected{background:var(--p1);color:#0d1117}
-.select-btn.sel2{border-color:var(--p2);color:var(--p2);background:var(--p2bg)}.select-btn.sel2:hover,.select-btn.sel2.selected{background:var(--p2);color:#0d1117}
-.select-btn.sel3{border-color:var(--p3);color:var(--p3);background:var(--p3bg)}.select-btn.sel3:hover,.select-btn.sel3.selected{background:var(--p3);color:#0d1117}
-
-/* ── AI PANEL ── */
+.bg{background:var(--grn-bg);color:var(--green)}
+.br{background:var(--red-bg);color:var(--red)}
+.by{background:var(--acc-bg);color:var(--acc2)}
+.bb{background:var(--blu-bg);color:var(--blue)}
+.bx{background:var(--surf2);color:var(--dim)}
 .ai-layout{display:grid;grid-template-columns:1fr 340px;gap:16px}
-@media(max-width:900px){.ai-layout{grid-template-columns:1fr}}
-.ai-recommendation{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:18px}
-.ai-title{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
-.ai-title::before{content:'';display:inline-block;width:3px;height:12px;background:var(--acc);border-radius:2px}
+.ai-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:12px}
+.ai-title{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ai-title::before{content:'';display:inline-block;width:3px;height:11px;background:var(--acc);border-radius:2px}
 .winner-card{background:var(--acc-bg);border:1px solid var(--acc-d);border-radius:var(--rl);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
 .winner-trophy{font-size:28px}
 .winner-name{font-size:16px;font-weight:800}
 .winner-score{font-size:12px;color:var(--acc2);font-family:'JetBrains Mono',monospace}
 .winner-text{font-size:13px;line-height:1.65;color:var(--text)}
 .confidence{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:10px;font-weight:700;margin-top:10px}
-.conf-high{background:var(--grn-bg);color:var(--green)}
-.conf-med{background:var(--acc-bg);color:var(--acc2)}
-.conf-low{background:var(--surf2);color:var(--dim)}
-
-.score-list{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:16px}
-.score-row{margin-bottom:12px}
-.score-row:last-child{margin-bottom:0}
-.score-header{display:flex;justify-content:space-between;margin-bottom:4px}
-.score-label{font-size:11px;font-weight:600;color:var(--dim)}
-.score-val{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text)}
-.score-bar-bg{height:4px;background:var(--bd);border-radius:2px;overflow:hidden}
-.score-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
-
-.radar-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px}
-#radarChart{width:100%;height:280px}
-.disclaimer{font-size:10px;color:var(--muted);margin-top:12px;line-height:1.5;padding:8px;border-left:2px solid var(--bd2)}
-
-/* ── MODALS ── */
+.ch{background:var(--grn-bg);color:var(--green)}
+.cm{background:var(--acc-bg);color:var(--acc2)}
+.cl{background:var(--surf2);color:var(--dim)}
+.sbar-bg{height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin-top:3px}
+.sbar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.select-btn{padding:8px 14px;border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:.15s;font-family:inherit;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sb1{border-color:var(--p1);color:var(--p1);background:var(--p1bg)}.sb1:hover,.sb1.on{background:var(--p1);color:#0d1117}
+.sb2{border-color:var(--p2);color:var(--p2);background:var(--p2bg)}.sb2:hover,.sb2.on{background:var(--p2);color:#0d1117}
+.sb3{border-color:var(--p3);color:var(--p3);background:var(--p3bg)}.sb3:hover,.sb3.on{background:var(--p3);color:#0d1117}
+.disc{font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;padding:8px;border-left:2px solid var(--bd2)}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;align-items:center;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:var(--surf);border:1px solid var(--bd2);border-radius:var(--rxl);width:430px;max-width:92vw;padding:24px}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:6px}
 .modal p{font-size:12px;color:var(--dim);margin-bottom:16px;line-height:1.5}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
-
-/* ── NOTIFICATION ── */
 .notif{position:fixed;bottom:18px;right:18px;background:var(--surf2);border:1px solid var(--bd2);border-left:3px solid var(--green);border-radius:var(--r);padding:11px 14px;font-size:12px;z-index:999;transform:translateX(130%);transition:transform .25s}
 .notif.show{transform:translateX(0)}
 .notif.err{border-left-color:var(--red)}
+@media(max-width:900px){.ai-layout{grid-template-columns:1fr}.charts-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
-<!-- HEADER -->
 <header>
   <div class="logo">
     <span class="logo-badge">IES</span>
@@ -246,20 +208,12 @@ select option{background:var(--surf2);color:var(--text)}
     <button class="btn btn-green btn-sm" onclick="exportExcel()">⬇ Exportar Excel</button>
   </div>
 </header>
-
 <div class="main">
-  <!-- SIDEBAR -->
   <aside>
-    <div class="sb-head">
-      Folios de Comparativo
-      <button class="btn btn-ghost btn-sm" onclick="openFolioModal()" style="padding:3px 6px">＋</button>
-    </div>
+    <div class="sb-head">Folios <button class="btn btn-ghost btn-sm" onclick="openFolioModal()" style="padding:3px 6px">＋</button></div>
     <div class="folio-list" id="folioList"></div>
   </aside>
-
-  <!-- CONTENT -->
   <div class="content">
-    <!-- Folio bar -->
     <div class="folio-bar" id="folioBar" style="display:none">
       <div>
         <div class="folio-bar-name" id="fbName">—</div>
@@ -267,51 +221,25 @@ select option{background:var(--surf2);color:var(--text)}
       </div>
       <div class="prov-pills" id="fbPills"></div>
     </div>
-
-    <!-- Tabs -->
     <div class="tabs" id="tabBar">
       <span class="tab active" id="tab-resumen" onclick="switchTab('resumen')">📊 Resumen</span>
       <span class="tab" id="tab-captura" onclick="switchTab('captura')">✏️ Captura</span>
       <span class="tab" id="tab-comp" onclick="switchTab('comp')">📋 Comparativo</span>
       <span class="tab" id="tab-ia" onclick="switchTab('ia')">🤖 Análisis IA</span>
     </div>
-
-    <!-- PANEL: RESUMEN -->
-    <div class="panel active" id="panel-resumen">
-      <div id="resumenContent"></div>
-    </div>
-
-    <!-- PANEL: CAPTURA -->
-    <div class="panel" id="panel-captura">
-      <div class="accordion" id="captureAccordion"></div>
-    </div>
-
-    <!-- PANEL: COMPARATIVO -->
-    <div class="panel" id="panel-comp">
-      <div id="compContent"></div>
-    </div>
-
-    <!-- PANEL: IA -->
-    <div class="panel" id="panel-ia">
-      <div id="iaContent"></div>
-    </div>
+    <div class="panel active" id="panel-resumen"><div id="resumenContent"></div></div>
+    <div class="panel" id="panel-captura"><div class="accordion" id="captureAccordion"></div></div>
+    <div class="panel" id="panel-comp"><div id="compContent"></div></div>
+    <div class="panel" id="panel-ia"><div id="iaContent"></div></div>
   </div>
 </div>
-
-<!-- MODAL: NUEVO FOLIO -->
 <div class="overlay" id="folioModal">
   <div class="modal">
     <h3>📁 Nuevo Folio de Comparativo</h3>
-    <p>Cada folio agrupa el análisis de hasta 3 proveedores para un mismo proceso de compra.</p>
+    <p>Cada folio agrupa hasta 3 proveedores para un mismo proceso de compra.</p>
     <div class="fg" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
-      <div class="form-group">
-        <label>Número de Folio</label>
-        <input type="text" id="nfName" placeholder="COT-2026-001" onkeydown="if(event.key==='Enter')confirmFolio()"/>
-      </div>
-      <div class="form-group">
-        <label>Descripción</label>
-        <input type="text" id="nfDesc" placeholder="Ej. Mantenimiento flotilla jun26"/>
-      </div>
+      <div class="form-group"><label>Número de Folio</label><input type="text" id="nfName" placeholder="COT-2026-001" onkeydown="if(event.key==='Enter')confirmFolio()"/></div>
+      <div class="form-group"><label>Descripción</label><input type="text" id="nfDesc" placeholder="Ej. Mant. flotilla jun26"/></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeFolioModal()">Cancelar</button>
@@ -319,16 +247,11 @@ select option{background:var(--surf2);color:var(--text)}
     </div>
   </div>
 </div>
-
-<!-- MODAL: ADMIN -->
 <div class="overlay" id="adminModal">
   <div class="modal">
     <h3>🔒 Acceso de Administrador</h3>
-    <p>Esta acción requiere autenticación de administrador. Ingrese la contraseña para continuar.</p>
-    <div class="form-group" style="margin-bottom:4px">
-      <label>Contraseña</label>
-      <input type="password" id="adminPass" placeholder="••••••••••" onkeydown="if(event.key==='Enter')confirmAdmin()"/>
-    </div>
+    <p>Esta acción requiere autenticación. Ingrese la contraseña de administrador.</p>
+    <div class="form-group" style="margin-bottom:4px"><label>Contraseña</label><input type="password" id="adminPass" placeholder="••••••••••" onkeydown="if(event.key==='Enter')confirmAdmin()"/></div>
     <div id="adminError" style="font-size:11px;color:var(--red);min-height:16px;margin-top:4px"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeAdminModal()">Cancelar</button>
@@ -336,30 +259,31 @@ select option{background:var(--surf2);color:var(--text)}
     </div>
   </div>
 </div>
-
 <div class="notif" id="notif"></div>
-
 <script>
-/* ═══════════════════════════════════════════════════════
-   CONSTANTS & DROPDOWNS
-═══════════════════════════════════════════════════════ */
-const ADMIN_PASS = 'CALIDAD135';
-const IVA_RATE = 0.16;
-const PROV_COLORS = ['var(--p1)','var(--p2)','var(--p3)'];
-const PROV_HEX    = ['#79c0ff','#bc8cff','#f0883e'];
-const PROV_BG     = ['var(--p1bg)','var(--p2bg)','var(--p3bg)'];
-const PROV_LABEL  = ['Proveedor 1','Proveedor 2','Proveedor 3'];
-const PROV_PCLS   = ['pp1','pp2','pp3'];
-const PROV_CCLS   = ['col1','col2','col3'];
-const PROV_HCLS   = ['h1','h2','h3'];
-const PROV_BCLS   = ['best1','best2','best3'];
-const PROV_HEAD   = ['prov-head-1 ph1-title','prov-head-2 ph2-title','prov-head-3 ph3-title'];
+/* ══════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════ */
+const ADMIN_PASS='CALIDAD135';
+const IVA=0.16;
+const PHEX=['#79c0ff','#bc8cff','#f0883e'];
+const PCLS=['pp1','pp2','pp3'];
+const PLBL=['Proveedor 1','Proveedor 2','Proveedor 3'];
+const PHDCLS=['prov-head-1 ph1','prov-head-2 ph2','prov-head-3 ph3'];
+const PCCLS=['c1','c2','c3'];
+const PHCLS=['h1','h2','h3'];
+const PBCLS=['b1','b2','b3'];
+const SBCLS=['sb1','sb2','sb3'];
 
-const DD = {
-  GESTOR: ['LIC. MARCOS XOOL','LIC. JOSE REJON'],
-  ZONA:   ['CANCUN','PDC','CABOS'],
-  UNIDAD: ['AVEO_01','BEAT_02','BEAT_04','BEAT_05','BEAT_06','BEAT_07','BEAT_08','BEAT_09','BEAT_10','DOBLE CABINA_02','ESTACA NP300_02','ESTACA NP300_03','FRONTIER_01','INTERNATIONAL_01','MARCH_01','MARCH_02','MARCH_03','MARCH_04','MARCH_05','MIRAGE_01','Q5_DIRECCIÓN','S10 CREW CAB_02','S10 CREW_01','SPARK_AFI01','SPARK_AFI02','STEPWAY_01','SUPER DUTY_01','TORNADO_01','TORNADO_02','TSURU_02','V DRIVE_02','V DRIVE_03','V DRIVE_04','V DRIVE_05','V DRIVE_06','V DRIVE_07','V DRIVE_08','V DRIVE_09','VENTO_01','VERSA_01','VERSA_02','YARIS_01'],
-  DEPTO:  ['OYS','PROYECTOS','VENTAS','DIRECCION','COMPRAS','TDA','ALMACEN','ADMINISTRACION','ACTIVOS','FINANZAS','RRHH','OBRA','SISTEMAS','AUTOMATIZACION'],
+/* ══════════════════════════════════════════
+   BASE DROPDOWN DATA
+══════════════════════════════════════════ */
+const DD_BASE={
+  GESTOR:['LIC. MARCOS XOOL','LIC. JOSE REJON'],
+  ZONA:['CANCUN','PDC','CABOS'],
+  UNIDAD:['AVEO_01','BEAT_02','BEAT_04','BEAT_05','BEAT_06','BEAT_07','BEAT_08','BEAT_09','BEAT_10','DOBLE CABINA_02','ESTACA NP300_02','ESTACA NP300_03','FRONTIER_01','INTERNATIONAL_01','MARCH_01','MARCH_02','MARCH_03','MARCH_04','MARCH_05','MIRAGE_01','Q5_DIRECCIÓN','S10 CREW CAB_02','S10 CREW_01','SPARK_AFI01','SPARK_AFI02','STEPWAY_01','SUPER DUTY_01','TORNADO_01','TORNADO_02','TSURU_02','V DRIVE_02','V DRIVE_03','V DRIVE_04','V DRIVE_05','V DRIVE_06','V DRIVE_07','V DRIVE_08','V DRIVE_09','VENTO_01','VERSA_01','VERSA_02','YARIS_01'],
+  DEPTO:['OYS','PROYECTOS','VENTAS','DIRECCION','COMPRAS','TDA','ALMACEN','ADMINISTRACION','ACTIVOS','FINANZAS','RRHH','OBRA','SISTEMAS','AUTOMATIZACION'],
+  TIPO:['REFACCIONES','SERVICIO'],
   PROV_RZ:['ABRIL MARÍN TORRES / BEBIS','AGENCIA COMERCIALIZADORA INDUSTRIAL DEL SURESTE SA','AGENCIAS MERCANTILES SA DE CV','ALIANZA A Y R DE OPERACIONES/ EL GRANERO','ALVAREZ AUTOMOTRIZ S.A. DE C.V.','ARGUS TECNOLOGÍAS','AUTOSUR - MAYA MOTRIZ S.A. DE C.V.','BATERIAS EL CARIBE S DE RL DE CV','BEPENSA MOTRIZ','CBC AUTOPARTES','CHEVROLET DEL CARIBE SA DE CV','CRISTALES Y PARTES ROTO','DIRMARK GROUP','DOMINGUEZ CARROCERIAS SA DE CV','GESTORIA AL MOMENTO','GRUPO GOMIVOZA SA DE CV','HDI SEGUROS','ITZACALCO MOTORS','LATIN TIRES SA DE CV','LLANTAS KENDA SA DE CV','LLANTAS Y REFACCIONES DE MATAMOROS SA DE CV','MARTHA GUADALUPE LEON HERNANDEZ/AUTOPARTES CARIBE','MHA SA DE CV','MOTORES LA PAZ S.A.P.I DE C.V.','NUEVA WAL MART DE MEXICO','PROVEDORA DE RINES Y LLANTAS MONTERREY','QUALITAS COMPAÑÍA DE SEGUROS','RADIAL LLANTAS SAPI DE CV','REFACCIONARIA AUTOMOTRIZ ANCONA SA DE CV','REPARACION Y RESPALDO AUTOMOTRIZ PROTECT','SAMS CLUB','SIEH PADAMO SA DE CV','STEREN','VEHICULOS AUTOMOTORES DE MAZATLAN SA DE CV','WESTLAKE TIRES'],
   CONDICIONES:['CONTADO','CREDITO','TRANSFERENCIA'],
   FACTURA:['SI','NO'],
@@ -368,829 +292,774 @@ const DD = {
   UM:['PZA','LT','KG','MT','SRV','JGO','CJA','PAR','GAL','ML','GR','CM','M²','TON','HR']
 };
 
-/* ═══════════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════════ */
-let folios = [];
-let activeId = null;
-let pendingDelete = null;
+/* ══════════════════════════════════════════
+   CUSTOM OPTIONS (persisted in localStorage)
+══════════════════════════════════════════ */
+let customOpts=JSON.parse(localStorage.getItem('ies_custom_v3')||'{}');
+function saveCustomOpts(){ localStorage.setItem('ies_custom_v3',JSON.stringify(customOpts)); }
+function getOpts(cat){ return [...(DD_BASE[cat]||[]),...(customOpts[cat]||[])]; }
+function addCustomOpt(cat,val){
+  if(!customOpts[cat]) customOpts[cat]=[];
+  if(!customOpts[cat].includes(val)){ customOpts[cat].push(val); saveCustomOpts(); }
+}
 
-function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v2')||'[]'); }
-function ss(){ localStorage.setItem('ies_comp_v2', JSON.stringify(folios)); }
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let folios=[];
+let activeId=null;
+let pendingDel=null;
+const CHARTS={};
+
+function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v3')||'[]'); }
+function ss(){ localStorage.setItem('ies_comp_v3',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
-function mkFolio(name, desc){
-  return {
-    id:genId(), name, desc:desc||'', createdAt: new Date().toISOString().slice(0,10),
-    general:{ gestor:'', fecha:'', zona:'', unidad:'', depto:'', cotInterna:'', solped:'', justificacion:'', descripcion:'', cantidad:'', um:'' },
-    prov:[
-      { active:false, numCot:'', rz:'', marca:'', pu:'', garantia:'', condiciones:'', entrega:'', factura:'', observaciones:'' },
-      { active:false, numCot:'', rz:'', marca:'', pu:'', garantia:'', condiciones:'', entrega:'', factura:'', observaciones:'' },
-      { active:false, numCot:'', rz:'', marca:'', pu:'', garantia:'', condiciones:'', entrega:'', factura:'', observaciones:'' }
-    ],
-    decision:{ ganador:null, autoriza:'', fechaAut:'', estatus:'' }
-  };
+function mkProv(){
+  return {active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',
+    rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};
 }
-
+function mkFolio(name,desc){
+  return {id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),
+    general:{gestor:'',fecha:'',zona:'',unidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:''},
+    prov:[mkProv(),mkProv(),mkProv()],
+    decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''}};
+}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
-/* ═══════════════════════════════════════════════════════
-   CALCULATIONS
-═══════════════════════════════════════════════════════ */
-function calc(pu, cantidad){
-  const p=parseFloat(pu)||0, q=parseFloat(cantidad)||0;
-  const sub=p*q, iva=sub*IVA_RATE, total=sub+iva;
-  return {sub,iva,total};
-}
-
-function getCalcs(folio){
-  const qty=folio.general.cantidad;
-  return folio.prov.map(p=>p.active?calc(p.pu,qty):null);
-}
-
-function getDifs(folio){
-  const calcs=getCalcs(folio);
-  const totals=calcs.filter(c=>c&&c.total>0).map(c=>c.total);
-  const mn=totals.length?Math.min(...totals):0;
-  return calcs.map(c=>c?{...c,dif:c.total-mn}:null);
-}
-
-function fmt(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtP(n){ return n.toFixed(0)+'%'; }
-
-/* ═══════════════════════════════════════════════════════
-   FOLIO MANAGEMENT
-═══════════════════════════════════════════════════════ */
-function openFolioModal(){
-  document.getElementById('nfName').value='';
-  document.getElementById('nfDesc').value='';
-  document.getElementById('folioModal').classList.add('open');
-  setTimeout(()=>document.getElementById('nfName').focus(),100);
-}
+/* ══════════════════════════════════════════
+   FOLIO CRUD
+══════════════════════════════════════════ */
+function openFolioModal(){ document.getElementById('nfName').value=''; document.getElementById('nfDesc').value=''; document.getElementById('folioModal').classList.add('open'); setTimeout(()=>document.getElementById('nfName').focus(),100); }
 function closeFolioModal(){ document.getElementById('folioModal').classList.remove('open'); }
 function confirmFolio(){
   const name=document.getElementById('nfName').value.trim();
   const desc=document.getElementById('nfDesc').value.trim();
   if(!name){ notify('Ingresa un número de folio',true); return; }
   if(folios.find(f=>f.name.toLowerCase()===name.toLowerCase())){ notify('Ya existe ese folio',true); return; }
-  const f=mkFolio(name,desc); folios.push(f); ss();
-  closeFolioModal(); selectFolio(f.id); notify(`Folio "${name}" creado`);
+  const f=mkFolio(name,desc); folios.push(f); ss(); closeFolioModal(); selectFolio(f.id); notify('Folio "'+name+'" creado');
 }
-
-function selectFolio(id){
-  activeId=id;
-  renderSidebar(); renderFolioBar(); renderResumen(); renderCapture(); renderComp(); renderIA();
-  switchTab('captura');
-}
-
-function deleteFolioRequest(id){ pendingDelete=id; document.getElementById('adminPass').value=''; document.getElementById('adminError').textContent=''; document.getElementById('adminModal').classList.add('open'); setTimeout(()=>document.getElementById('adminPass').focus(),100); }
-function closeAdminModal(){ document.getElementById('adminModal').classList.remove('open'); pendingDelete=null; }
+function selectFolio(id){ activeId=id; renderSidebar(); renderFolioBar(); renderCapture(); renderComp(); renderIA(); switchTab('captura'); }
+function deleteFolioRequest(id){ pendingDel=id; document.getElementById('adminPass').value=''; document.getElementById('adminError').textContent=''; document.getElementById('adminModal').classList.add('open'); setTimeout(()=>document.getElementById('adminPass').focus(),100); }
+function closeAdminModal(){ document.getElementById('adminModal').classList.remove('open'); pendingDel=null; }
 function confirmAdmin(){
-  const pass=document.getElementById('adminPass').value;
-  if(pass!==ADMIN_PASS){ document.getElementById('adminError').textContent='Contraseña incorrecta'; return; }
-  if(!pendingDelete){ closeAdminModal(); return; }
-  const name=folios.find(f=>f.id===pendingDelete)?.name||'';
-  folios=folios.filter(f=>f.id!==pendingDelete);
-  if(activeId===pendingDelete) activeId=folios.length?folios[0].id:null;
-  ss(); closeAdminModal(); renderSidebar(); renderFolioBar(); renderResumen(); renderCapture(); renderComp(); renderIA();
-  notify(`Folio "${name}" eliminado`);
+  if(document.getElementById('adminPass').value!==ADMIN_PASS){ document.getElementById('adminError').textContent='Contraseña incorrecta'; return; }
+  if(!pendingDel){ closeAdminModal(); return; }
+  const name=folios.find(f=>f.id===pendingDel)?.name||'';
+  folios=folios.filter(f=>f.id!==pendingDel);
+  if(activeId===pendingDel) activeId=folios.length?folios[0].id:null;
+  ss(); closeAdminModal(); renderSidebar(); renderFolioBar(); renderCapture(); renderComp(); renderIA(); renderResumen(); notify('Folio "'+name+'" eliminado');
 }
 
-/* ═══════════════════════════════════════════════════════
-   SIDEBAR
-═══════════════════════════════════════════════════════ */
-function provStatus(folio){
-  const n=folio.prov.filter(p=>p.active).length;
-  if(n===0) return '<span class="acc-status sts-empty">Sin proveedores</span>';
-  if(n===3) return '<span class="acc-status sts-done">3 de 3</span>';
-  return `<span class="acc-status sts-partial">${n} de 3</span>`;
+/* ══════════════════════════════════════════
+   DYNAMIC SELECT WITH "AGREGAR NUEVO"
+══════════════════════════════════════════ */
+function dynSel(id,cat,val,ph,allowNew){
+  if(ph===undefined) ph='— Seleccionar —';
+  if(allowNew===undefined) allowNew=true;
+  const opts=getOpts(cat);
+  const noNew=['TIPO','FACTURA'];
+  const canAdd=allowNew&&!noNew.includes(cat);
+  let html=`<select id="${id}" onchange="handleSel(this,'${id}','${cat}')">
+    <option value="">${ph}</option>
+    ${opts.map(o=>`<option value="${esc(o)}"${o===val?' selected':''}>${o}</option>`).join('')}
+    ${canAdd?'<option value="__new__">＋ Agregar nuevo...</option>':''}
+  </select>
+  <div id="${id}_nw" class="add-new-row">
+    <input type="text" id="${id}_ni" placeholder="Nuevo valor..." onkeydown="if(event.key==='Enter')addOpt('${id}','${cat}')"/>
+    <button class="btn btn-acc btn-sm" onclick="addOpt('${id}','${cat}')">✓</button>
+    <button class="btn btn-ghost btn-sm" onclick="cancelOpt('${id}')">✕</button>
+  </div>`;
+  return html;
 }
 
+function handleSel(el,id,cat){
+  if(el.value==='__new__'){
+    el.value='';
+    const nw=document.getElementById(id+'_nw');
+    if(nw){ nw.classList.add('show'); document.getElementById(id+'_ni').focus(); }
+  } else { autoSave(); }
+}
+
+function addOpt(id,cat){
+  const inp=document.getElementById(id+'_ni');
+  const val=(inp?.value||'').trim();
+  if(!val){ notify('Ingresa un valor',true); return; }
+  addCustomOpt(cat,val);
+  const sel=document.getElementById(id);
+  if(sel){
+    const last=sel.querySelector('option[value="__new__"]');
+    const o=new Option(val,val,true,true);
+    if(last) sel.insertBefore(o,last); else sel.appendChild(o);
+    sel.value=val;
+  }
+  const nw=document.getElementById(id+'_nw');
+  if(nw){ nw.classList.remove('show'); if(inp) inp.value=''; }
+  autoSave();
+  notify('"'+val+'" agregado al catálogo de '+cat);
+}
+
+function cancelOpt(id){
+  const nw=document.getElementById(id+'_nw');
+  if(nw) nw.classList.remove('show');
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR & FOLIO BAR
+══════════════════════════════════════════ */
 function renderSidebar(){
   const list=document.getElementById('folioList');
-  if(!folios.length){ list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin folios.<br>Crea uno para comenzar.</div>'; return; }
+  if(!folios.length){ list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin folios.<br>Crea uno con ＋</div>'; return; }
   list.innerHTML=folios.map(f=>`
-    <div class="folio-item ${f.id===activeId?'active':''}" onclick="selectFolio('${f.id}')">
+    <div class="folio-item${f.id===activeId?' active':''}" onclick="selectFolio('${f.id}')">
       <span class="folio-dot"></span>
       <div class="folio-info">
-        <div class="folio-name" title="${f.name}">${f.name}</div>
-        <div class="folio-meta">${f.prov.filter(p=>p.active).length} proveedor(es)</div>
+        <div class="folio-name" title="${esc(f.name)}">${f.name}</div>
+        <div class="folio-meta">${f.prov.filter(p=>p.active).length} prov · ${f.general.tipo||'Sin tipo'}</div>
       </div>
       <span class="folio-gear" onclick="event.stopPropagation();deleteFolioRequest('${f.id}')" title="Eliminar (Admin)">⚙</span>
     </div>`).join('');
 }
 
-/* ═══════════════════════════════════════════════════════
-   FOLIO BAR
-═══════════════════════════════════════════════════════ */
 function renderFolioBar(){
   const bar=document.getElementById('folioBar');
-  const folio=getActive();
-  if(!folio){ bar.style.display='none'; return; }
+  const f=getActive();
+  if(!f){ bar.style.display='none'; return; }
   bar.style.display='flex';
-  document.getElementById('fbName').innerHTML=`${folio.name} <span class="fbadge">${folio.createdAt}</span>`;
-  document.getElementById('fbDesc').textContent=folio.desc||'';
-  document.getElementById('fbPills').innerHTML=folio.prov.map((p,i)=>`
-    <span class="prov-pill ${PROV_PCLS[i]} ${p.active?'':'empty'}" title="${p.active?p.rz||PROV_LABEL[i]:'Sin capturar'}">
-      ${p.active?'●':'○'} ${p.active?truncate(p.rz||PROV_LABEL[i],14):PROV_LABEL[i]}
-    </span>`).join('');
+  const tipoChip=f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:'';
+  document.getElementById('fbName').innerHTML=`${f.name} ${tipoChip} <span class="fbadge">${f.createdAt}</span>`;
+  document.getElementById('fbDesc').textContent=f.desc||'';
+  document.getElementById('fbPills').innerHTML=f.prov.map((p,i)=>`<span class="prov-pill ${PCLS[i]}${p.active?'':' empty'}">${p.active?'●':'○'} ${p.active?trunc(p.rz||PLBL[i],14):PLBL[i]}</span>`).join('');
 }
 
-function truncate(str,n){ return str&&str.length>n?str.slice(0,n)+'…':str||'—'; }
-
-/* ═══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    TABS
-═══════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function switchTab(name){
   ['resumen','captura','comp','ia'].forEach(t=>{
     document.getElementById('panel-'+t).classList.toggle('active',t===name);
     document.getElementById('tab-'+t).classList.toggle('active',t===name);
   });
+  if(name==='resumen') setTimeout(renderCharts,200);
   if(name==='ia') setTimeout(renderRadarChart,200);
 }
 
-/* ═══════════════════════════════════════════════════════
-   SELECT HELPERS
-═══════════════════════════════════════════════════════ */
-function sel(id,options,val,placeholder='— Seleccionar —'){
-  const opts=[`<option value="">${placeholder}</option>`,...options.map(o=>`<option${o===val?' selected':''}>${o}</option>`)];
-  return `<select id="${id}" onchange="autoSave()">${opts.join('')}</select>`;
-}
+/* ══════════════════════════════════════════
+   CALCULATIONS
+══════════════════════════════════════════ */
+function calcProv(pu,qty){ const p=parseFloat(pu)||0,q=parseFloat(qty)||0,sub=p*q,iva=sub*IVA,tot=sub+iva; return{sub,iva,tot}; }
+function getDifs(f){ const c=f.prov.map(p=>p.active?calcProv(p.pu,f.general.cantidad):null); const tots=c.filter(Boolean).filter(x=>x.tot>0).map(x=>x.tot); const mn=tots.length?Math.min(...tots):0; return c.map(x=>x?{...x,dif:x.tot-mn}:null); }
+function fmt(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function trunc(s,n){ return s&&s.length>n?s.slice(0,n)+'…':s||'—'; }
+function esc(v){ return(v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-/* ═══════════════════════════════════════════════════════
-   RENDER CAPTURE FORM
-═══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   CAPTURE FORM
+══════════════════════════════════════════ */
 function renderCapture(){
   const acc=document.getElementById('captureAccordion');
-  const folio=getActive();
-  if(!folio){ acc.innerHTML='<div class="empty-hero"><div class="icon">📂</div><h3>Sin folio activo</h3><p>Selecciona o crea un folio desde la barra lateral.</p></div>'; return; }
-  const g=folio.general;
-  const genFilled=g.gestor||g.descripcion||g.cantidad;
-  const genStatus=genFilled?'<span class="acc-status sts-done">Completado</span>':'<span class="acc-status sts-empty">Pendiente</span>';
-  const decFilled=folio.decision.autoriza||folio.decision.estatus;
-  const decStatus=folio.decision.ganador!==null?'<span class="acc-status sts-done">Decisión tomada</span>':(decFilled?'<span class="acc-status sts-partial">Parcial</span>':'<span class="acc-status sts-empty">Pendiente</span>');
-
-  acc.innerHTML=`
-  <!-- GENERAL -->
-  <div class="acc-card open" id="acc-gen">
-    <div class="acc-head" onclick="toggleAcc('acc-gen')">
-      <span class="acc-icon">📋</span>
-      <span class="acc-title">Información General del Comparativo</span>
-      ${genStatus}
-      <span class="acc-arrow">▼</span>
-    </div>
-    <div class="acc-body"><div class="acc-inner">
-      <div class="fg">
-        <div class="form-group">
-          <label>Gestor</label>
-          ${sel('g_gestor',DD.GESTOR,g.gestor)}
-        </div>
-        <div class="form-group">
-          <label>Fecha de Solicitud</label>
-          <input type="date" id="g_fecha" value="${g.fecha}" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label>Zona</label>
-          ${sel('g_zona',DD.ZONA,g.zona)}
-        </div>
-        <div class="form-group">
-          <label>Unidad</label>
-          ${sel('g_unidad',DD.UNIDAD,g.unidad)}
-        </div>
-        <div class="form-group">
-          <label>Departamento</label>
-          ${sel('g_depto',DD.DEPTO,g.depto)}
-        </div>
-        <div class="form-group">
-          <label># COT Interna</label>
-          <input type="text" id="g_cotInterna" value="${esc(g.cotInterna)}" placeholder="COT-001" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label># SOLPED</label>
-          <input type="text" id="g_solped" value="${esc(g.solped)}" placeholder="Texto libre" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label>Cantidad</label>
-          <input type="number" id="g_cantidad" value="${esc(g.cantidad)}" placeholder="0" step="any" oninput="autoSave();refreshCalcs()"/>
-        </div>
-        <div class="form-group">
-          <label>Unidad de Medida</label>
-          ${sel('g_um',DD.UM,g.um)}
-        </div>
-        <div class="form-group full">
-          <label>Descripción del Artículo / Servicio</label>
-          <textarea id="g_descripcion" rows="2" placeholder="Descripción detallada del bien o servicio a adquirir" onchange="autoSave()">${esc(g.descripcion)}</textarea>
-        </div>
-        <div class="form-group full">
-          <label>Justificación</label>
-          <textarea id="g_justificacion" rows="2" placeholder="Motivo de la compra o servicio" onchange="autoSave()">${esc(g.justificacion)}</textarea>
-        </div>
-      </div>
-    </div></div>
-  </div>
-
-  ${[0,1,2].map(i=>renderProvCard(folio,i)).join('')}
-
-  <!-- DECISION -->
-  <div class="acc-card" id="acc-dec">
-    <div class="acc-head" onclick="toggleAcc('acc-dec')">
-      <span class="acc-icon">✅</span>
-      <span class="acc-title">Decisión y Autorización</span>
-      ${decStatus}
-      <span class="acc-arrow">▼</span>
-    </div>
-    <div class="acc-body"><div class="acc-inner">
-      <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Selecciona el proveedor ganador y completa la autorización:</p>
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        ${folio.prov.map((p,i)=>p.active?`<button class="select-btn sel${i+1} ${folio.decision.ganador===i?'selected':''}" onclick="setGanador(${i})">${p.rz?truncate(p.rz,22):PROV_LABEL[i]}</button>`:'').join('')}
-      </div>
-      <div class="fg">
-        <div class="form-group">
-          <label>Autoriza</label>
-          ${sel('d_autoriza',DD.AUTORIZA,folio.decision.autoriza)}
-        </div>
-        <div class="form-group">
-          <label>Fecha de Autorización</label>
-          <input type="date" id="d_fechaAut" value="${folio.decision.fechaAut}" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label>Estatus</label>
-          ${sel('d_estatus',DD.ESTATUS,folio.decision.estatus)}
-        </div>
-      </div>
-    </div></div>
-  </div>
-
-  <div style="display:flex;justify-content:flex-end;margin-top:6px">
-    <button class="btn btn-acc" onclick="saveAll()">💾 Guardar Todo</button>
-  </div>`;
+  const f=getActive();
+  if(!f){ acc.innerHTML='<div class="empty-hero"><div class="icon">📂</div><h3>Sin folio activo</h3><p>Selecciona o crea un folio.</p></div>'; return; }
+  const g=f.general;
+  const gFilled=g.gestor||g.descripcion||g.cantidad;
+  acc.innerHTML=[
+    genCardGeneral(f,g,gFilled),
+    genCardProv(f,0), genCardProv(f,1), genCardProv(f,2),
+    genCardDecision(f)
+  ].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn btn-acc" onclick="saveAll()">💾 Guardar y Ver Comparativo</button></div>`;
   refreshCalcs();
 }
 
-function renderProvCard(folio, i){
-  const p=folio.prov[i];
-  const calcs=p.active?calc(p.pu,folio.general.cantidad):null;
-  let status='<span class="acc-status sts-empty">Sin capturar</span>';
-  if(p.active && p.rz) status='<span class="acc-status sts-done">Completado</span>';
-  else if(p.active)    status='<span class="acc-status sts-partial">En proceso</span>';
-
-  return `
-  <div class="acc-card ${p.active?'open':''}" id="acc-p${i}">
-    <div class="acc-head ${PROV_HEAD[i].split(' ')[0]}" onclick="toggleAcc('acc-p${i}')">
-      <span class="acc-icon">📦</span>
-      <span class="acc-title ${PROV_HEAD[i].split(' ')[1]}">${PROV_LABEL[i]}${p.rz?' — '+truncate(p.rz,28):''}</span>
-      ${status}
-      <span class="acc-arrow">▼</span>
+function genCardGeneral(f,g,gFilled){
+  const st=gFilled?'<span class="acc-status sts-done">Completado</span>':'<span class="acc-status sts-empty">Pendiente</span>';
+  return `<div class="acc-card open" id="acc-gen">
+    <div class="acc-head" onclick="toggleAcc('acc-gen')">
+      <span>📋</span><span class="acc-title">Información General</span>${st}<span class="acc-arrow">▼</span>
     </div>
     <div class="acc-body"><div class="acc-inner">
       <div class="fg">
-        <div class="form-group">
-          <label># Cot. Proveedor</label>
-          <input type="text" id="p${i}_numCot" value="${esc(p.numCot)}" placeholder="Texto libre" onchange="autoSave()"/>
-        </div>
-        <div class="form-group half">
-          <label>Proveedor (Razón Social)</label>
-          ${sel(`p${i}_rz`,DD.PROV_RZ,p.rz,'— Seleccionar proveedor —')}
-        </div>
-        <div class="form-group">
-          <label>Marca</label>
-          <input type="text" id="p${i}_marca" value="${esc(p.marca)}" placeholder="Texto libre" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label>P.U. (Precio Unitario $)</label>
-          <input type="number" id="p${i}_pu" value="${esc(p.pu)}" placeholder="0.00" step="0.01" oninput="autoSave();refreshCalcs()"/>
-        </div>
-        <div class="form-group">
-          <label>Subtotal ($)</label>
-          <input type="text" id="p${i}_sub" value="${calcs?fmt(calcs.sub):'$0.00'}" readonly/>
-          <span class="calc-badge">= P.U. × Cantidad</span>
-        </div>
-        <div class="form-group">
-          <label>IVA 16% ($)</label>
-          <input type="text" id="p${i}_iva" value="${calcs?fmt(calcs.iva):'$0.00'}" readonly/>
-          <span class="calc-badge">= Subtotal × 16%</span>
-        </div>
-        <div class="form-group">
-          <label>Total ($)</label>
-          <input type="text" id="p${i}_tot" value="${calcs?fmt(calcs.total):'$0.00'}" readonly style="font-weight:700;color:var(--acc2)"/>
-          <span class="calc-badge">= Subtotal + IVA</span>
-        </div>
-        <div class="form-group">
-          <label>Tiempo de Garantía</label>
-          <input type="text" id="p${i}_garantia" value="${esc(p.garantia)}" placeholder="Ej. 6 meses" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label>Condiciones de Pago</label>
-          ${sel(`p${i}_condiciones`,DD.CONDICIONES,p.condiciones)}
-        </div>
-        <div class="form-group">
-          <label>Tiempo de Entrega</label>
-          <input type="text" id="p${i}_entrega" value="${esc(p.entrega)}" placeholder="Ej. 2 días hábiles" onchange="autoSave()"/>
-        </div>
-        <div class="form-group">
-          <label>Factura</label>
-          ${sel(`p${i}_factura`,DD.FACTURA,p.factura)}
-        </div>
-        <div class="form-group full">
-          <label>Observaciones</label>
-          <textarea id="p${i}_obs" rows="2" placeholder="Notas adicionales" onchange="autoSave()">${esc(p.observaciones)}</textarea>
-        </div>
+        <div class="form-group"><label>Gestor</label>${dynSel('g_gestor','GESTOR',g.gestor)}</div>
+        <div class="form-group"><label>Fecha de Solicitud</label><input type="date" id="g_fecha" value="${esc(g.fecha)}" onchange="autoSave()"/></div>
+        <div class="form-group"><label>Zona</label>${dynSel('g_zona','ZONA',g.zona)}</div>
+        <div class="form-group"><label>Unidad</label>${dynSel('g_unidad','UNIDAD',g.unidad)}</div>
+        <div class="form-group"><label>Departamento</label>${dynSel('g_depto','DEPTO',g.depto)}</div>
+        <div class="form-group"><label>Tipo de Solicitud</label>${dynSel('g_tipo','TIPO',g.tipo,'— Refacciones / Servicio —',false)}</div>
+        <div class="form-group"><label># COT Interna</label><input type="text" id="g_cotInterna" value="${esc(g.cotInterna)}" placeholder="COT-001" onchange="autoSave()"/></div>
+        <div class="form-group"><label># SOLPED</label><input type="text" id="g_solped" value="${esc(g.solped)}" placeholder="Texto libre" onchange="autoSave()"/></div>
+        <div class="form-group"><label>Cantidad</label><input type="number" id="g_cantidad" value="${esc(g.cantidad)}" placeholder="0" step="any" oninput="autoSave();refreshCalcs()"/></div>
+        <div class="form-group"><label>Unidad de Medida</label>${dynSel('g_um','UM',g.um)}</div>
+        <div class="form-group full"><label>Descripción del Artículo / Servicio</label><textarea id="g_descripcion" rows="2" placeholder="Descripción detallada" onchange="autoSave()">${esc(g.descripcion)}</textarea></div>
+        <div class="form-group full"><label>Justificación</label><textarea id="g_justificacion" rows="2" placeholder="Motivo de la compra" onchange="autoSave()">${esc(g.justificacion)}</textarea></div>
       </div>
     </div></div>
   </div>`;
 }
 
-function toggleAcc(id){
-  document.getElementById(id).classList.toggle('open');
-}
-
-function esc(v){ return (v||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-/* ═══════════════════════════════════════════════════════
-   AUTO-SAVE & CALC REFRESH
-═══════════════════════════════════════════════════════ */
-function refreshCalcs(){
-  const folio=getActive(); if(!folio) return;
-  const qty=parseFloat(document.getElementById('g_cantidad')?.value||folio.general.cantidad)||0;
-  [0,1,2].forEach(i=>{
-    const puEl=document.getElementById(`p${i}_pu`);
-    if(!puEl) return;
-    const pu=parseFloat(puEl.value)||0;
-    const c=calc(pu,qty);
-    const subEl=document.getElementById(`p${i}_sub`);
-    const ivaEl=document.getElementById(`p${i}_iva`);
-    const totEl=document.getElementById(`p${i}_tot`);
-    if(subEl) subEl.value=fmt(c.sub);
-    if(ivaEl) ivaEl.value=fmt(c.iva);
-    if(totEl) totEl.value=fmt(c.total);
-  });
-}
-
-function autoSave(){
-  const folio=getActive(); if(!folio) return;
-  // General
-  const gf=['gestor','fecha','zona','unidad','depto','cotInterna','solped','justificacion','descripcion','cantidad','um'];
-  const gIds=['g_gestor','g_fecha','g_zona','g_unidad','g_depto','g_cotInterna','g_solped','g_justificacion','g_descripcion','g_cantidad','g_um'];
-  gIds.forEach((id,k)=>{ const el=document.getElementById(id); if(el) folio.general[gf[k]]=el.value; });
-  // Providers
-  const pfields=['numCot','rz','marca','pu','garantia','condiciones','entrega','factura','observaciones'];
-  const pids=['numCot','rz','marca','pu','garantia','condiciones','entrega','factura','obs'];
-  [0,1,2].forEach(i=>{
-    pids.forEach((pid,k)=>{ const el=document.getElementById(`p${i}_${pid}`); if(el){ folio.prov[i][pfields[k]]=el.value; folio.prov[i].active=!!(folio.prov[i].rz||folio.prov[i].pu||folio.prov[i].numCot); } });
-  });
-  // Decision
-  const da=document.getElementById('d_autoriza'); if(da) folio.decision.autoriza=da.value;
-  const dfa=document.getElementById('d_fechaAut'); if(dfa) folio.decision.fechaAut=dfa.value;
-  const ds=document.getElementById('d_estatus'); if(ds) folio.decision.estatus=ds.value;
-  ss(); renderFolioBar();
-}
-
-function saveAll(){
-  autoSave();
-  const folio=getActive(); if(!folio) return;
-  renderSidebar(); renderResumen(); renderComp(); renderIA();
-  notify('Folio guardado correctamente');
-  switchTab('comp');
-}
-
-function setGanador(idx){
-  const folio=getActive(); if(!folio) return;
-  folio.decision.ganador=idx; ss();
-  renderCapture();
-  notify(`Proveedor ${idx+1} seleccionado como ganador`);
-}
-
-/* ═══════════════════════════════════════════════════════
-   RESUMEN
-═══════════════════════════════════════════════════════ */
-function renderResumen(){
-  const cont=document.getElementById('resumenContent');
-  if(!folios.length){
-    cont.innerHTML=`<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos</h3><p>Crea tu primer folio con el botón <strong>＋ Nuevo Folio</strong> para comenzar.</p></div>`;
-    return;
-  }
-  const totalFolios=folios.length;
-  const autorizados=folios.filter(f=>f.decision.estatus==='AUTORIZADO').length;
-  const pendientes=folios.filter(f=>!f.decision.estatus||f.decision.estatus==='PENDIENTE'||f.decision.estatus==='EN PROCESO').length;
-  const totalesAll=folios.flatMap(f=>getDifs(f).filter(Boolean).map(c=>c.total));
-  const grandTotal=totalesAll.reduce((a,b)=>a+b,0);
-  const ahorrosAll=folios.flatMap(f=>{const difs=getDifs(f);const mn=Math.min(...difs.filter(Boolean).filter(c=>c.total>0).map(c=>c.total));return difs.filter(Boolean).filter(c=>c.total>mn).map(c=>c.total-mn);});
-  const ahorro=ahorrosAll.length?Math.max(...ahorrosAll):0;
-
-  cont.innerHTML=`
-  <div class="kpi-grid">
-    <div class="kpi acc"><div class="kpi-label">Folios Activos</div><div class="kpi-val">${totalFolios}</div><div class="kpi-sub">Comparativos en el sistema</div></div>
-    <div class="kpi green"><div class="kpi-label">Autorizados</div><div class="kpi-val">${autorizados}</div><div class="kpi-sub">Con decisión tomada</div></div>
-    <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val">${pendientes}</div><div class="kpi-sub">En proceso / sin decisión</div></div>
-    <div class="kpi blue"><div class="kpi-label">Valor Total</div><div class="kpi-val" style="font-size:15px">${fmt(grandTotal)}</div><div class="kpi-sub">Suma de todos los totales</div></div>
-    <div class="kpi acc"><div class="kpi-label">Ahorro Máx. Identificado</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Diferencia entre opciones</div></div>
-  </div>
-
-  <div style="background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden">
-    <div style="padding:12px 16px;font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--bd)">Todos los Folios</div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr>
-        <th style="padding:9px 14px;text-align:left;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd)">Folio</th>
-        <th style="padding:9px 14px;text-align:left;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd)">Descripción</th>
-        <th style="padding:9px 14px;text-align:center;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd)">Proveedores</th>
-        <th style="padding:9px 14px;text-align:right;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd)">Mejor Precio</th>
-        <th style="padding:9px 14px;text-align:center;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd)">Estatus</th>
-        <th style="padding:9px 14px;text-align:center;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd)">Acción</th>
-      </tr></thead>
-      <tbody>
-      ${folios.map(f=>{
-        const active=f.prov.filter(p=>p.active).length;
-        const difs=getDifs(f); const mn=Math.min(...difs.filter(Boolean).filter(c=>c.total>0).map(c=>c.total)||[0]);
-        const stMap={'AUTORIZADO':'b-green','CANCELADO':'b-red','PENDIENTE':'b-yellow','EN PROCESO':'b-blue'};
-        const st=f.decision.estatus;
-        return `<tr>
-          <td style="padding:9px 14px;border-bottom:1px solid var(--bd)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2)">${f.name}</span></td>
-          <td style="padding:9px 14px;border-bottom:1px solid var(--bd);color:var(--dim);font-size:11px">${truncate(f.general.descripcion||f.desc||'—',40)}</td>
-          <td style="padding:9px 14px;border-bottom:1px solid var(--bd);text-align:center"><span class="acc-status ${active===3?'sts-done':active>0?'sts-partial':'sts-empty'}">${active}/3</span></td>
-          <td style="padding:9px 14px;border-bottom:1px solid var(--bd);text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">${mn>0?fmt(mn):'—'}</td>
-          <td style="padding:9px 14px;border-bottom:1px solid var(--bd);text-align:center">${st?`<span class="badge ${stMap[st]||'b-gray'}">${st}</span>`:'<span class="badge b-gray">Sin definir</span>'}</td>
-          <td style="padding:9px 14px;border-bottom:1px solid var(--bd);text-align:center"><button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}')">Abrir</button></td>
-        </tr>`;
-      }).join('')}
-      </tbody>
-    </table>
+function genCardProv(f,i){
+  const p=f.prov[i];
+  const c=p.active?calcProv(p.pu,f.general.cantidad):null;
+  const hdcls=PHDCLS[i].split(' ');
+  let st='<span class="acc-status sts-empty">Sin capturar</span>';
+  if(p.active&&p.rz) st='<span class="acc-status sts-done">Completado</span>';
+  else if(p.active) st='<span class="acc-status sts-partial">En proceso</span>';
+  const r=p.rating||{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''};
+  return `<div class="acc-card${p.active?' open':''}" id="acc-p${i}">
+    <div class="acc-head ${hdcls[0]}" onclick="toggleAcc('acc-p${i}')">
+      <span>📦</span><span class="acc-title ${hdcls[1]}">${PLBL[i]}${p.rz?' — '+trunc(p.rz,28):''}</span>${st}<span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <div class="fg">
+        <div class="form-group"><label># Cot. Proveedor</label><input type="text" id="p${i}_numCot" value="${esc(p.numCot)}" placeholder="Texto libre" onchange="autoSave()"/></div>
+        <div class="form-group half"><label>Proveedor (Razón Social)</label>${dynSel('p'+i+'_rz','PROV_RZ',p.rz,'— Seleccionar proveedor —')}</div>
+        <div class="form-group"><label>Marca</label><input type="text" id="p${i}_marca" value="${esc(p.marca)}" placeholder="Texto libre" onchange="autoSave()"/></div>
+        <div class="form-group"><label>P.U. (Precio Unitario $)</label><input type="number" id="p${i}_pu" value="${esc(p.pu)}" placeholder="0.00" step="0.01" oninput="autoSave();refreshCalcs()"/></div>
+        <div class="form-group"><label>Subtotal ($)</label><input type="text" id="p${i}_sub" value="${c?fmt(c.sub):'$0.00'}" readonly/><span class="calc-badge">= P.U. × Cantidad</span></div>
+        <div class="form-group"><label>IVA 16% ($)</label><input type="text" id="p${i}_iva" value="${c?fmt(c.iva):'$0.00'}" readonly/><span class="calc-badge">= Subtotal × 16%</span></div>
+        <div class="form-group"><label>Total ($)</label><input type="text" id="p${i}_tot" value="${c?fmt(c.tot):'$0.00'}" readonly style="color:var(--acc2);font-weight:700"/><span class="calc-badge">= Subtotal + IVA</span></div>
+        <div class="form-group"><label>Garantía</label><input type="text" id="p${i}_garantia" value="${esc(p.garantia)}" placeholder="Ej. 6 meses" onchange="autoSave()"/></div>
+        <div class="form-group"><label>Condiciones</label>${dynSel('p'+i+'_condiciones','CONDICIONES',p.condiciones)}</div>
+        <div class="form-group"><label>Tiempo de Entrega</label><input type="text" id="p${i}_entrega" value="${esc(p.entrega)}" placeholder="Ej. 2 días" onchange="autoSave()"/></div>
+        <div class="form-group"><label>Factura</label>${dynSel('p'+i+'_factura','FACTURA',p.factura,'— SI / NO —',false)}</div>
+        <div class="form-group full"><label>Observaciones del Proveedor</label><textarea id="p${i}_obs" rows="2" placeholder="Notas sobre esta cotización" onchange="autoSave()">${esc(p.observaciones)}</textarea></div>
+      </div>
+      <div class="section-sep">Calificación del Proveedor <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(integrada al Análisis IA)</span></div>
+      <div class="rating-grid">
+        ${[['global','Calificación Global',r.global],['precio','Precio Competitivo',r.precio],['calidad','Calidad / Servicio',r.calidad],['cumplimiento','Cumplimiento Entrega',r.cumplimiento],['comunicacion','Comunicación',r.comunicacion]].map(([dim,lbl,val])=>`
+          <div class="rating-item">
+            <div class="rating-item-label">${lbl}</div>
+            <div class="star-row" id="p${i}_r_${dim}">
+              ${[1,2,3,4,5].map(s=>`<span class="star${s<=val?' on':''}" onclick="setRating(${i},'${dim}',${s})" onmouseover="hoverStars('p${i}_r_${dim}',${s})" onmouseout="restoreStars(${i},'${dim}','p${i}_r_${dim}')">${s<=val?'★':'☆'}</span>`).join('')}
+              <span class="rating-score">${val}/5</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <div class="form-group full"><label>Observaciones del Proveedor (Historial)</label><textarea id="p${i}_robs" rows="2" placeholder="Historial de servicio, incidencias, comentarios relevantes..." onchange="autoSave()">${esc(r.obs)}</textarea></div>
+      </div>
+    </div></div>
   </div>`;
 }
 
-/* ═══════════════════════════════════════════════════════
-   COMPARATIVO TABLE
-═══════════════════════════════════════════════════════ */
-function renderComp(){
-  const cont=document.getElementById('compContent');
-  const folio=getActive();
-  if(!folio){ cont.innerHTML='<div class="empty-hero"><div class="icon">📋</div><h3>Sin folio activo</h3></div>'; return; }
-  const actives=folio.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
-  if(actives.length<2){ cont.innerHTML='<div class="empty-hero"><div class="icon">📋</div><h3>Se necesitan al menos 2 proveedores</h3><p>Captura los datos de al menos 2 proveedores en la pestaña <strong>Captura</strong>.</p></div>'; return; }
-
-  const difs=getDifs(folio);
-  // Find best (lowest total)
-  const totals=actives.map(p=>difs[p.idx]?.total||0);
-  const minTotal=Math.min(...totals.filter(t=>t>0));
-  const bestPriceIdx=totals.indexOf(minTotal);
-
-  function bestCol(vals, lowerBetter=true){
-    const nums=vals.map(v=>parseFloat(v)||0).filter(v=>v>0);
-    if(!nums.length) return Array(vals.length).fill(false);
-    const best=lowerBetter?Math.min(...nums):Math.max(...nums);
-    return vals.map(v=>Math.abs((parseFloat(v)||0)-best)<0.001);
-  }
-
-  const rows=[
-    {label:'# Cot. Proveedor', vals:actives.map(p=>p.numCot||'—'), best:null},
-    {label:'Razón Social', vals:actives.map(p=>p.rz||'—'), best:null},
-    {label:'Marca', vals:actives.map(p=>p.marca||'—'), best:null},
-    {label:'', sep:true, label2:'PRICING'},
-    {label:'P.U. (Precio Unitario)', vals:actives.map(p=>p.pu?fmt(parseFloat(p.pu)):'—'), best:bestCol(actives.map(p=>p.pu)), money:true, lowerBetter:true},
-    {label:'Subtotal', vals:actives.map(p=>difs[p.idx]?fmt(difs[p.idx].sub):'—'), best:bestCol(actives.map(p=>difs[p.idx]?.sub)), money:true, lowerBetter:true},
-    {label:'IVA (16%)', vals:actives.map(p=>difs[p.idx]?fmt(difs[p.idx].iva):'—'), best:null, money:true},
-    {label:'Total', vals:actives.map(p=>difs[p.idx]?fmt(difs[p.idx].total):'—'), best:bestCol(actives.map(p=>difs[p.idx]?.total)), money:true, lowerBetter:true, bold:true},
-    {label:'Diferencia vs Mínimo', vals:actives.map(p=>{const d=difs[p.idx]; if(!d) return '—'; return d.dif===0?'<span class="badge b-green">Menor precio</span>':`<span class="badge b-red">+${fmt(d.dif)}</span>`;}), best:null},
-    {label:'', sep:true, label2:'CONDICIONES'},
-    {label:'Tiempo de Garantía', vals:actives.map(p=>p.garantia||'—'), best:null},
-    {label:'Condiciones de Pago', vals:actives.map(p=>p.condiciones||'—'), best:null},
-    {label:'Tiempo de Entrega', vals:actives.map(p=>p.entrega||'—'), best:null},
-    {label:'Factura', vals:actives.map(p=>p.factura?`<span class="badge ${p.factura==='SI'?'b-green':'b-red'}">${p.factura}</span>`:'—'), best:null},
-    {label:'', sep:true, label2:'AUTORIZACIÓN'},
-    {label:'Observaciones', vals:actives.map(p=>p.observaciones||'—'), best:null},
-  ];
-
-  const ganador=folio.decision.ganador;
-  const ganadorActive=actives.find(p=>p.idx===ganador);
-
-  cont.innerHTML=`
-  ${folio.decision.ganador!==null?`
-    <div class="decision-banner" style="border-color:var(--acc-d);background:var(--acc-bg)">
-      <div>
-        <div class="decision-label">Proveedor Autorizado</div>
-        <div class="decision-value">🏆 ${ganadorActive?.rz||PROV_LABEL[ganador]} <span class="fbadge" style="margin-left:6px">${PROV_LABEL[ganador]}</span></div>
+function genCardDecision(f){
+  const d=f.decision;
+  const st=d.ganador!==null?'<span class="acc-status sts-done">Decisión tomada</span>':'<span class="acc-status sts-empty">Pendiente</span>';
+  return `<div class="acc-card" id="acc-dec">
+    <div class="acc-head" onclick="toggleAcc('acc-dec')">
+      <span>✅</span><span class="acc-title">Decisión y Autorización</span>${st}<span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Selecciona el proveedor ganador y formaliza la autorización:</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        ${f.prov.map((p,i)=>p.active?`<button class="select-btn ${SBCLS[i]}${d.ganador===i?' on':''}" onclick="setGanador(${i})">${p.rz?trunc(p.rz,22):PLBL[i]}</button>`:'').join('')}
       </div>
-      ${folio.decision.autoriza?`<div style="font-size:11px;color:var(--dim)">Autoriza: <strong style="color:var(--text)">${folio.decision.autoriza}</strong></div>`:''}
-      ${folio.decision.estatus?`<span class="badge b-green">${folio.decision.estatus}</span>`:''}
-    </div>`:''}
-
-  <div class="comp-wrap">
-  <table class="comp-table">
-    <thead>
-      <tr>
-        <th class="field-col">Campo</th>
-        ${actives.map(p=>`<th class="${PROV_HCLS[p.idx]}">${ganador===p.idx?'🏆 ':''} ${PROV_LABEL[p.idx]}<br><small style="font-size:10px;font-weight:400;opacity:.8">${truncate(p.rz,20)}</small></th>`).join('')}
-      </tr>
-    </thead>
-    <tbody>
-    ${rows.map((r,ri)=>{
-      if(r.sep) return `<tr class="comp-separator"><td colspan="${actives.length+1}">${r.label2}</td></tr>`;
-      const isBest=r.best||Array(actives.length).fill(false);
-      return `<tr>
-        <td class="field-name">${r.label}</td>
-        ${actives.map((p,ci)=>{
-          const v=r.vals[ci];
-          const best=isBest[ci];
-          const cls=`${PROV_CCLS[p.idx]} ${best?PROV_BCLS[p.idx]:''} ${best?'best':''} ${r.money?'mono-num':''}`;
-          return `<td class="${cls}">${r.bold?`<strong>${v}</strong>`:v}</td>`;
-        }).join('')}
-      </tr>`;
-    }).join('')}
-    </tbody>
-  </table>
-  </div>
-  `;
+      <div class="fg">
+        <div class="form-group"><label>Autoriza</label>${dynSel('d_autoriza','AUTORIZA',d.autoriza)}</div>
+        <div class="form-group"><label>Fecha de Autorización</label><input type="date" id="d_fechaAut" value="${esc(d.fechaAut)}" onchange="autoSave()"/></div>
+        <div class="form-group"><label>Estatus</label>${dynSel('d_estatus','ESTATUS',d.estatus)}</div>
+      </div>
+    </div></div>
+  </div>`;
 }
 
-/* ═══════════════════════════════════════════════════════
-   AI ANALYSIS ENGINE
-═══════════════════════════════════════════════════════ */
-function parseDays(s){ if(!s) return 99; const m=s.match(/(\d+)/); return m?+m[1]:99; }
-function parseMonths(s){ if(!s) return 0; const l=s.toLowerCase(),m=l.match(/(\d+)/); if(!m) return 0; const n=+m[1]; return (l.includes('año')||l.includes('year'))?n*12:n; }
-function payScore(c){ const s=(c||'').toLowerCase(); if(s.includes('60'))return 100; if(s.includes('30'))return 80; if(s.includes('crédito')||s.includes('credito'))return 70; if(s.includes('transfer'))return 60; if(s.includes('contado'))return 40; if(s.includes('anticipo'))return 20; return 50; }
+function toggleAcc(id){ document.getElementById(id)?.classList.toggle('open'); }
 
-function scoreAll(folio){
-  const active=folio.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
+/* ══════════════════════════════════════════
+   STAR RATINGS
+══════════════════════════════════════════ */
+function setRating(pi,dim,val){
+  const f=getActive(); if(!f) return;
+  if(!f.prov[pi].rating) f.prov[pi].rating={global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''};
+  f.prov[pi].rating[dim]=val; ss();
+  restoreStars(pi,dim,'p'+pi+'_r_'+dim);
+}
+function hoverStars(containerId,val){
+  const el=document.getElementById(containerId); if(!el) return;
+  el.querySelectorAll('.star').forEach((s,i)=>{ s.className='star'+(i<val?' on':''); s.textContent=i<val?'★':'☆'; });
+}
+function restoreStars(pi,dim,containerId){
+  const f=getActive(); if(!f) return;
+  const val=(f.prov[pi].rating||{})[dim]||0;
+  const el=document.getElementById(containerId); if(!el) return;
+  el.querySelectorAll('.star').forEach((s,i)=>{ s.className='star'+(i<val?' on':''); s.textContent=i<val?'★':'☆'; });
+  const sc=el.querySelector('.rating-score'); if(sc) sc.textContent=val+'/5';
+}
+
+/* ══════════════════════════════════════════
+   AUTO-SAVE & CALC REFRESH
+══════════════════════════════════════════ */
+function autoSave(){
+  const f=getActive(); if(!f) return;
+  const gMap={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um'};
+  Object.entries(gMap).forEach(([k,id])=>{ const el=document.getElementById(id); if(el) f.general[k]=el.value; });
+  [0,1,2].forEach(i=>{
+    const mp={numCot:'numCot',rz:'rz',marca:'marca',pu:'pu',garantia:'garantia',condiciones:'condiciones',entrega:'entrega',factura:'factura',observaciones:'obs'};
+    Object.entries(mp).forEach(([k,sfx])=>{ const el=document.getElementById('p'+i+'_'+sfx); if(el) f.prov[i][k]=el.value; });
+    f.prov[i].active=!!(f.prov[i].rz||f.prov[i].pu||f.prov[i].numCot);
+    if(!f.prov[i].rating) f.prov[i].rating={global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''};
+    const obsEl=document.getElementById('p'+i+'_robs'); if(obsEl) f.prov[i].rating.obs=obsEl.value;
+  });
+  const da=document.getElementById('d_autoriza'); if(da) f.decision.autoriza=da.value;
+  const dfa=document.getElementById('d_fechaAut'); if(dfa) f.decision.fechaAut=dfa.value;
+  const ds=document.getElementById('d_estatus'); if(ds) f.decision.estatus=ds.value;
+  ss(); renderFolioBar();
+}
+
+function refreshCalcs(){
+  const f=getActive(); if(!f) return;
+  const qty=parseFloat(document.getElementById('g_cantidad')?.value||f.general.cantidad)||0;
+  [0,1,2].forEach(i=>{
+    const puEl=document.getElementById('p'+i+'_pu'); if(!puEl) return;
+    const c=calcProv(puEl.value,qty);
+    const s=document.getElementById('p'+i+'_sub'); if(s) s.value=fmt(c.sub);
+    const iv=document.getElementById('p'+i+'_iva'); if(iv) iv.value=fmt(c.iva);
+    const t=document.getElementById('p'+i+'_tot'); if(t) t.value=fmt(c.tot);
+  });
+}
+
+function saveAll(){
+  autoSave(); renderSidebar(); renderResumen(); renderComp(); renderIA();
+  notify('Folio guardado correctamente'); switchTab('comp');
+}
+
+function setGanador(idx){
+  const f=getActive(); if(!f) return;
+  f.decision.ganador=idx; ss(); renderCapture(); notify(PLBL[idx]+' seleccionado como ganador');
+}
+
+/* ══════════════════════════════════════════
+   AI ANALYSIS ENGINE
+══════════════════════════════════════════ */
+function parseDays(s){ if(!s) return 99; const m=s.match(/(\d+)/); return m?+m[1]:99; }
+function parseMonths(s){ if(!s) return 0; const l=s.toLowerCase(),m=l.match(/(\d+)/); if(!m) return 0; return(l.includes('año')||l.includes('year'))?+m[1]*12:+m[1]; }
+function payScore(c){ const s=(c||'').toLowerCase(); if(s.includes('60'))return 100; if(s.includes('30'))return 80; if(s.includes('créd')||s.includes('cred'))return 70; if(s.includes('trans'))return 60; if(s.includes('cont'))return 40; if(s.includes('antici'))return 20; return 50; }
+function ratingAvg(r){ if(!r) return 0; const v=[r.global,r.precio,r.calidad,r.cumplimiento,r.comunicacion].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; }
+
+function scoreAll(f){
+  const active=f.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
   if(active.length<2) return null;
-  const qty=parseFloat(folio.general.cantidad)||1;
-  const calcs=active.map(p=>calc(p.pu,qty));
-  const totals=calcs.map(c=>c.total);
-  const minT=Math.min(...totals.filter(t=>t>0));
+  const qty=parseFloat(f.general.cantidad)||1;
+  const calcs=active.map(p=>calcProv(p.pu,qty));
+  const tots=calcs.map(c=>c.tot);
+  const minT=Math.min(...tots.filter(t=>t>0));
   const days=active.map(p=>parseDays(p.entrega));
   const minD=Math.min(...days.filter(d=>d<99));
   const months=active.map(p=>parseMonths(p.garantia));
   const maxM=Math.max(...months);
-  const pScores=totals.map(t=>t>0?(minT/t)*40:0);
-  const dScores=days.map(d=>d<99?(minD/d)*20:10);
-  const gScores=months.map(m=>maxM>0?(m/maxM)*15:0);
-  const pPayScores=active.map(p=>payScore(p.condiciones)*0.15);
-  const fScores=active.map(p=>p.factura==='SI'?10:0);
+  const ratings=active.map(p=>ratingAvg(p.rating));
+  const maxR=Math.max(...ratings);
+  // Weights: Precio 33, Entrega 17, Garantía 12, Condiciones 13, Factura 10, Calificación 15 = 100
+  const ps=tots.map(t=>t>0?(minT/t)*33:0);
+  const ds=days.map(d=>d<99?(minD/d)*17:8);
+  const gs=months.map(m=>maxM>0?(m/maxM)*12:0);
+  const cs=active.map(p=>payScore(p.condiciones)*0.13);
+  const fs=active.map(p=>p.factura==='SI'?10:0);
+  const rs=ratings.map(r=>maxR>0?(r/maxR)*15:r>0?(r/5)*15:0);
   return active.map((p,i)=>({
-    prov:p, calc:calcs[i],
-    s:{ precio:Math.round(pScores[i]), entrega:Math.round(dScores[i]), garantia:Math.round(gScores[i]), condPago:Math.round(pPayScores[i]), factura:Math.round(fScores[i]) },
-    total:Math.round(pScores[i]+dScores[i]+gScores[i]+pPayScores[i]+fScores[i])
+    prov:p,calc:calcs[i],ratingAvg:ratings[i],
+    s:{precio:Math.round(ps[i]),entrega:Math.round(ds[i]),garantia:Math.round(gs[i]),condPago:Math.round(cs[i]),factura:Math.round(fs[i]),calificacion:Math.round(rs[i])},
+    total:Math.round(ps[i]+ds[i]+gs[i]+cs[i]+fs[i]+rs[i])
   }));
 }
 
-function buildRecommendation(analysis, folio){
+function buildRec(analysis,f){
   const sorted=[...analysis].sort((a,b)=>b.total-a.total);
-  const W=sorted[0], R=sorted[1];
+  const W=sorted[0],R=sorted[1];
   const diff=W.total-(R?R.total:W.total);
-  const confidence=diff>=15?'alto':diff>=7?'medio':'bajo';
-  const confLabel={'alto':'CONFIANZA ALTA','medio':'CONFIANZA MEDIA','bajo':'CONFIANZA BAJA'};
-  const confCls={'alto':'conf-high','medio':'conf-med','bajo':'conf-low'};
-
-  const wName=W.prov.rz||PROV_LABEL[W.prov.idx];
-  const fmtW=fmt(W.calc.total);
-  let main=`Con base en el análisis ponderado de criterios técnicos y financieros, se recomienda a la Dirección considerar la propuesta de <strong>${wName}</strong> con una calificación de <strong>${W.total}/100 puntos</strong>, equivalente al ${Math.round(W.total)}% del índice de evaluación institucional.`;
-
+  const conf=diff>=15?'alto':diff>=7?'medio':'bajo';
+  const confLbl={alto:'CONFIANZA ALTA',medio:'CONFIANZA MEDIA',bajo:'CONFIANZA BAJA'};
+  const confCls={alto:'ch',medio:'cm',bajo:'cl'};
+  const wName=W.prov.rz||PLBL[W.prov.idx];
+  let main=`Con base en el análisis ponderado de criterios técnicos, financieros y de calificación histórica, se recomienda a la Dirección considerar la propuesta de <strong>${wName}</strong>, con una puntuación de <strong>${W.total}/100 puntos</strong>.`;
   const adv=[];
-  if(W.s.precio>=sorted.reduce((a,b)=>a+b.s.precio,0)/sorted.length*1.05) adv.push(`presenta el menor costo total (${fmtW})`);
+  const tots=sorted.map(a=>a.calc.tot);
+  if(W.calc.tot===Math.min(...tots.filter(t=>t>0))) adv.push('presenta el menor costo total ('+fmt(W.calc.tot)+')');
   if(W.prov.factura==='SI') adv.push('emite comprobante fiscal (CFDI)');
-  const wd=parseDays(W.prov.entrega), minOtherD=Math.min(...sorted.slice(1).map(x=>parseDays(x.prov.entrega)));
-  if(wd<=minOtherD&&wd<99) adv.push(`ofrece el tiempo de entrega más competitivo (${W.prov.entrega||wd+' días'})`);
-  const wm=parseMonths(W.prov.garantia), maxOM=Math.max(...sorted.slice(1).map(x=>parseMonths(x.prov.garantia)));
-  if(wm>=maxOM&&wm>0) adv.push(`respalda con la mayor cobertura de garantía (${W.prov.garantia})`);
+  if(parseDays(W.prov.entrega)===Math.min(...sorted.map(a=>parseDays(a.prov.entrega)).filter(d=>d<99))&&parseDays(W.prov.entrega)<99) adv.push('ofrece el menor tiempo de entrega ('+W.prov.entrega+')');
+  if(W.ratingAvg>0&&W.ratingAvg===Math.max(...sorted.map(a=>a.ratingAvg))) adv.push('tiene la calificación histórica más alta ('+W.ratingAvg.toFixed(1)+'/5)');
   const wc=(W.prov.condiciones||'').toLowerCase();
-  if(wc.includes('crédito')||wc.includes('credito')) adv.push(`facilita el flujo de efectivo mediante crédito (${W.prov.condiciones})`);
-
-  let advText='';
-  if(adv.length) advText=` Adicionalmente, ${adv.slice(0,3).join('; ')}.`;
-
-  let caveat='';
-  if(confidence==='bajo') caveat=' <em>Nota: La diferencia de puntuación entre las opciones es reducida; se sugiere que Dirección evalúe factores cualitativos adicionales como historial de servicio y relación comercial antes de emitir la autorización definitiva.</em>';
-  if(R&&Math.abs(W.calc.total-R.calc.total)<W.calc.total*0.03) caveat+=' Los precios presentan una variación menor al 3%, por lo que pueden considerarse equiparables en términos económicos.';
-
-  return { winner:W, sorted, confidence, confLabel:confLabel[confidence], confCls:confCls[confidence], text:main+advText+caveat };
+  if(wc.includes('créd')||wc.includes('cred')) adv.push('facilita el flujo de efectivo ('+W.prov.condiciones+')');
+  let advTxt=adv.length?' Adicionalmente, '+adv.slice(0,3).join('; ')+'.':'';
+  let cav='';
+  if(conf==='bajo') cav=' <em>Nota: La diferencia de puntuación es reducida; se recomienda evaluar factores cualitativos adicionales antes de emitir la autorización.</em>';
+  return{winner:W,sorted,conf,confLbl:confLbl[conf],confCls:confCls[conf],text:main+advTxt+cav};
 }
 
+/* ══════════════════════════════════════════
+   RENDER IA
+══════════════════════════════════════════ */
 function renderIA(){
   const cont=document.getElementById('iaContent');
-  const folio=getActive();
-  if(!folio){ cont.innerHTML='<div class="empty-hero"><div class="icon">🤖</div><h3>Sin folio activo</h3></div>'; return; }
-  const analysis=scoreAll(folio);
+  const f=getActive();
+  if(!f){ cont.innerHTML='<div class="empty-hero"><div class="icon">🤖</div><h3>Sin folio activo</h3></div>'; return; }
+  const analysis=scoreAll(f);
   if(!analysis){ cont.innerHTML='<div class="empty-hero"><div class="icon">🤖</div><h3>Se necesitan al menos 2 proveedores</h3><p>Captura datos de al menos 2 proveedores para generar el análisis.</p></div>'; return; }
-  const rec=buildRecommendation(analysis,folio);
-  const sorted=rec.sorted;
-
-  const dimLabels=['Precio','T. Entrega','Garantía','Cond. Pago','Factura'];
-  const dimWeights=[40,20,15,15,10];
-
-  cont.innerHTML=`
-  <div class="ai-layout">
+  const rec=buildRec(analysis,f);
+  const dims=[['precio','Precio',33],['entrega','T. Entrega',17],['garantia','Garantía',12],['condPago','Condiciones',13],['factura','Factura',10],['calificacion','Calificación',15]];
+  cont.innerHTML=`<div class="ai-layout">
     <div>
-      <div class="ai-recommendation" style="margin-bottom:14px">
-        <div class="ai-title">Recomendación del Sistema de Análisis Inteligente</div>
+      <div class="ai-card">
+        <div class="ai-title">Recomendación del Motor de Análisis Inteligente</div>
         <div class="winner-card">
           <span class="winner-trophy">🏆</span>
-          <div>
-            <div class="winner-name">${rec.winner.prov.rz||PROV_LABEL[rec.winner.prov.idx]}</div>
-            <div class="winner-score">${PROV_LABEL[rec.winner.prov.idx]} · Puntuación: ${rec.winner.total}/100</div>
-          </div>
+          <div><div class="winner-name">${rec.winner.prov.rz||PLBL[rec.winner.prov.idx]}</div>
+          <div class="winner-score">${PLBL[rec.winner.prov.idx]} · ${rec.winner.total}/100 puntos · Calificación: ${rec.winner.ratingAvg>0?rec.winner.ratingAvg.toFixed(1)+'/5':'Sin calificar'}</div></div>
         </div>
         <div class="winner-text">${rec.text}</div>
-        <div><span class="confidence ${rec.confCls}">● ${rec.confLabel}</span></div>
+        <div><span class="confidence ${rec.confCls}">● ${rec.confLbl}</span></div>
       </div>
-
-      <div class="score-list">
+      <div class="ai-card">
         <div class="ai-title">Evaluación por Dimensión</div>
-        ${dimLabels.map((dim,di)=>`
-          <div style="margin-bottom:14px">
-            <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">${dim} <span style="font-size:10px;color:var(--muted)">(peso: ${dimWeights[di]} pts)</span></div>
-            ${sorted.map(a=>{
-              const sc=[a.s.precio,a.s.entrega,a.s.garantia,a.s.condPago,a.s.factura][di];
-              const max=dimWeights[di];
-              const pct=Math.round((sc/max)*100);
-              const color=PROV_HEX[a.prov.idx];
-              return `<div style="margin-bottom:6px">
-                <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-                  <span style="font-size:11px;color:var(--dim)">${truncate(a.prov.rz||PROV_LABEL[a.prov.idx],28)}</span>
-                  <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${color}">${sc}/${max}</span>
+        ${dims.map(([k,lbl,max])=>`
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;margin-bottom:6px">${lbl} <span style="color:var(--muted);font-size:10px">(peso: ${max} pts)</span></div>
+            ${rec.sorted.map(a=>{
+              const sc=a.s[k], pct=Math.round((sc/max)*100);
+              return `<div style="margin-bottom:5px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+                  <span style="font-size:11px;color:var(--dim)">${trunc(a.prov.rz||PLBL[a.prov.idx],28)}</span>
+                  <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${PHEX[a.prov.idx]}">${sc}/${max}</span>
                 </div>
-                <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-              </div>`;
-            }).join('')}
+                <div class="sbar-bg"><div class="sbar-fill" style="width:${pct}%;background:${PHEX[a.prov.idx]}"></div></div>
+              </div>`;}).join('')}
           </div>`).join('')}
       </div>
-
-      <div style="background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px">
+      <div class="ai-card">
         <div class="ai-title">Tabla de Puntuación Final</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr>
-            <th style="padding:8px;text-align:left;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Proveedor</th>
-            <th style="padding:8px;text-align:center;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Precio</th>
-            <th style="padding:8px;text-align:center;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Entrega</th>
-            <th style="padding:8px;text-align:center;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Garantía</th>
-            <th style="padding:8px;text-align:center;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Condiciones</th>
-            <th style="padding:8px;text-align:center;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Factura</th>
-            <th style="padding:8px;text-align:right;border-bottom:1px solid var(--bd);font-size:10px;color:var(--dim)">Total</th>
-          </tr></thead>
-          <tbody>
-          ${sorted.map((a,rank)=>`
-            <tr style="${rank===0?'background:var(--acc-bg)':''}">
-              <td style="padding:9px 8px;border-bottom:1px solid var(--bd)">
-                ${rank===0?'🏆 ':rank===1?'🥈 ':'🥉 '}
-                <strong style="color:${PROV_HEX[a.prov.idx]}">${truncate(a.prov.rz||PROV_LABEL[a.prov.idx],25)}</strong>
-              </td>
-              <td style="padding:9px 8px;text-align:center;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px">${a.s.precio}/40</td>
-              <td style="padding:9px 8px;text-align:center;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px">${a.s.entrega}/20</td>
-              <td style="padding:9px 8px;text-align:center;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px">${a.s.garantia}/15</td>
-              <td style="padding:9px 8px;text-align:center;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px">${a.s.condPago}/15</td>
-              <td style="padding:9px 8px;text-align:center;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px">${a.s.factura}/10</td>
-              <td style="padding:9px 8px;text-align:right;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${PROV_HEX[a.prov.idx]}">${a.total}/100</td>
-            </tr>`).join('')}
-          </tbody>
+          <thead><tr>${['Proveedor','Precio','Entrega','Garantía','Cond.','Factura','Calif.','TOTAL'].map(h=>`<th style="padding:7px 8px;font-size:10px;color:var(--dim);border-bottom:1px solid var(--bd);text-align:${h==='Proveedor'?'left':'center'}">${h}</th>`).join('')}</tr></thead>
+          <tbody>${rec.sorted.map((a,rank)=>`<tr style="${rank===0?'background:var(--acc-bg)':''}">
+            <td style="padding:8px;border-bottom:1px solid var(--bd)">${rank===0?'🏆 ':rank===1?'🥈 ':'🥉 '}<strong style="color:${PHEX[a.prov.idx]}">${trunc(a.prov.rz||PLBL[a.prov.idx],24)}</strong></td>
+            ${['precio','entrega','garantia','condPago','factura','calificacion'].map(k=>`<td style="padding:8px;text-align:center;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px">${a.s[k]}</td>`).join('')}
+            <td style="padding:8px;text-align:right;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-weight:700;color:${PHEX[a.prov.idx]}">${a.total}</td>
+          </tr>`).join('')}</tbody>
         </table>
-        <div class="disclaimer">Este análisis es generado automáticamente con base en los criterios ingresados. Los pesos asignados son: Precio (40%), Tiempo de Entrega (20%), Garantía (15%), Condiciones de Pago (15%) y Factura (10%). La decisión final queda sujeta al criterio de Dirección General.</div>
+        <div class="disc">Pesos: Precio 33% · Entrega 17% · Garantía 12% · Condiciones 13% · Factura 10% · Calificación 15%. La calificación del proveedor se extrae de las estrellas capturadas en la pestaña Captura. La decisión final queda a criterio de Dirección General.</div>
       </div>
     </div>
-
     <div>
-      <div class="radar-card">
+      <div class="ai-card">
         <div class="ai-title">Comparativo Visual (Radar)</div>
-        <div id="radarChart"></div>
+        <div id="radarChart" style="height:280px"></div>
       </div>
-
-      <div style="background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-top:12px">
+      <div class="ai-card">
         <div class="ai-title">Aplicar Decisión</div>
-        <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Formaliza la selección del proveedor ganador para reflejarla en el Comparativo:</p>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${sorted.map(a=>`
-            <button onclick="setGanadorAndSwitch(${a.prov.idx})"
-              class="select-btn sel${a.prov.idx+1} ${folio.decision.ganador===a.prov.idx?'selected':''}"
-              style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:var(--r)">
-              <span>${sorted.indexOf(a)===0?'🏆 ':''}${truncate(a.prov.rz||PROV_LABEL[a.prov.idx],24)}</span>
-              <span style="font-family:'JetBrains Mono',monospace;font-size:11px">${a.total} pts</span>
-            </button>`).join('')}
+        <p style="font-size:12px;color:var(--dim);margin-bottom:10px">Selecciona el proveedor ganador:</p>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${rec.sorted.map(a=>`<button onclick="setGanadorSwitch(${a.prov.idx})" class="select-btn ${SBCLS[a.prov.idx]}${f.decision.ganador===a.prov.idx?' on':''}">
+            <span>${rec.sorted.indexOf(a)===0?'🏆 ':''}${trunc(a.prov.rz||PLBL[a.prov.idx],24)}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px">${a.total} pts</span>
+          </button>`).join('')}
         </div>
+        ${f.decision.ganador!==null?`<div style="margin-top:10px;padding:10px;background:var(--grn-bg);border:1px solid #2a6e36;border-radius:var(--r);font-size:12px;color:var(--green)">✓ Decisión registrada: <strong>${f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]}</strong></div>`:''}
       </div>
     </div>
   </div>`;
-
-  setTimeout(()=>renderRadarChart(),100);
+  setTimeout(renderRadarChart,100);
 }
 
-let radarChartInst=null;
+let radarInst=null;
 function renderRadarChart(){
-  const el=document.getElementById('radarChart');
-  if(!el) return;
-  const folio=getActive();
-  const analysis=scoreAll(folio);
+  const el=document.getElementById('radarChart'); if(!el) return;
+  const f=getActive(); const analysis=scoreAll(f);
   if(!analysis){ el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Sin datos suficientes</div>'; return; }
-  if(radarChartInst){ radarChartInst.dispose(); }
-  radarChartInst=echarts.init(el);
-  radarChartInst.setOption({
-    backgroundColor:'transparent',
-    color:analysis.map(a=>PROV_HEX[a.prov.idx]),
+  if(radarInst){ radarInst.dispose(); } radarInst=echarts.init(el);
+  radarInst.setOption({
+    backgroundColor:'transparent',color:analysis.map(a=>PHEX[a.prov.idx]),
     tooltip:{trigger:'item',backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3',fontSize:11}},
-    legend:{bottom:0,textStyle:{color:'#8b949e',fontSize:10},data:analysis.map(a=>truncate(a.prov.rz||PROV_LABEL[a.prov.idx],20))},
-    radar:{
-      shape:'polygon',center:['50%','44%'],radius:'62%',startAngle:90,splitNumber:4,
-      axisName:{color:'#8b949e',fontSize:11,fontFamily:'Plus Jakarta Sans'},
+    legend:{bottom:0,textStyle:{color:'#8b949e',fontSize:10},data:analysis.map(a=>trunc(a.prov.rz||PLBL[a.prov.idx],20))},
+    radar:{shape:'polygon',center:['50%','44%'],radius:'60%',startAngle:90,splitNumber:4,
+      axisName:{color:'#8b949e',fontSize:11},
       splitLine:{lineStyle:{color:'#30363d'}},
-      splitArea:{areaStyle:{color:['rgba(48,54,61,.25)','transparent']}},
+      splitArea:{areaStyle:{color:['rgba(48,54,61,.2)','transparent']}},
       axisLine:{lineStyle:{color:'#30363d'}},
-      indicator:[{name:'Precio',max:40},{name:'T. Entrega',max:20},{name:'Garantía',max:15},{name:'Cond. Pago',max:15},{name:'Factura',max:10}]
-    },
-    series:[{
-      type:'radar',
-      data:analysis.map(a=>({
-        name:truncate(a.prov.rz||PROV_LABEL[a.prov.idx],20),
-        value:[a.s.precio,a.s.entrega,a.s.garantia,a.s.condPago,a.s.factura],
-        areaStyle:{opacity:.15},
-        lineStyle:{width:2}
-      }))
+      indicator:[{name:'Precio',max:33},{name:'Entrega',max:17},{name:'Garantía',max:12},{name:'Condiciones',max:13},{name:'Factura',max:10},{name:'Calificación',max:15}]},
+    series:[{type:'radar',data:analysis.map(a=>({name:trunc(a.prov.rz||PLBL[a.prov.idx],20),value:[a.s.precio,a.s.entrega,a.s.garantia,a.s.condPago,a.s.factura,a.s.calificacion],areaStyle:{opacity:.15},lineStyle:{width:2}}))}]
+  });
+}
+
+function setGanadorSwitch(idx){ setGanador(idx); switchTab('comp'); }
+
+/* ══════════════════════════════════════════
+   COMPARISON TABLE
+══════════════════════════════════════════ */
+function renderComp(){
+  const cont=document.getElementById('compContent');
+  const f=getActive();
+  if(!f){ cont.innerHTML='<div class="empty-hero"><div class="icon">📋</div><h3>Sin folio activo</h3></div>'; return; }
+  const act=f.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
+  if(act.length<2){ cont.innerHTML='<div class="empty-hero"><div class="icon">📋</div><h3>Se necesitan al menos 2 proveedores</h3><p>Captura datos en la pestaña <strong>Captura</strong>.</p></div>'; return; }
+  const difs=getDifs(f);
+  function bestIdx(vals,lower){ const ns=vals.map(v=>parseFloat(v)||0).filter(v=>v>0); if(!ns.length) return -1; const b=lower?Math.min(...ns):Math.max(...ns); const i=vals.findIndex(v=>Math.abs((parseFloat(v)||0)-b)<0.01); return i; }
+  const gan=f.decision.ganador;
+  const ganAct=act.find(p=>p.idx===gan);
+  cont.innerHTML=`
+    ${gan!==null?`<div style="background:var(--acc-bg);border:1px solid var(--acc-d);border-radius:var(--rl);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div><div style="font-size:10px;font-weight:700;color:var(--acc-d);text-transform:uppercase;letter-spacing:.5px">Proveedor Autorizado</div>
+      <div style="font-size:15px;font-weight:700">🏆 ${ganAct?.rz||PLBL[gan]} <span class="fbadge">${PLBL[gan]}</span></div></div>
+      ${f.decision.autoriza?`<div style="font-size:11px;color:var(--dim)">Autoriza: <strong style="color:var(--text)">${f.decision.autoriza}</strong></div>`:''}
+      ${f.decision.estatus?`<span class="badge bg">${f.decision.estatus}</span>`:''}
+    </div>`:''}
+    <div class="comp-wrap"><table class="comp-table">
+      <thead><tr>
+        <th class="fc">Campo</th>
+        ${act.map(p=>`<th class="${PHCLS[p.idx]}">${gan===p.idx?'🏆 ':''}${PLBL[p.idx]}<br><small style="font-size:10px;opacity:.8;font-weight:400">${trunc(p.rz,20)}</small></th>`).join('')}
+      </tr></thead>
+      <tbody>
+      ${[
+        {lbl:'# Cot. Proveedor',vals:act.map(p=>p.numCot||'—'),best:null},
+        {lbl:'Razón Social',vals:act.map(p=>p.rz||'—'),best:null},
+        {lbl:'Marca',vals:act.map(p=>p.marca||'—'),best:null},
+        {sep:true,lbl:'PRICING'},
+        {lbl:'P.U. ($)',vals:act.map(p=>p.pu?fmt(parseFloat(p.pu)):'—'),bestLower:true,money:true},
+        {lbl:'Subtotal ($)',vals:act.map(p=>difs[p.idx]?fmt(difs[p.idx].sub):'—'),bestLower:true,money:true},
+        {lbl:'IVA 16% ($)',vals:act.map(p=>difs[p.idx]?fmt(difs[p.idx].iva):'—'),money:true},
+        {lbl:'Total ($)',vals:act.map(p=>difs[p.idx]?fmt(difs[p.idx].tot):'—'),bestLower:true,money:true,bold:true},
+        {lbl:'Diferencia',vals:act.map(p=>{const d=difs[p.idx];if(!d)return'—';return d.dif===0?'<span class="badge bg">Menor precio</span>':`<span class="badge br">+${fmt(d.dif)}</span>`;})},
+        {sep:true,lbl:'CONDICIONES'},
+        {lbl:'Garantía',vals:act.map(p=>p.garantia||'—')},
+        {lbl:'Condiciones',vals:act.map(p=>p.condiciones||'—')},
+        {lbl:'T. Entrega',vals:act.map(p=>p.entrega||'—')},
+        {lbl:'Factura',vals:act.map(p=>p.factura?`<span class="badge ${p.factura==='SI'?'bg':'br'}">${p.factura}</span>`:'—')},
+        {sep:true,lbl:'CALIFICACIÓN'},
+        {lbl:'Calificación Global',vals:act.map(p=>{const g=(p.rating||{}).global||0;return[1,2,3,4,5].map(s=>`<span style="color:${s<=g?'var(--acc)':'var(--muted)'}">${s<=g?'★':'☆'}</span>`).join('')+'<span style="font-size:10px;color:var(--dim);margin-left:4px">'+g+'/5</span>';})},
+        {lbl:'Observaciones',vals:act.map(p=>p.observaciones||'—')},
+      ].map(r=>{
+        if(r.sep) return`<tr class="csep"><td colspan="${act.length+1}">${r.lbl}</td></tr>`;
+        const bi=r.bestLower!==undefined?bestIdx(act.map((_,ci)=>{const d=difs[act[ci].idx];if(r.lbl.includes('P.U')) return act[ci].pu;if(r.lbl.includes('Subtotal')) return d?.sub;if(r.lbl.includes('IVA')) return null;if(r.lbl.includes('Total')) return d?.tot;return null;}),r.bestLower):-1;
+        return`<tr><td class="fn">${r.lbl}</td>${act.map((p,ci)=>{
+          const v=r.vals[ci]; const isBest=bi===ci;
+          const cls=`${PCCLS[p.idx]}${isBest?' '+PBCLS[p.idx]+' best':''} ${r.money?'mn':''}`;
+          return`<td class="${cls}">${r.bold?`<strong>${v}</strong>`:v}</td>`;}).join('')}</tr>`;
+      }).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+/* ══════════════════════════════════════════
+   RESUMEN + CHARTS
+══════════════════════════════════════════ */
+function renderResumen(){
+  const cont=document.getElementById('resumenContent');
+  if(!folios.length){ cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos</h3><p>Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p></div>'; return; }
+  const total=folios.length;
+  const aut=folios.filter(f=>f.decision.estatus==='AUTORIZADO').length;
+  const pend=folios.filter(f=>!f.decision.estatus||f.decision.estatus==='PENDIENTE'||f.decision.estatus==='EN PROCESO').length;
+  const allTots=folios.flatMap(f=>getDifs(f).filter(Boolean).map(c=>c.tot));
+  const grandTot=allTots.reduce((a,b)=>a+b,0);
+  const allDifs=folios.flatMap(f=>getDifs(f).filter(Boolean).filter(c=>c.dif>0).map(c=>c.dif));
+  const ahorro=allDifs.length?Math.max(...allDifs):0;
+  cont.innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi acc"><div class="kpi-label">Folios Activos</div><div class="kpi-val">${total}</div><div class="kpi-sub">Comparativos registrados</div></div>
+      <div class="kpi green"><div class="kpi-label">Autorizados</div><div class="kpi-val">${aut}</div><div class="kpi-sub">Con decisión emitida</div></div>
+      <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val">${pend}</div><div class="kpi-sub">Sin decisión / en proceso</div></div>
+      <div class="kpi blue"><div class="kpi-label">Valor Total</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub">Suma de todos los comparativos</div></div>
+      <div class="kpi acc"><div class="kpi-label">Ahorro Máx. Detectado</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Diferencia mayor entre opciones</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">Pipeline de Compras por Estatus</div><div id="ch-funnel" style="height:240px"></div></div>
+      <div class="chart-card">
+        <div class="chart-title">Proveedores Competitivos por Categoría
+          <div class="chart-filter">
+            <button class="cf-btn on" id="cf-all" onclick="setCatFilter('all')">Todos</button>
+            <button class="cf-btn" id="cf-ref" onclick="setCatFilter('REFACCIONES')">Refacciones</button>
+            <button class="cf-btn" id="cf-srv" onclick="setCatFilter('SERVICIO')">Servicio</button>
+          </div>
+        </div>
+        <div id="ch-spider" style="height:240px"></div>
+      </div>
+      <div class="chart-card"><div class="chart-title">Gasto por Departamento</div><div id="ch-dept" style="height:240px"></div></div>
+      <div class="chart-card"><div class="chart-title">Proveedor más Seleccionado</div><div id="ch-prov" style="height:240px"></div></div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden">
+      <div style="padding:10px 16px;font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--bd)">Todos los Folios</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>${['Folio','Descripción','Tipo','Provs.','Mejor Precio','Estatus','Acción'].map(h=>`<th style="padding:8px 14px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);text-align:${h==='Acción'?'center':h==='Mejor Precio'?'right':'left'}">${h}</th>`).join('')}</tr></thead>
+        <tbody>${folios.map(f=>{
+          const actN=f.prov.filter(p=>p.active).length;
+          const d=getDifs(f); const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
+          const sm={AUTORIZADO:'bg',CANCELADO:'br',PENDIENTE:'by','EN PROCESO':'bb'};
+          const st=f.decision.estatus;
+          return`<tr>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2)">${f.name}</span></td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd);color:var(--dim);font-size:11px">${trunc(f.general.descripcion||f.desc||'—',38)}</td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd)">${f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:'—'}</td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:center"><span class="acc-status ${actN===3?'sts-done':actN>0?'sts-partial':'sts-empty'}">${actN}/3</span></td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">${mn>0?fmt(mn):'—'}</td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:center">${st?`<span class="badge ${sm[st]||'bx'}">${st}</span>`:'<span class="badge bx">Sin definir</span>'}</td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:center"><button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}')">Abrir</button></td>
+          </tr>`;}).join('')}</tbody>
+      </table>
+    </div>`;
+  setTimeout(renderCharts,150);
+}
+
+let catFilter='all';
+function setCatFilter(f){
+  catFilter=f;
+  ['all','ref','srv'].forEach(k=>document.getElementById('cf-'+k)?.classList.remove('on'));
+  document.getElementById('cf-'+(f==='all'?'all':f==='REFACCIONES'?'ref':'srv'))?.classList.add('on');
+  renderChartSpider();
+}
+
+function renderCharts(){ renderChartFunnel(); renderChartSpider(); renderChartDept(); renderChartProv(); }
+
+function initChart(id){
+  const el=document.getElementById(id); if(!el) return null;
+  if(CHARTS[id]){ CHARTS[id].dispose(); }
+  CHARTS[id]=echarts.init(el); return CHARTS[id];
+}
+
+const EC_THEME={backgroundColor:'transparent',textStyle:{color:'#8b949e',fontFamily:'Plus Jakarta Sans'},tooltip:{backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3',fontSize:11}}};
+
+function renderChartFunnel(){
+  const ch=initChart('ch-funnel'); if(!ch) return;
+  const stagesOrder=['EN PROCESO','PENDIENTE','AUTORIZADO','CANCELADO'];
+  const counts={};
+  folios.forEach(f=>{ const s=f.decision.estatus||'Sin definir'; counts[s]=(counts[s]||0)+1; });
+  const data=Object.entries(counts).sort((a,b)=>{const ia=stagesOrder.indexOf(a[0]),ib=stagesOrder.indexOf(b[0]);return(ia<0?99:ia)-(ib<0?99:ib);}).map(([name,value])=>({name,value}));
+  const colorMap={'AUTORIZADO':'#3fb950','PENDIENTE':'#d4a843','EN PROCESO':'#79c0ff','CANCELADO':'#f85149','Sin definir':'#484f58'};
+  ch.setOption({...EC_THEME,
+    series:[{type:'funnel',left:'10%',top:20,bottom:30,width:'80%',min:0,max:Math.max(...data.map(d=>d.value),1)+1,
+      minSize:'30%',maxSize:'100%',sort:'descending',gap:4,
+      label:{show:true,position:'inside',formatter:'{b}: {c}',fontSize:11,color:'#e6edf3',fontFamily:'Plus Jakarta Sans'},
+      itemStyle:{borderWidth:0},
+      data:data.map(d=>({name:d.name,value:d.value,itemStyle:{color:colorMap[d.name]||'#484f58'}}))
     }]
   });
 }
 
-function setGanadorAndSwitch(idx){
-  setGanador(idx);
-  switchTab('comp');
+function renderChartSpider(){
+  const ch=initChart('ch-spider'); if(!ch) return;
+  const filter=catFilter==='all'?null:catFilter;
+  const provScores={};
+  folios.filter(f=>!filter||f.general.tipo===filter).forEach(f=>{
+    const a=scoreAll(f); if(!a) return;
+    a.forEach(x=>{
+      const nm=x.prov.rz||PLBL[x.prov.idx];
+      if(!provScores[nm]) provScores[nm]={p:0,e:0,g:0,c:0,f:0,r:0,n:0};
+      provScores[nm].p+=x.s.precio; provScores[nm].e+=x.s.entrega; provScores[nm].g+=x.s.garantia;
+      provScores[nm].c+=x.s.condPago; provScores[nm].f+=x.s.factura; provScores[nm].r+=x.s.calificacion;
+      provScores[nm].n++;
+    });
+  });
+  const entries=Object.entries(provScores).map(([nm,s])=>({nm:trunc(nm,20),tot:(s.p+s.e+s.g+s.c+s.f+s.r)/s.n,vals:[s.p/s.n,s.e/s.n,s.g/s.n,s.c/s.n,s.f/s.n,s.r/s.n].map(v=>+v.toFixed(1))})).sort((a,b)=>b.tot-a.tot).slice(0,4);
+  if(!entries.length){ ch.setOption({...EC_THEME,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin datos suficientes',fill:'#484f58',fontSize:12}}]}); return; }
+  const colors=['#79c0ff','#bc8cff','#f0883e','#3fb950'];
+  ch.setOption({...EC_THEME,color:colors,
+    legend:{bottom:0,textStyle:{color:'#8b949e',fontSize:10},data:entries.map(e=>e.nm)},
+    radar:{shape:'polygon',center:['50%','44%'],radius:'58%',splitNumber:3,axisName:{color:'#8b949e',fontSize:10},
+      splitLine:{lineStyle:{color:'#30363d'}},splitArea:{areaStyle:{color:['rgba(48,54,61,.2)','transparent']}},
+      axisLine:{lineStyle:{color:'#30363d'}},
+      indicator:[{name:'Precio',max:33},{name:'Entrega',max:17},{name:'Garantía',max:12},{name:'Cond.',max:13},{name:'Factura',max:10},{name:'Calific.',max:15}]},
+    series:[{type:'radar',data:entries.map((e,i)=>({name:e.nm,value:e.vals,areaStyle:{opacity:.12},lineStyle:{width:2,color:colors[i]}}))}]
+  });
 }
 
-/* ═══════════════════════════════════════════════════════
+function renderChartDept(){
+  const ch=initChart('ch-dept'); if(!ch) return;
+  const deptTot={};
+  folios.forEach(f=>{ const dept=f.general.depto||'Sin depto'; getDifs(f).forEach(d=>{ if(d&&d.tot>0){ deptTot[dept]=(deptTot[dept]||0)+d.tot; } }); });
+  const sorted=Object.entries(deptTot).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!sorted.length){ ch.setOption({...EC_THEME,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin datos',fill:'#484f58',fontSize:12}}]}); return; }
+  ch.setOption({...EC_THEME,
+    grid:{left:80,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:'#30363d'}},axisLabel:{color:'#8b949e',fontSize:9,formatter:v=>'$'+v.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:0})}},
+    yAxis:{type:'category',data:sorted.map(d=>d[0]).reverse(),axisLabel:{color:'#8b949e',fontSize:10},axisLine:{show:false}},
+    series:[{type:'bar',data:sorted.map(d=>d[1]).reverse(),barMaxWidth:18,
+      itemStyle:{borderRadius:[0,3,3,0],color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#1a4d26'},{offset:1,color:'#3fb950'}]}},
+      label:{show:true,position:'right',formatter:p=>'$'+p.value.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:1}),color:'#8b949e',fontSize:9}}]
+  });
+}
+
+function renderChartProv(){
+  const ch=initChart('ch-prov'); if(!ch) return;
+  const wins={};
+  folios.forEach(f=>{ if(f.decision.ganador!==null){ const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]; wins[nm]=(wins[nm]||0)+1; } });
+  const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!sorted.length){ ch.setOption({...EC_THEME,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin decisiones registradas',fill:'#484f58',fontSize:12}}]}); return; }
+  const colors=['#d4a843','#79c0ff','#3fb950','#bc8cff','#f0883e','#f85149','#5eca80','#eac96d'];
+  ch.setOption({...EC_THEME,
+    grid:{left:20,right:20,top:10,bottom:60},
+    xAxis:{type:'category',data:sorted.map(d=>trunc(d[0],14)),axisLabel:{color:'#8b949e',fontSize:9,rotate:15,interval:0},axisLine:{show:false}},
+    yAxis:{type:'value',axisLabel:{color:'#8b949e',fontSize:9},splitLine:{lineStyle:{color:'#30363d'}},axisLine:{show:false}},
+    series:[{type:'bar',data:sorted.map((d,i)=>({value:d[1],itemStyle:{color:colors[i%colors.length],borderRadius:[3,3,0,0]}})),barMaxWidth:28,
+      label:{show:true,position:'top',formatter:'{c}',color:'#8b949e',fontSize:10}}]
+  });
+}
+
+/* ══════════════════════════════════════════
    EXCEL EXPORT
-═══════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function exportExcel(){
   if(!folios.length){ notify('Sin folios para exportar',true); return; }
   const wb=XLSX.utils.book_new();
-  folios.forEach(folio=>{
-    const g=folio.general;
-    const difs=getDifs(folio);
-    const active=folio.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
-
-    const data=[];
-    data.push(['COMPARATIVO DE PROVEEDORES — IES INTERNACIONAL']);
-    data.push(['Folio:',folio.name,'Fecha:',folio.createdAt,'Gestor:',g.gestor||'—']);
-    data.push(['Descripción:',g.descripcion||'—']);
-    data.push(['Justificación:',g.justificacion||'—']);
-    data.push(['Zona:',g.zona,'Unidad:',g.unidad,'Departamento:',g.depto]);
-    data.push(['Cantidad:',g.cantidad,'U.M.:',g.um,'COT Interna:',g.cotInterna]);
-    data.push([]);
-    data.push(['','...COMPARATIVO DE OPCIONES...']);
-    data.push(['CAMPO',...active.map(p=>p.rz||PROV_LABEL[p.idx])]);
-    const rows=[
-      ['# Cot. Proveedor',...active.map(p=>p.numCot||'—')],
-      ['Marca',...active.map(p=>p.marca||'—')],
-      ['P.U. ($)',...active.map(p=>parseFloat(p.pu)||0)],
-      ['Subtotal ($)',...active.map(p=>difs[p.idx]?.sub||0)],
-      ['IVA 16% ($)',...active.map(p=>difs[p.idx]?.iva||0)],
-      ['Total ($)',...active.map(p=>difs[p.idx]?.total||0)],
-      ['Diferencia vs Mínimo',...active.map(p=>difs[p.idx]?.dif||0)],
-      ['Garantía',...active.map(p=>p.garantia||'—')],
-      ['Condiciones',...active.map(p=>p.condiciones||'—')],
-      ['Tiempo Entrega',...active.map(p=>p.entrega||'—')],
-      ['Factura',...active.map(p=>p.factura||'—')],
-      ['Observaciones',...active.map(p=>p.observaciones||'—')],
+  folios.forEach(f=>{
+    const g=f.general; const d=getDifs(f);
+    const act=f.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
+    const data=[
+      ['COMPARATIVO DE PROVEEDORES — IES INTERNACIONAL'],
+      ['Folio:',f.name,'Tipo:',g.tipo||'—','Fecha:',f.createdAt,'Gestor:',g.gestor||'—'],
+      ['Descripción:',g.descripcion||'—'],['Justificación:',g.justificacion||'—'],
+      ['Zona:',g.zona,'Unidad:',g.unidad,'Depto:',g.depto],
+      ['Cantidad:',g.cantidad,'U.M:',g.um,'COT:',g.cotInterna,'SOLPED:',g.solped],[],
+      ['COMPARATIVO DE OPCIONES'],
+      ['CAMPO',...act.map(p=>p.rz||PLBL[p.idx])],
+      ['# Cot.',...act.map(p=>p.numCot||'—')],
+      ['Marca',...act.map(p=>p.marca||'—')],
+      ['P.U. ($)',...act.map(p=>parseFloat(p.pu)||0)],
+      ['Subtotal ($)',...act.map(p=>d[p.idx]?.sub||0)],
+      ['IVA 16% ($)',...act.map(p=>d[p.idx]?.iva||0)],
+      ['Total ($)',...act.map(p=>d[p.idx]?.tot||0)],
+      ['Diferencia',...act.map(p=>d[p.idx]?.dif||0)],
+      ['Garantía',...act.map(p=>p.garantia||'—')],
+      ['Condiciones',...act.map(p=>p.condiciones||'—')],
+      ['T. Entrega',...act.map(p=>p.entrega||'—')],
+      ['Factura',...act.map(p=>p.factura||'—')],
+      ['Observaciones',...act.map(p=>p.observaciones||'—')],[],
+      ['CALIFICACIÓN DEL PROVEEDOR'],
+      ['Dimensión',...act.map(p=>p.rz||PLBL[p.idx])],
+      ['Global',...act.map(p=>(p.rating||{}).global||0)],
+      ['Precio',...act.map(p=>(p.rating||{}).precio||0)],
+      ['Calidad',...act.map(p=>(p.rating||{}).calidad||0)],
+      ['Cumplimiento',...act.map(p=>(p.rating||{}).cumplimiento||0)],
+      ['Comunicación',...act.map(p=>(p.rating||{}).comunicacion||0)],
+      ['Obs. Historial',...act.map(p=>(p.rating||{}).obs||'—')],[],
+      ['DECISIÓN Y AUTORIZACIÓN'],
+      ['Proveedor Ganador:',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'Sin definir'],
+      ['Autoriza:',f.decision.autoriza||'—','Fecha:',f.decision.fechaAut||'—'],
+      ['Estatus:',f.decision.estatus||'Sin definir'],
     ];
-    rows.forEach(r=>data.push(r));
-    data.push([]);
-    data.push(['DECISIÓN Y AUTORIZACIÓN']);
-    data.push(['Proveedor Ganador:',folio.decision.ganador!==null?(folio.prov[folio.decision.ganador]?.rz||PROV_LABEL[folio.decision.ganador]):'Sin definir']);
-    data.push(['Autoriza:',folio.decision.autoriza||'—','Fecha:',folio.decision.fechaAut||'—']);
-    data.push(['Estatus:',folio.decision.estatus||'Sin definir']);
-
-    // AI Analysis if available
-    const analysis=scoreAll(folio);
+    const analysis=scoreAll(f);
     if(analysis){
-      data.push([]);
-      data.push(['ANÁLISIS IA — PUNTUACIÓN PONDERADA']);
-      data.push(['Proveedor','Precio (40)','Entrega (20)','Garantía (15)','Cond. Pago (15)','Factura (10)','TOTAL (100)']);
-      [...analysis].sort((a,b)=>b.total-a.total).forEach(a=>data.push([a.prov.rz||PROV_LABEL[a.prov.idx],a.s.precio,a.s.entrega,a.s.garantia,a.s.condPago,a.s.factura,a.total]));
+      data.push([],['ANÁLISIS IA — PUNTUACIÓN PONDERADA'],['Proveedor','Precio(33)','Entrega(17)','Garantía(12)','Cond.(13)','Factura(10)','Calif.(15)','TOTAL(100)']);
+      [...analysis].sort((a,b)=>b.total-a.total).forEach(a=>data.push([a.prov.rz||PLBL[a.prov.idx],a.s.precio,a.s.entrega,a.s.garantia,a.s.condPago,a.s.factura,a.s.calificacion,a.total]));
     }
-
     const ws=XLSX.utils.aoa_to_sheet(data);
     ws['!cols']=[{wch:28},{wch:32},{wch:32},{wch:32}];
-    const sn=folio.name.replace(/[:\\/?*\[\]]/g,'').slice(0,31);
-    XLSX.utils.book_append_sheet(wb,ws,sn);
+    XLSX.utils.book_append_sheet(wb,ws,f.name.replace(/[:\\/?*\[\]]/g,'').slice(0,31));
   });
-
-  // Summary sheet
-  const sum=[['FOLIO','DESCRIPCIÓN','PROVEEDORES','MEJOR PRECIO','GANADOR','ESTATUS','AUTORIZA'],...folios.map(f=>{
-    const difs=getDifs(f);const mn=Math.min(...difs.filter(Boolean).filter(c=>c.total>0).map(c=>c.total)||[0]);
-    return [f.name,f.general.descripcion||f.desc||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PROV_LABEL[f.decision.ganador]):'Sin definir',f.decision.estatus||'Sin definir',f.decision.autoriza||'—'];
+  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','GANADOR','ESTATUS','AUTORIZA'],...folios.map(f=>{
+    const d=getDifs(f); const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
+    return[f.name,f.general.descripcion||f.desc||'—',f.general.tipo||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'—',f.decision.estatus||'—',f.decision.autoriza||'—'];
   })];
   const wss=XLSX.utils.aoa_to_sheet(sum);
-  wss['!cols']=[{wch:20},{wch:35},{wch:14},{wch:16},{wch:35},{wch:14},{wch:22}];
+  wss['!cols']=[{wch:20},{wch:35},{wch:14},{wch:8},{wch:16},{wch:35},{wch:14},{wch:22}];
   XLSX.utils.book_append_sheet(wb,wss,'RESUMEN GENERAL');
-  XLSX.writeFile(wb,`Comparativo_Proveedores_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.writeFile(wb,'Comparativo_Proveedores_'+new Date().toISOString().slice(0,10)+'.xlsx');
   notify('Excel exportado correctamente');
 }
 
-/* ═══════════════════════════════════════════════════════
-   NOTIFICATIONS
-═══════════════════════════════════════════════════════ */
-let ntimer;
+/* ══════════════════════════════════════════
+   NOTIFICATIONS & INIT
+══════════════════════════════════════════ */
+let nt;
 function notify(msg,err=false){
   const el=document.getElementById('notif');
-  el.textContent=(err?'⚠ ':'✓ ')+msg;
-  el.className='notif show'+(err?' err':'');
-  clearTimeout(ntimer); ntimer=setTimeout(()=>el.classList.remove('show'),3200);
+  el.textContent=(err?'⚠ ':'✓ ')+msg; el.className='notif show'+(err?' err':'');
+  clearTimeout(nt); nt=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
-/* ═══════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════ */
 (function init(){
   folios=ls();
   if(!folios.length){ folios.push(mkFolio('COMP-2026-001','Primer comparativo')); ss(); }
