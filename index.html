@@ -765,7 +765,11 @@ const CDN={
   cloud:'djzjqbbq3',
   preset:'ies_comparativos',
   folder:'ies-comparativos',
-  get url(){return`https://api.cloudinary.com/v1_1/${this.cloud}/auto/upload`;}
+  uploadUrl(type){
+    // Images → /image/upload, everything else → /raw/upload
+    if(type&&type.startsWith('image/'))return`https://api.cloudinary.com/v1_1/${this.cloud}/image/upload`;
+    return`https://api.cloudinary.com/v1_1/${this.cloud}/raw/upload`;
+  }
 };
 
 function genAdjuntos(f){
@@ -865,9 +869,14 @@ async function handleAdjFiles(files){
       fd.append('file',file);
       fd.append('upload_preset',CDN.preset);
       fd.append('folder',CDN.folder+'/'+f.name.replace(/[^a-zA-Z0-9-_]/g,'_'));
-      fd.append('public_id',genId()+'_'+file.name.replace(/[^a-zA-Z0-9.-]/g,'_'));
+      // For non-images: strip extension from public_id to avoid duplication (Cloudinary adds it)
+      const isImage=file.type&&file.type.startsWith('image/');
+      const baseName=isImage
+        ? genId()+'_'+file.name.replace(/[^a-zA-Z0-9.-]/g,'_')
+        : genId()+'_'+file.name.replace(/\.[^/.]+$/,'').replace(/[^a-zA-Z0-9-_]/g,'_');
+      fd.append('public_id',baseName);
 
-      const resp=await fetch(CDN.url,{method:'POST',body:fd});
+      const resp=await fetch(CDN.uploadUrl(file.type),{method:'POST',body:fd});
       if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||'Error '+resp.status);}
       const data=await resp.json();
 
@@ -919,8 +928,9 @@ function deleteAdj(i){
 function downloadAdj(i){
   const f=getActive();if(!f||!f.adjuntos)return;
   const adj=f.adjuntos[i];if(!adj||!adj.url)return;
-  // Force download via Cloudinary fl_attachment flag
-  const dlUrl=adj.url.replace('/upload/','/upload/fl_attachment/');
+  // fl_attachment only works for image resources; for raw files use direct URL
+  const isImage=adj.type&&adj.type.startsWith('image/');
+  const dlUrl=isImage?adj.url.replace('/upload/','/upload/fl_attachment/'):adj.url;
   const a=document.createElement('a');a.href=dlUrl;a.download=adj.name;a.target='_blank';a.click();
   notify(`Descargando "${adj.name}"`);
 }
