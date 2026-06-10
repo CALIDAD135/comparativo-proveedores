@@ -25,6 +25,37 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;height:100vh;overflow:hidden}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+
+/* ROLES & LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rxl);padding:36px 40px;width:360px;text-align:center}
+.login-logo{font-size:13px;font-weight:800;letter-spacing:1px;color:var(--acc);margin-bottom:4px}
+.login-title{font-size:20px;font-weight:800;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--dim);margin-bottom:28px}
+.role-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.role-btn{padding:13px 16px;border-radius:var(--rl);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--bd2);background:var(--surf2);color:var(--text);font-family:inherit;transition:.15s;text-align:left;display:flex;align-items:center;gap:10px}
+.role-btn:hover{border-color:var(--acc);background:var(--acc-bg);color:var(--acc2)}
+.role-btn .rb-icon{font-size:20px;flex-shrink:0}
+.role-btn .rb-name{font-size:13px;font-weight:700}
+.role-btn .rb-desc{font-size:10px;color:var(--muted);font-weight:400;margin-top:1px}
+.pin-screen{display:none;flex-direction:column;align-items:center;gap:16px}
+.pin-screen.show{display:flex}
+.role-select-screen{display:flex;flex-direction:column;align-items:center;gap:0}
+.pin-display{display:flex;gap:8px;margin:4px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--bd2);border:2px solid var(--bd2);transition:.15s}
+.pin-dot.filled{background:var(--acc);border-color:var(--acc)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:200px}
+.pin-key{padding:14px;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;border:1px solid var(--bd2);background:var(--surf2);color:var(--text);font-family:'JetBrains Mono',monospace;transition:.15s;text-align:center}
+.pin-key:hover{background:var(--surf3);border-color:var(--acc)}
+.pin-key:active{transform:scale(.95)}
+.pin-error{font-size:12px;color:var(--red);min-height:18px;margin-top:-6px}
+.pin-back{font-size:11px;color:var(--dim);cursor:pointer;margin-top:4px;text-decoration:underline}
+.role-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px}
+.role-coord{background:#1a2d10;color:#5eca80;border:1px solid #2a4a1a}
+.role-aux{background:var(--acc-bg);color:var(--acc2);border:1px solid var(--acc-d)}
+.role-ger{background:var(--blu-bg);color:var(--blue);border:1px solid var(--p1bd)}
+.readonly-overlay{pointer-events:none;opacity:.6;user-select:none}
+
 /* HEADER */
 header{height:54px;background:var(--surf);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:fixed;top:0;width:100%;z-index:100}
 .logo{display:flex;align-items:center;gap:10px}
@@ -252,6 +283,53 @@ select option{background:var(--surf2)}
 </style>
 </head>
 <body>
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">IES INTERNACIONAL</div>
+    <div class="login-title">Comparativo de Proveedores</div>
+    <div class="login-sub">Activos Fijos · Control Vehicular · ITTSA</div>
+    <div class="role-select-screen" id="roleSelectScreen">
+      <div class="role-btns">
+        <button class="role-btn" onclick="selectRole('COORDINADOR')">
+          <span class="rb-icon">👑</span>
+          <div><div class="rb-name">Coordinador Activos</div><div class="rb-desc">Acceso completo · Administrador</div></div>
+        </button>
+        <button class="role-btn" onclick="selectRole('AUXILIAR')">
+          <span class="rb-icon">📋</span>
+          <div><div class="rb-name">Auxiliar Activos</div><div class="rb-desc">Captura y consulta · Sin eliminar folios</div></div>
+        </button>
+        <button class="role-btn" onclick="selectRole('GERENCIA')">
+          <span class="rb-icon">🏢</span>
+          <div><div class="rb-name">Gerencia Operaciones</div><div class="rb-desc">Visualización y autorización</div></div>
+        </button>
+      </div>
+    </div>
+    <div class="pin-screen" id="pinScreen">
+      <div style="font-size:13px;font-weight:700;color:var(--text)" id="pinRoleLabel">Ingresa tu PIN</div>
+      <div class="pin-display" id="pinDisplay">
+        <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-error" id="pinError"></div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key" style="visibility:hidden">-</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key" onclick="pinKey('DEL')">⌫</button>
+      </div>
+      <div class="pin-back" onclick="backToRoles()">← Cambiar rol</div>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="logo">
     <span class="logo-badge">IES</span>
@@ -261,6 +339,7 @@ select option{background:var(--surf2)}
     <span id="syncIndicator" title="Estado de sincronización" style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer" onclick="openCloudModal()">
       <span class="sync-dot sync-off" id="syncDot"></span><span id="syncLabel">Sin conf.</span>
     </span>
+    <span id="roleBadge" class="role-badge role-coord" style="cursor:pointer" onclick="logoutRole()">👑 Coordinador <span style="opacity:.6;font-size:9px">salir</span></span>
     <button class="btn btn-blue btn-sm" id="hdrSyncBtn" onclick="quickSync()" title="Sincronizar con la nube">☁ Nube</button>
     <button class="btn btn-acc btn-sm" onclick="openFolioModal()">＋ Nuevo Folio</button>
     <button class="btn btn-green btn-sm" onclick="exportExcel()">⬇ Exportar Excel</button>
@@ -610,7 +689,7 @@ function confirmFolio(){
   closeFolioModal();selectFolio(f.id);notify('Folio "'+name+'" creado');
 }
 function selectFolio(id){activeId=id;renderSidebar();renderFolioBar();renderCapture();renderComp();renderIA();switchTab('captura');}
-function deleteFolioRequest(id){pendingDel=id;document.getElementById('adminPass').value='';document.getElementById('adminError').textContent='';document.getElementById('adminModal').classList.add('open');setTimeout(()=>document.getElementById('adminPass').focus(),100);}
+function deleteFolioRequest(id){if(!can('deleteFolio')){notify('Sin permiso para eliminar folios',true);return;}pendingDel=id;document.getElementById('adminPass').value='';document.getElementById('adminError').textContent='';document.getElementById('adminModal').classList.add('open');setTimeout(()=>document.getElementById('adminPass').focus(),100);}
 function closeAdminModal(){document.getElementById('adminModal').classList.remove('open');pendingDel=null;}
 function confirmAdmin(){
   if(document.getElementById('adminPass').value!==ADMIN_PASS){document.getElementById('adminError').textContent='Contraseña incorrecta';return;}
@@ -676,7 +755,7 @@ function renderSidebar(){
     <span class="folio-dot"></span>
     <div class="folio-info"><div class="folio-name" title="${esc(f.name)}">${f.name}</div>
     <div class="folio-meta">${f.prov.filter(p=>p.active).length} prov · ${f.general.tipo||'Sin tipo'}</div></div>
-    <span class="folio-gear" onclick="event.stopPropagation();deleteFolioRequest('${f.id}')" title="Eliminar (Admin)">⚙</span>
+    ${currentRole==='COORDINADOR'?`<span class="folio-gear" onclick="event.stopPropagation();deleteFolioRequest('${f.id}')" title="Eliminar (Admin)">⚙</span>`:''}
   </div>`).join('');
 }
 function renderFolioBar(){
@@ -713,15 +792,15 @@ function renderCapture(){
   const acc=document.getElementById('captureAccordion');const f=getActive();
   if(!f){acc.innerHTML='<div class="empty-hero"><div class="icon">📂</div><h3>Sin folio activo</h3><p>Selecciona o crea un folio.</p></div>';return;}
   const g=f.general;const gFilled=g.gestor||g.descripcion||g.cantidad;
-  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genCD(f),genAdjuntos(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
+  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCD(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
     <button class="btn btn-ghost" onclick="switchTab('comp')">Ver Comparativo →</button>
-    <button class="btn btn-acc" onclick="saveAll()">💾 Guardar Todo</button>
+    ${can('capture')?`<button class="btn btn-acc" onclick="saveAll()">💾 Guardar Todo</button>`:''}
   </div>`;
   refreshCalcs();
 }
 function genCG(f,g,gFilled){
   const st=gFilled?'<span class="acc-status sts-done">Completado</span>':'<span class="acc-status sts-empty">Pendiente</span>';
-  return`<div class="acc-card open" id="acc-gen">
+  const genRO=!can('capture');return`<div class="acc-card open" id="acc-gen">
     <div class="acc-head" onclick="toggleAcc('acc-gen')"><span>📋</span><span class="acc-title">Información General</span>${st}<span class="acc-arrow">▼</span></div>
     <div class="acc-body"><div class="acc-inner"><div class="fg">
       <div class="form-group"><label>Gestor</label>${dynSel('g_gestor','GESTOR',g.gestor)}</div>
@@ -782,17 +861,21 @@ function genCP(f,i){
 }
 function genCD(f){
   const d=f.decision;const st=d.ganador!==null?'<span class="acc-status sts-done">Decisión tomada</span>':'<span class="acc-status sts-empty">Pendiente</span>';
-  return`<div class="acc-card" id="acc-dec">
+  const canEdit=currentRole==='COORDINADOR'||currentRole==='GERENCIA';
+  const ro=canEdit?'':'readonly';const roOnchange=canEdit?'onchange="autoSave()"':'';
+  const roBtn=canEdit?'':"style='pointer-events:none;opacity:.5'";
+  return`<div class="acc-card${d.ganador!==null?' open':''}" id="acc-dec">
     <div class="acc-head" onclick="toggleAcc('acc-dec')"><span>✅</span><span class="acc-title">Decisión y Autorización</span>${st}<span class="acc-arrow">▼</span></div>
     <div class="acc-body"><div class="acc-inner">
-      <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Selecciona el proveedor ganador:</p>
+      ${!canEdit?'<div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:6px 10px;background:var(--surf2);border-radius:var(--r);border-left:3px solid var(--bd2)">Solo lectura para este rol</div>':''}
+      <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Proveedor ganador:</p>
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        ${f.prov.map((p,i)=>p.active?`<button class="select-btn ${SBCLS[i]}${d.ganador===i?' on':''}" onclick="setGanador(${i})">${p.rz?trunc(p.rz,22):PLBL[i]}</button>`:'').join('')}
+        ${f.prov.map((p,i)=>p.active?`<button class="select-btn ${SBCLS[i]}${d.ganador===i?' on':''}" onclick="${canEdit?'setGanador('+i+')':''}" ${roBtn}>${p.rz?trunc(p.rz,22):PLBL[i]}</button>`:'').join('')}
       </div>
       <div class="fg">
-        <div class="form-group"><label>Autoriza</label>${dynSel('d_autoriza','AUTORIZA',d.autoriza)}</div>
-        <div class="form-group"><label>Fecha Autorización</label><input type="date" id="d_fechaAut" value="${esc(d.fechaAut)}" onchange="autoSave()"/></div>
-        <div class="form-group"><label>Estatus</label>${dynSel('d_estatus','ESTATUS',d.estatus)}</div>
+        <div class="form-group"><label>Autoriza</label>${canEdit?dynSel('d_autoriza','AUTORIZA',d.autoriza):`<input type="text" value="${esc(d.autoriza)}" readonly/>`}</div>
+        <div class="form-group"><label>Fecha Autorización</label><input type="date" id="d_fechaAut" value="${esc(d.fechaAut)}" ${roOnchange} ${ro}/></div>
+        <div class="form-group"><label>Estatus</label>${canEdit?dynSel('d_estatus','ESTATUS',d.estatus):`<input type="text" value="${esc(d.estatus)}" readonly/>`}</div>
       </div>
     </div></div>
   </div>`;
@@ -1471,18 +1554,125 @@ function exportExcel(){
 }
 
 /* ══════════════════════════════════════════
+   ROLES & AUTH
+══════════════════════════════════════════ */
+const ROLES={
+  COORDINADOR:{pin:'1358',label:'Coordinador',icon:'👑',badgeCls:'role-coord'},
+  AUXILIAR:   {pin:'2479',label:'Auxiliar Activos',icon:'📋',badgeCls:'role-aux'},
+  GERENCIA:   {pin:'3690',label:'Gerencia Ops.',icon:'🏢',badgeCls:'role-ger'}
+};
+let currentRole=localStorage.getItem('ies_role_v4')||null;
+let pinBuffer='';let pendingRole=null;
+
+function initAuth(){
+  if(currentRole&&ROLES[currentRole]){
+    document.getElementById('loginScreen').style.display='none';
+    applyRole(currentRole);
+    appStart();
+  }else{
+    document.getElementById('loginScreen').style.display='flex';
+  }
+}
+
+function selectRole(role){
+  pendingRole=role;pinBuffer='';
+  document.getElementById('roleSelectScreen').style.display='none';
+  document.getElementById('pinScreen').classList.add('show');
+  document.getElementById('pinRoleLabel').textContent=ROLES[role].icon+' '+ROLES[role].label+' — ingresa tu PIN';
+  document.getElementById('pinError').textContent='';
+  updatePinDisplay();
+}
+
+function backToRoles(){
+  pinBuffer='';pendingRole=null;
+  document.getElementById('pinScreen').classList.remove('show');
+  document.getElementById('roleSelectScreen').style.display='';
+  updatePinDisplay();
+}
+
+function pinKey(k){
+  if(k==='DEL'){pinBuffer=pinBuffer.slice(0,-1);updatePinDisplay();return;}
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=k;updatePinDisplay();
+  if(pinBuffer.length===4)setTimeout(checkPin,120);
+}
+
+function updatePinDisplay(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d)d.className='pin-dot'+(i<pinBuffer.length?' filled':'');
+  }
+}
+
+function checkPin(){
+  const r=ROLES[pendingRole];
+  if(pinBuffer===r.pin){
+    currentRole=pendingRole;
+    localStorage.setItem('ies_role_v4',currentRole);
+    document.getElementById('loginScreen').style.display='none';
+    applyRole(currentRole);
+    appStart();
+  }else{
+    document.getElementById('pinError').textContent='PIN incorrecto. Intenta de nuevo.';
+    pinBuffer='';updatePinDisplay();
+    setTimeout(()=>{if(document.getElementById('pinError'))document.getElementById('pinError').textContent='';},2000);
+  }
+}
+
+function applyRole(role){
+  const r=ROLES[role];
+  // Update header badge
+  const badge=document.getElementById('roleBadge');
+  if(badge){badge.className='role-badge '+r.badgeCls;badge.innerHTML=r.icon+' '+r.label+' <span style="opacity:.6;font-size:9px">salir</span>';}
+  // COORDINADOR: full access
+  // AUXILIAR: hide delete folio gear, show everything else
+  // GERENCIA: hide Captura tab write access, show all read
+  const isCoord=role==='COORDINADOR';
+  const isAux=role==='AUXILIAR';
+  const isGer=role==='GERENCIA';
+  // New folio button
+  const nfBtn=document.querySelector('button[onclick="openFolioModal()"]');
+  if(nfBtn)nfBtn.style.display=isGer?'none':'';
+  const sbNfBtn=document.querySelector('.sb-head button[onclick="openFolioModal()"]');
+  if(sbNfBtn)sbNfBtn.style.display=isGer?'none':'';
+  // Export excel available to all
+  // Sync available to all
+}
+
+function logoutRole(){
+  if(!confirm('¿Cerrar sesión y cambiar de usuario?'))return;
+  currentRole=null;localStorage.removeItem('ies_role_v4');
+  pinBuffer='';pendingRole=null;
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('pinScreen').classList.remove('show');
+  document.getElementById('roleSelectScreen').style.display='';
+  updatePinDisplay();
+}
+
+function can(action){
+  if(!currentRole)return false;
+  const perms={
+    COORDINADOR:{deleteFolio:true,createFolio:true,capture:true,decision:true,adjuntos:true,deleteCot:true},
+    AUXILIAR:   {deleteFolio:false,createFolio:true,capture:true,decision:false,adjuntos:true,deleteCot:true},
+    GERENCIA:   {deleteFolio:false,createFolio:false,capture:false,decision:true,adjuntos:false,deleteCot:false}
+  };
+  return !!(perms[currentRole]&&perms[currentRole][action]);
+}
+
+/* ══════════════════════════════════════════
    HELPERS & INIT
 ══════════════════════════════════════════ */
 function renderAll(){renderSidebar();renderFolioBar();renderResumen();renderCapture();renderComp();renderIA();}
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
-(function init(){
+function appStart(){
   folios=ls();
   if(!folios.length){folios.push(mkFolio('COMP-2026-001','Primer comparativo'));ss();}
   activeId=folios[0].id;
   if(settings.jsonbinKey)setSyncState('ok','Key configurada');
   renderAll();switchTab('resumen');
-})();
+}
+(function init(){initAuth();})();
 </script>
 </body>
 </html>
