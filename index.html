@@ -577,9 +577,56 @@ async function syncCloud(){
   const key=settings.jsonbinKey||document.getElementById('cfgKey')?.value||'';
   if(!key){openCloudModal();return;}
   const binId=settings.jsonbinBin||'';
+  if(!binId&&!key){openCloudModal();return;}
   setSyncState('syncing');
   const btn=document.getElementById('hdrSyncBtn');if(btn){btn.textContent='⏳ Sync...';btn.disabled=true;}
   try{
+    // ── STEP 1: PULL from cloud first ──────────────────────────────
+    if(binId){
+      const respPull=await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest',{headers:{'X-Master-Key':key}});
+      if(respPull.ok){
+        const dataPull=await respPull.json();
+        const rec=dataPull.record;
+        if(rec&&rec.folios){
+          // Deep merge: remote wins on adjuntos, local wins on everything else
+          // Strategy: for each folio, merge adjuntos arrays (union by id)
+          const remoteMap={};
+          rec.folios.forEach(rf=>{remoteMap[rf.id]=rf;});
+          const localMap={};
+          folios.forEach(lf=>{localMap[lf.id]=lf;});
+          // Build merged folios list
+          const allIds=new Set([...Object.keys(remoteMap),...Object.keys(localMap)]);
+          const merged=[];
+          allIds.forEach(id=>{
+            const remote=remoteMap[id];
+            const local=localMap[id];
+            if(local&&remote){
+              // Merge adjuntos: union by id
+              const adjMap={};
+              (remote.adjuntos||[]).forEach(a=>{adjMap[a.id]=a;});
+              (local.adjuntos||[]).forEach(a=>{adjMap[a.id]=a;});
+              merged.push({...remote,...local,adjuntos:Object.values(adjMap)});
+            }else if(local){
+              merged.push(local);
+            }else{
+              merged.push(remote);
+            }
+          });
+          // Sort by original remote order then local additions
+          merged.sort((a,b)=>{
+            const ri=rec.folios.findIndex(f=>f.id===a.id);
+            const rj=rec.folios.findIndex(f=>f.id===b.id);
+            if(ri>=0&&rj>=0)return ri-rj;
+            if(ri>=0)return -1;
+            if(rj>=0)return 1;
+            return 0;
+          });
+          folios=merged;ss();
+          if(rec.customOpts){customOpts=rec.customOpts;saveCO();}
+        }
+      }
+    }
+    // ── STEP 2: PUSH merged data to cloud ──────────────────────────
     const payload=JSON.stringify({folios,customOpts,version:'4',updated:new Date().toISOString()});
     let url,method;
     if(binId){url='https://api.jsonbin.io/v3/b/'+binId;method='PUT';}
@@ -592,16 +639,6 @@ async function syncCloud(){
       const bi=document.getElementById('cfgBin');if(bi)bi.value=data.metadata.id;
       const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=data.metadata.id;
     }
-    // Pull latest to merge changes from other users
-    const respPull=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{headers:{'X-Master-Key':key}});
-    if(respPull.ok){
-      const dataPull=await respPull.json();
-      const rec=dataPull.record;
-      if(rec&&rec.updated&&settings.lastSync&&new Date(rec.updated)>new Date(settings.lastSync)){
-        if(rec.folios){folios=rec.folios;ss();}
-        if(rec.customOpts){customOpts=rec.customOpts;saveCO();}
-      }
-    }
     settings.lastSync=new Date().toISOString();
     localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
     setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
@@ -611,8 +648,9 @@ async function syncCloud(){
     const syncSec=document.getElementById('cloudSyncSection');
     if(setupSec)setupSec.style.display='none';
     if(syncSec)syncSec.style.display='block';
+    if(folios.length&&!activeId)activeId=folios[0].id;
     renderAll();
-    notify('✓ Sincronizado — '+folios.length+' folios');
+    notify('✓ Sincronizado — '+folios.length+' folios actualizados');
   }catch(e){setSyncState('error','Error: '+e.message);notify('Error al sincronizar: '+e.message,true);}
   finally{if(btn){btn.textContent='☁ Nube';btn.disabled=false;}}
 }
