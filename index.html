@@ -928,9 +928,21 @@ function deleteAdj(i){
 function downloadAdj(i){
   const f=getActive();if(!f||!f.adjuntos)return;
   const adj=f.adjuntos[i];if(!adj||!adj.url)return;
-  // Open directly — works for both image and raw resources
-  window.open(adj.url,'_blank');
-  notify(`Abriendo "${adj.name}"`);
+  // Fetch as blob to force browser download dialog regardless of file type
+  notify(`Preparando descarga de "${adj.name}"...`);
+  fetch(adj.url)
+    .then(r=>{if(!r.ok)throw new Error('Error '+r.status);return r.blob();})
+    .then(blob=>{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=adj.name;a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+      notify(`"${adj.name}" descargado ✓`);
+    })
+    .catch(e=>{
+      // Fallback: open in new tab
+      window.open(adj.url,'_blank');
+      notify(`Abriendo "${adj.name}" en nueva pestaña`);
+    });
 }
 
 function previewAdj(i){
