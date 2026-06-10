@@ -865,19 +865,16 @@ async function handleAdjFiles(files){
     if(bar)bar.style.width=Math.round((done/total)*100)+'%';
 
     try{
-      const isImage=file.type&&file.type.startsWith('image/');
-      const resourceType=isImage?'image':'raw';
-      const uploadEndpoint=`https://api.cloudinary.com/v1_1/${CDN.cloud}/${resourceType}/upload`;
+      // Upload everything as image resource — Cloudinary converts PDFs/docs to image automatically
+      // This avoids 401 errors on raw resources in free accounts
+      const uploadEndpoint=`https://api.cloudinary.com/v1_1/${CDN.cloud}/image/upload`;
 
       const fd=new FormData();
       fd.append('file',file);
       fd.append('upload_preset',CDN.preset);
-      fd.append('resource_type',resourceType);
+      fd.append('resource_type','image');
       fd.append('folder',CDN.folder+'/'+f.name.replace(/[^a-zA-Z0-9-_]/g,'_'));
-      const baseName=isImage
-        ? genId()+'_'+file.name.replace(/[^a-zA-Z0-9.-]/g,'_')
-        : genId()+'_'+file.name.replace(/\.[^/.]+$/,'').replace(/[^a-zA-Z0-9-_]/g,'_');
-      fd.append('public_id',baseName);
+      fd.append('public_id',genId()+'_'+file.name.replace(/\.[^/.]+$/,'').replace(/[^a-zA-Z0-9-_]/g,'_'));
 
       const resp=await fetch(uploadEndpoint,{method:'POST',body:fd});
       if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||'Error '+resp.status);}
@@ -948,18 +945,18 @@ function previewAdj(i){
     if(adj.type&&adj.type.startsWith('image/')){
       body.innerHTML=`<img src="${adj.url}" style="max-width:100%;max-height:60vh;border-radius:var(--r);object-fit:contain"/>`;
     }else if(adj.type==='application/pdf'){
+      // Cloudinary converts PDF pages to images — show page 1 as preview
+      const previewUrl=adj.url.replace('/upload/','/upload/f_jpg,pg_1/');
+      const origUrl=adj.url.replace('/upload/','/upload/fl_attachment/');
       body.innerHTML=`
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;text-align:center">
-          <div style="font-size:48px">📕</div>
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${esc(adj.name)}</div>
-          <div style="font-size:11px;color:var(--muted)">${adjFmtSize(adj.size)}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-            <a href="${adj.url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#0d1117;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:700;text-decoration:none;font-family:inherit">
-              ↗ Abrir PDF en nueva pestaña
-            </a>
-          </div>
-          <div style="font-size:10px;color:var(--muted);max-width:320px;line-height:1.6">
-            Los PDFs se abren en una nueva pestaña del navegador para garantizar la visualización correcta independientemente del dispositivo.
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;width:100%">
+          <img src="${previewUrl}" style="max-width:100%;max-height:50vh;border-radius:var(--r);object-fit:contain;box-shadow:0 2px 12px rgba(0,0,0,.4)"
+            onerror="this.style.display='none';document.getElementById('pdf-fallback-${i}').style.display='block'"
+          />
+          <div id="pdf-fallback-${i}" style="display:none;font-size:48px;padding:20px">📕</div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <a href="${adj.url}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--blu-bg);color:var(--blue);border:1px solid var(--p1bd);padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:600;text-decoration:none;font-family:inherit">↗ Abrir en nueva pestaña</a>
+            <a href="${origUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--surf2);color:var(--dim);border:1px solid var(--bd2);padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:600;text-decoration:none;font-family:inherit">⬇ Descargar</a>
           </div>
         </div>`;
     }else{
