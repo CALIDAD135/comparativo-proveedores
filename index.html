@@ -784,46 +784,84 @@ function genAdjuntos(f){
       <span class="acc-arrow">▼</span>
     </div>
     <div class="acc-body"><div class="acc-inner">
-      <div style="font-size:10px;color:var(--dim);margin-bottom:8px;display:flex;align-items:center;gap:5px">
-        <span style="color:var(--green)">☁</span> Los archivos se almacenan en <strong style="color:var(--text)">Cloudinary</strong> y son accesibles para todos los usuarios.
-      </div>
-      <div class="attach-zone" id="adjDropZone"
-        ondragover="event.preventDefault();document.getElementById('adjDropZone').classList.add('drag')"
-        ondragleave="document.getElementById('adjDropZone').classList.remove('drag')"
-        ondrop="handleAdjDrop(event)">
-        <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.xml,.zip,.csv" onchange="handleAdjFiles(this.files)" id="adjFileInput"/>
-        <div class="attach-zone-icon">☁</div>
-        <div class="attach-zone-label">Arrastra archivos aquí o haz clic para seleccionar</div>
-        <div class="attach-zone-sub">Imágenes, PDF, Word, Excel, CSV · Máx. 10 MB por archivo · Se suben a la nube</div>
-      </div>
-      <div class="attach-progress" id="adjProgress">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:10px;color:var(--dim)" id="adjProgressLabel">Subiendo...</span>
-          <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--acc2)" id="adjProgressPct">0%</span>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+
+        <!-- COLUMNA 1: Subir imagen -->
+        <div>
+          <div class="section-sep" style="margin-bottom:8px">🖼 Subir imagen</div>
+          <div class="attach-zone" id="adjDropZone"
+            ondragover="event.preventDefault();document.getElementById('adjDropZone').classList.add('drag')"
+            ondragleave="document.getElementById('adjDropZone').classList.remove('drag')"
+            ondrop="handleAdjDrop(event)">
+            <input type="file" multiple accept="image/*" onchange="handleAdjFiles(this.files)" id="adjFileInput"/>
+            <div class="attach-zone-icon">🖼</div>
+            <div class="attach-zone-label">Arrastra imágenes o haz clic</div>
+            <div class="attach-zone-sub">JPG, PNG, WEBP · Máx. 10 MB · Cloudinary</div>
+          </div>
+          <div class="attach-progress" id="adjProgress">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:10px;color:var(--dim)" id="adjProgressLabel">Subiendo...</span>
+              <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--acc2)" id="adjProgressPct">0%</span>
+            </div>
+            <div class="attach-progress-bar-wrap"><div class="attach-progress-bar" id="adjProgressBar"></div></div>
+          </div>
         </div>
-        <div class="attach-progress-bar-wrap"><div class="attach-progress-bar" id="adjProgressBar"></div></div>
+
+        <!-- COLUMNA 2: Agregar enlace externo -->
+        <div>
+          <div class="section-sep" style="margin-bottom:8px">🔗 Agregar enlace</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="form-group">
+              <label>Nombre del documento</label>
+              <input type="text" id="adjLinkName" placeholder="Ej: Cotización Vento 2019.pdf"/>
+            </div>
+            <div class="form-group">
+              <label>URL (Drive, OneDrive, Dropbox, etc.)</label>
+              <input type="url" id="adjLinkUrl" placeholder="https://drive.google.com/file/d/..."/>
+            </div>
+            <button class="btn btn-acc btn-sm" onclick="addAdjLink()" style="align-self:flex-end">＋ Agregar enlace</button>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
+            💡 En Google Drive: click derecho al archivo → <strong>Obtener enlace</strong> → Acceso general: <strong>Cualquier persona con el enlace</strong> → Copiar enlace.
+          </div>
+        </div>
       </div>
+
       <div class="attach-list" id="adjList">${renderAdjList(f)}</div>
     </div></div>
   </div>`;
 }
 
 function renderAdjList(f){
-  if(!f||!f.adjuntos||!f.adjuntos.length)return'<div style="text-align:center;padding:14px;font-size:11px;color:var(--muted)">Sin archivos adjuntos.</div>';
+  if(!f||!f.adjuntos||!f.adjuntos.length)return'<div style="text-align:center;padding:14px;font-size:11px;color:var(--muted)">Sin adjuntos registrados.</div>';
   return f.adjuntos.map((adj,i)=>`
     <div class="attach-item" id="adj-item-${i}">
-      <span class="attach-icon">${adjIcon(adj.type)}</span>
+      <span class="attach-icon">${adj.isLink?'🔗':adjIcon(adj.type)}</span>
       <div class="attach-info">
         <div class="attach-name" title="${esc(adj.name)}">${esc(adj.name)}</div>
-        <div class="attach-meta">${adjFmtSize(adj.size)} · ${adj.date||''} · <span style="color:var(--green)">☁ Nube</span></div>
+        <div class="attach-meta">${adj.isLink?'<span style="color:var(--blue)">🔗 Enlace externo</span>':'<span style="color:var(--green)">☁ Cloudinary</span>'} · ${adj.date||''}</div>
       </div>
       <div class="attach-actions">
-        ${adj.url&&((adj.type&&adj.type.startsWith('image/'))||(adj.type==='application/pdf'))?`<button class="attach-btn" onclick="previewAdj(${i})">👁 Ver</button>`:''}
-        ${adj.url&&adj.type==='application/pdf'?`<a href="${adj.url}" target="_blank" class="attach-btn" style="text-decoration:none">↗ PDF</a>`:''}
-        ${adj.url?`<button class="attach-btn" onclick="downloadAdj(${i})">⬇</button>`:''}
+        ${adj.url&&adj.type&&adj.type.startsWith('image/')?`<button class="attach-btn" onclick="previewAdj(${i})">👁 Ver</button>`:''}
+        ${adj.url?`<a href="${adj.url}" target="_blank" class="attach-btn" style="text-decoration:none">↗ Abrir</a>`:''}
         <button class="attach-btn del" onclick="deleteAdj(${i})">🗑</button>
       </div>
     </div>`).join('');
+}
+
+function addAdjLink(){
+  const f=getActive();if(!f)return;if(!f.adjuntos)f.adjuntos=[];
+  const name=(document.getElementById('adjLinkName')?.value||'').trim();
+  const url=(document.getElementById('adjLinkUrl')?.value||'').trim();
+  if(!name){notify('Ingresa el nombre del documento',true);return;}
+  if(!url||!url.startsWith('http')){notify('Ingresa una URL válida (debe iniciar con http)',true);return;}
+  f.adjuntos.push({id:genId(),name,type:'link',size:0,date:new Date().toLocaleDateString('es-MX'),url,isLink:true});
+  ss();setSyncState('pending');
+  document.getElementById('adjLinkName').value='';
+  document.getElementById('adjLinkUrl').value='';
+  refreshAdjUI(f);
+  notify(`Enlace "${name}" agregado ✓`);
 }
 
 function adjIcon(type){
