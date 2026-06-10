@@ -222,8 +222,9 @@ select option{background:var(--surf2)}
 .attach-btn:hover{background:var(--surf2);color:var(--text)}
 .attach-btn.del:hover{border-color:#5c2020;color:var(--red);background:var(--red-bg)}
 .attach-count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--acc-bg);color:var(--acc2);border:1px solid var(--acc-d);border-radius:8px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:16px;height:16px;padding:0 4px;margin-left:5px}
-.attach-progress{height:3px;background:var(--bd);border-radius:2px;margin-top:8px;overflow:hidden;display:none}
+.attach-progress{margin-top:8px;display:none}
 .attach-progress.show{display:block}
+.attach-progress-bar-wrap{height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
 .attach-progress-bar{height:100%;background:var(--acc);border-radius:2px;width:0;transition:width .3s}
 /* MODALS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;align-items:center;justify-content:center}
@@ -757,6 +758,16 @@ function toggleAcc(id){document.getElementById(id)?.classList.toggle('open');}
 /* ══════════════════════════════════════════
    ADJUNTOS (Attachments)
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   CLOUDINARY CONFIG
+══════════════════════════════════════════ */
+const CDN={
+  cloud:'djzjqbbq3',
+  preset:'ies_comparativos',
+  folder:'ies-comparativos',
+  get url(){return`https://api.cloudinary.com/v1_1/${this.cloud}/auto/upload`;}
+};
+
 function genAdjuntos(f){
   if(!f.adjuntos)f.adjuntos=[];
   const cnt=f.adjuntos.length;
@@ -769,16 +780,25 @@ function genAdjuntos(f){
       <span class="acc-arrow">▼</span>
     </div>
     <div class="acc-body"><div class="acc-inner">
+      <div style="font-size:10px;color:var(--dim);margin-bottom:8px;display:flex;align-items:center;gap:5px">
+        <span style="color:var(--green)">☁</span> Los archivos se almacenan en <strong style="color:var(--text)">Cloudinary</strong> y son accesibles para todos los usuarios.
+      </div>
       <div class="attach-zone" id="adjDropZone"
         ondragover="event.preventDefault();document.getElementById('adjDropZone').classList.add('drag')"
         ondragleave="document.getElementById('adjDropZone').classList.remove('drag')"
         ondrop="handleAdjDrop(event)">
         <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.xml,.zip,.csv" onchange="handleAdjFiles(this.files)" id="adjFileInput"/>
-        <div class="attach-zone-icon">📂</div>
+        <div class="attach-zone-icon">☁</div>
         <div class="attach-zone-label">Arrastra archivos aquí o haz clic para seleccionar</div>
-        <div class="attach-zone-sub">Imágenes, PDF, Word, Excel, CSV · Máx. 5 MB por archivo</div>
+        <div class="attach-zone-sub">Imágenes, PDF, Word, Excel, CSV · Máx. 10 MB por archivo · Se suben a la nube</div>
       </div>
-      <div class="attach-progress" id="adjProgress"><div class="attach-progress-bar" id="adjProgressBar"></div></div>
+      <div class="attach-progress" id="adjProgress">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:10px;color:var(--dim)" id="adjProgressLabel">Subiendo...</span>
+          <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--acc2)" id="adjProgressPct">0%</span>
+        </div>
+        <div class="attach-progress-bar-wrap"><div class="attach-progress-bar" id="adjProgressBar"></div></div>
+      </div>
       <div class="attach-list" id="adjList">${renderAdjList(f)}</div>
     </div></div>
   </div>`;
@@ -791,11 +811,11 @@ function renderAdjList(f){
       <span class="attach-icon">${adjIcon(adj.type)}</span>
       <div class="attach-info">
         <div class="attach-name" title="${esc(adj.name)}">${esc(adj.name)}</div>
-        <div class="attach-meta">${adjFmtSize(adj.size)} · ${adj.date||''} · ${adj.type||'archivo'}</div>
+        <div class="attach-meta">${adjFmtSize(adj.size)} · ${adj.date||''} · <span style="color:var(--green)">☁ Nube</span></div>
       </div>
       <div class="attach-actions">
-        ${adj.type&&(adj.type.startsWith('image/')||adj.type==='application/pdf')?`<button class="attach-btn" onclick="previewAdj(${i})">👁 Ver</button>`:''}
-        <button class="attach-btn" onclick="downloadAdj(${i})">⬇</button>
+        ${adj.url&&(adj.type&&adj.type.startsWith('image/')||adj.type==='application/pdf')?`<button class="attach-btn" onclick="previewAdj(${i})">👁 Ver</button>`:''}
+        ${adj.url?`<button class="attach-btn" onclick="downloadAdj(${i})">⬇</button>`:''}
         <button class="attach-btn del" onclick="deleteAdj(${i})">🗑</button>
       </div>
     </div>`).join('');
@@ -817,37 +837,70 @@ function handleAdjDrop(e){
   handleAdjFiles(e.dataTransfer.files);
 }
 
-function handleAdjFiles(files){
+async function handleAdjFiles(files){
   const f=getActive();if(!f)return;if(!f.adjuntos)f.adjuntos=[];
-  const maxSize=5*1024*1024;const fileArr=Array.from(files);
+  const maxSize=10*1024*1024;const fileArr=Array.from(files);
   if(!fileArr.length)return;
-  let processed=0;
+
   const progress=document.getElementById('adjProgress');
   const bar=document.getElementById('adjProgressBar');
-  if(progress){progress.classList.add('show');bar.style.width='0%';}
-  fileArr.forEach((file,idx)=>{
-    if(file.size>maxSize){notify(`"${file.name}" supera los 5 MB permitidos`,true);processed++;if(progress&&processed===fileArr.length)progress.classList.remove('show');return;}
-    if(f.adjuntos.find(a=>a.name===file.name&&a.size===file.size)){notify(`"${file.name}" ya está adjunto`,true);processed++;if(progress&&processed===fileArr.length)progress.classList.remove('show');return;}
-    const r=new FileReader();
-    r.onload=ev=>{
-      f.adjuntos.push({id:genId(),name:file.name,type:file.type,size:file.size,date:new Date().toLocaleDateString('es-MX'),data:ev.target.result});
-      ss();setSyncState('pending');
-      processed++;
-      if(bar)bar.style.width=Math.round((processed/fileArr.length)*100)+'%';
-      if(processed===fileArr.length){
-        setTimeout(()=>{if(progress)progress.classList.remove('show');if(bar)bar.style.width='0%';},400);
-        refreshAdjUI(f);notify(`${processed} archivo${processed!==1?'s':''} adjuntado${processed!==1?'s':''} correctamente`);
-      }
-    };
-    r.readAsDataURL(file);
-  });
+  const lbl=document.getElementById('adjProgressLabel');
+  const pct=document.getElementById('adjProgressPct');
+  if(progress){progress.classList.add('show');}
+
+  let done=0;const total=fileArr.length;
+  const results=[];
+
+  for(const file of fileArr){
+    if(file.size>maxSize){notify(`"${file.name}" supera los 10 MB permitidos`,true);done++;continue;}
+    if(f.adjuntos.find(a=>a.name===file.name&&a.size===file.size)){notify(`"${file.name}" ya está adjunto`,true);done++;continue;}
+
+    if(lbl)lbl.textContent=`Subiendo "${file.name}"...`;
+    if(pct)pct.textContent=Math.round((done/total)*100)+'%';
+    if(bar)bar.style.width=Math.round((done/total)*100)+'%';
+
+    try{
+      const fd=new FormData();
+      fd.append('file',file);
+      fd.append('upload_preset',CDN.preset);
+      fd.append('folder',CDN.folder+'/'+f.name.replace(/[^a-zA-Z0-9-_]/g,'_'));
+      fd.append('public_id',genId()+'_'+file.name.replace(/[^a-zA-Z0-9.-]/g,'_'));
+
+      const resp=await fetch(CDN.url,{method:'POST',body:fd});
+      if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||'Error '+resp.status);}
+      const data=await resp.json();
+
+      f.adjuntos.push({
+        id:genId(),
+        name:file.name,
+        type:file.type,
+        size:file.size,
+        date:new Date().toLocaleDateString('es-MX'),
+        url:data.secure_url,
+        publicId:data.public_id,
+        cloudFormat:data.format
+      });
+      results.push(file.name);
+    }catch(e){
+      notify(`Error al subir "${file.name}": ${e.message}`,true);
+    }
+    done++;
+    if(bar)bar.style.width=Math.round((done/total)*100)+'%';
+    if(pct)pct.textContent=Math.round((done/total)*100)+'%';
+  }
+
+  ss();setSyncState('pending');
+  setTimeout(()=>{if(progress)progress.classList.remove('show');if(bar)bar.style.width='0%';},600);
+  if(results.length){
+    refreshAdjUI(f);
+    notify(`${results.length} archivo${results.length!==1?'s':''} subido${results.length!==1?'s':''} a la nube ✓`);
+  }
   const fi=document.getElementById('adjFileInput');if(fi)fi.value='';
 }
 
 function refreshAdjUI(f){
   const list=document.getElementById('adjList');
   if(list)list.innerHTML=renderAdjList(f);
-  // Update badge in accordion header
   const head=document.querySelector('#acc-adj .acc-title');
   if(head){const cnt=f.adjuntos.length;const badge=cnt>0?`<span class="attach-count-badge">${cnt}</span>`:'';head.innerHTML=`Adjuntos del Folio${badge}`;}
   const sts=document.querySelector('#acc-adj .acc-status');
@@ -856,21 +909,24 @@ function refreshAdjUI(f){
 
 function deleteAdj(i){
   const f=getActive();if(!f||!f.adjuntos)return;
-  const name=f.adjuntos[i]?.name||'archivo';
-  if(!confirm(`¿Eliminar "${name}"?`))return;
-  f.adjuntos.splice(i,1);ss();setSyncState('pending');refreshAdjUI(f);notify(`"${name}" eliminado`);
+  const adj=f.adjuntos[i];if(!adj)return;
+  if(!confirm(`¿Eliminar "${adj.name}" de la nube? Esta acción no puede deshacerse.`))return;
+  f.adjuntos.splice(i,1);ss();setSyncState('pending');refreshAdjUI(f);
+  notify(`"${adj.name}" eliminado`);
 }
 
 function downloadAdj(i){
   const f=getActive();if(!f||!f.adjuntos)return;
-  const adj=f.adjuntos[i];if(!adj)return;
-  const a=document.createElement('a');a.href=adj.data;a.download=adj.name;a.click();
+  const adj=f.adjuntos[i];if(!adj||!adj.url)return;
+  // Force download via Cloudinary fl_attachment flag
+  const dlUrl=adj.url.replace('/upload/','/upload/fl_attachment/');
+  const a=document.createElement('a');a.href=dlUrl;a.download=adj.name;a.target='_blank';a.click();
   notify(`Descargando "${adj.name}"`);
 }
 
 function previewAdj(i){
   const f=getActive();if(!f||!f.adjuntos)return;
-  const adj=f.adjuntos[i];if(!adj)return;
+  const adj=f.adjuntos[i];if(!adj||!adj.url)return;
   const title=document.getElementById('previewTitle');
   const body=document.getElementById('previewBody');
   const downBtn=document.getElementById('previewDownBtn');
@@ -878,11 +934,11 @@ function previewAdj(i){
   if(downBtn){downBtn.onclick=()=>downloadAdj(i);}
   if(body){
     if(adj.type&&adj.type.startsWith('image/')){
-      body.innerHTML=`<img src="${adj.data}" style="max-width:100%;max-height:60vh;border-radius:var(--r);object-fit:contain"/>`;
+      body.innerHTML=`<img src="${adj.url}" style="max-width:100%;max-height:60vh;border-radius:var(--r);object-fit:contain"/>`;
     }else if(adj.type==='application/pdf'){
-      body.innerHTML=`<iframe src="${adj.data}" style="width:100%;height:60vh;border:none;border-radius:var(--r)"></iframe>`;
+      body.innerHTML=`<iframe src="${adj.url}" style="width:100%;height:60vh;border:none;border-radius:var(--r)"></iframe>`;
     }else{
-      body.innerHTML=`<div style="padding:30px;text-align:center;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">${adjIcon(adj.type)}</div><div style="font-size:13px">"${esc(adj.name)}"</div><div style="font-size:11px;margin-top:6px">${adjFmtSize(adj.size)}</div></div>`;
+      body.innerHTML=`<div style="padding:30px;text-align:center;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">${adjIcon(adj.type)}</div><div style="font-size:13px">"${esc(adj.name)}"</div><div style="font-size:11px;margin-top:6px">${adjFmtSize(adj.size)}</div><a href="${adj.url}" target="_blank" style="display:inline-block;margin-top:10px;color:var(--blue);font-size:11px">Abrir en nueva pestaña ↗</a></div>`;
     }
   }
   document.getElementById('previewModal').classList.add('open');
