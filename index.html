@@ -865,18 +865,21 @@ async function handleAdjFiles(files){
     if(bar)bar.style.width=Math.round((done/total)*100)+'%';
 
     try{
+      const isImage=file.type&&file.type.startsWith('image/');
+      const resourceType=isImage?'image':'raw';
+      const uploadEndpoint=`https://api.cloudinary.com/v1_1/${CDN.cloud}/${resourceType}/upload`;
+
       const fd=new FormData();
       fd.append('file',file);
       fd.append('upload_preset',CDN.preset);
+      fd.append('resource_type',resourceType);
       fd.append('folder',CDN.folder+'/'+f.name.replace(/[^a-zA-Z0-9-_]/g,'_'));
-      // For non-images: strip extension from public_id to avoid duplication (Cloudinary adds it)
-      const isImage=file.type&&file.type.startsWith('image/');
       const baseName=isImage
         ? genId()+'_'+file.name.replace(/[^a-zA-Z0-9.-]/g,'_')
         : genId()+'_'+file.name.replace(/\.[^/.]+$/,'').replace(/[^a-zA-Z0-9-_]/g,'_');
       fd.append('public_id',baseName);
 
-      const resp=await fetch(CDN.uploadUrl(file.type),{method:'POST',body:fd});
+      const resp=await fetch(uploadEndpoint,{method:'POST',body:fd});
       if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||'Error '+resp.status);}
       const data=await resp.json();
 
@@ -928,11 +931,9 @@ function deleteAdj(i){
 function downloadAdj(i){
   const f=getActive();if(!f||!f.adjuntos)return;
   const adj=f.adjuntos[i];if(!adj||!adj.url)return;
-  // fl_attachment only works for image resources; for raw files use direct URL
-  const isImage=adj.type&&adj.type.startsWith('image/');
-  const dlUrl=isImage?adj.url.replace('/upload/','/upload/fl_attachment/'):adj.url;
-  const a=document.createElement('a');a.href=dlUrl;a.download=adj.name;a.target='_blank';a.click();
-  notify(`Descargando "${adj.name}"`);
+  // Open directly — works for both image and raw resources
+  window.open(adj.url,'_blank');
+  notify(`Abriendo "${adj.name}"`);
 }
 
 function previewAdj(i){
