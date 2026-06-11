@@ -624,7 +624,36 @@ const DD_BASE={
 let customOpts=JSON.parse(localStorage.getItem('ies_custom_v4')||'{}');
 function saveCO(){ localStorage.setItem('ies_custom_v4',JSON.stringify(customOpts)); }
 function getOpts(cat){ return[...(DD_BASE[cat]||[]),...(customOpts[cat]||[])]; }
-function addCO(cat,val){ if(!customOpts[cat])customOpts[cat]=[]; if(!customOpts[cat].includes(val)){customOpts[cat].push(val);saveCO();} }
+function addCO(cat,val){
+  if(!customOpts[cat])customOpts[cat]=[];
+  if(!customOpts[cat].includes(val)){
+    customOpts[cat].push(val);
+    customOpts._updatedAt=new Date().toISOString(); // stamp for sync
+    saveCO();
+    setSyncState('pending');
+  }
+}
+// Merge two customOpts objects: union of all arrays, remote wins on conflict
+function mergeCustomOpts(local, remote){
+  if(!remote)return local;
+  if(!local)return remote;
+  const result={};
+  const allCats=new Set([...Object.keys(local),...Object.keys(remote)]);
+  allCats.forEach(cat=>{
+    if(cat==='_updatedAt')return;
+    const la=Array.isArray(local[cat])?local[cat]:[];
+    const ra=Array.isArray(remote[cat])?remote[cat]:[];
+    // Union: remote order first, then any local-only additions
+    const union=[...ra];
+    la.forEach(v=>{if(!union.includes(v))union.push(v);});
+    if(union.length)result[cat]=union;
+  });
+  // Keep newer _updatedAt
+  const lt=new Date(local._updatedAt||0).getTime();
+  const rt=new Date(remote._updatedAt||0).getTime();
+  result._updatedAt=lt>rt?(local._updatedAt):(remote._updatedAt||new Date().toISOString());
+  return result;
+}
 
 /* ══════════════════════════════════════════
    SETTINGS (cloud)
@@ -782,7 +811,7 @@ async function syncCloud(){
       folios            = mergeFolios(folios, remoteClean, tombIds);
       addedFromRemote   = folios.filter(f=>!new Map(Array.from({length:before},(_, i)=>folios[i]).map(x=>[x?.id,true])).has(f.id)).length;
       keptLocal         = folios.length;
-      if(remoteRec.customOpts){customOpts=remoteRec.customOpts;saveCO();}
+      if(remoteRec.customOpts){customOpts=mergeCustomOpts(customOpts,remoteRec.customOpts);saveCO();}
     }
     ss(); // Persist merged state locally before push
 
@@ -2296,7 +2325,7 @@ function startPolling(){
             const remoteClean=rd.record.folios.filter(f=>!tombIds.has(f.id));
             folios=folios.filter(f=>!tombIds.has(f.id));
             folios=mergeFolios(folios,remoteClean,tombIds);
-            ss();if(rd.record.customOpts){customOpts=rd.record.customOpts;saveCO();}
+            ss();if(rd.record.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
             settings.tombstones=allTombs;
             settings.lastSync=new Date().toISOString();
             localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
@@ -2341,7 +2370,7 @@ async function appStart(){
           localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
           const tombIds=new Set(allTombs.map(t=>t.id));
           folios=rd.record.folios.filter(f=>!tombIds.has(f.id));ss();
-          if(rd.record.customOpts){customOpts=rd.record.customOpts;saveCO();}
+          if(rd.record.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
         }
       }
       setSyncState('ok','Datos cargados · '+new Date().toLocaleTimeString('es-MX'));
