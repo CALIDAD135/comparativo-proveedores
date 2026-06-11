@@ -487,6 +487,24 @@ select option{background:var(--surf2)}
   </div>
 </div>
 
+<!-- MODAL: KPI DESGLOSE -->
+<div class="overlay" id="kpiModal">
+  <div class="modal" style="width:700px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column">
+    <h3 id="kpiModalTitle">Desglose</h3>
+    <div id="kpiModalBody" style="overflow:auto;flex:1"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="document.getElementById('kpiModal').classList.remove('open')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: PROVEEDOR DESGLOSE -->
+<div class="overlay" id="provModal">
+  <div class="modal" style="width:640px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column">
+    <h3 id="provModalTitle">Desglose de Proveedor</h3>
+    <div id="provModalBody" style="overflow:auto;flex:1"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="document.getElementById('provModal').classList.remove('open')">Cerrar</button></div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -737,7 +755,15 @@ function confirmAdmin(){
   const name=folios.find(f=>f.id===pendingDel)?.name||'';
   folios=folios.filter(f=>f.id!==pendingDel);
   if(activeId===pendingDel)activeId=folios.length?folios[0].id:null;
-  ss();setSyncState('pending');closeAdminModal();renderAll();notify('Folio "'+name+'" eliminado');
+  ss();closeAdminModal();renderAll();notify('Folio "'+name+'" eliminado — sincronizando...');
+  // Immediately push to cloud so all users see the deletion
+  if(settings.jsonbinKey&&settings.jsonbinBin){
+    const payload=JSON.stringify({folios,customOpts,version:'4',updated:new Date().toISOString()});
+    fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin,{method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':settings.jsonbinKey,'X-Bin-Private':'true'},body:payload})
+      .then(r=>{if(r.ok){settings.lastSync=new Date().toISOString();localStorage.setItem('ies_settings_v4',JSON.stringify(settings));setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));notify('Folio "'+name+'" eliminado y sincronizado ✓');}else setSyncState('pending');})
+      .catch(()=>setSyncState('pending'));
+  }else{setSyncState('pending');}
 }
 
 /* ELIMINAR COTIZACIÓN */
@@ -1396,9 +1422,12 @@ function renderResumen(){
   cont.innerHTML=`
     <!-- KPIs -->
     <div class="kpi-grid">
-      <div class="kpi acc"><div class="kpi-label">Total Folios</div><div class="kpi-val">${total}</div><div class="kpi-sub">Comparativos registrados</div></div>
-      <div class="kpi green"><div class="kpi-label">Autorizados</div><div class="kpi-val">${aut}</div><div class="kpi-sub">Con decisión emitida</div></div>
-      <div class="kpi red"><div class="kpi-label">Sin Decisión</div><div class="kpi-val">${pend}</div><div class="kpi-sub">Requieren autorización</div></div>
+      <div class="kpi acc" style="cursor:pointer" onclick="openKpiModal('total')" title="Ver detalle">
+        <div class="kpi-label">Total Folios</div><div class="kpi-val">${total}</div><div class="kpi-sub">Comparativos registrados</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ click para desglose</div></div>
+      <div class="kpi green" style="cursor:pointer" onclick="openKpiModal('aut')" title="Ver autorizados">
+        <div class="kpi-label">Autorizados</div><div class="kpi-val">${aut}</div><div class="kpi-sub">Con decisión emitida</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ click para desglose</div></div>
+      <div class="kpi red" style="cursor:pointer" onclick="openKpiModal('pend')" title="Ver pendientes">
+        <div class="kpi-label">Sin Decisión</div><div class="kpi-val">${pend}</div><div class="kpi-sub">Requieren autorización</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ click para desglose</div></div>
       <div class="kpi blue"><div class="kpi-label">Valor Total</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub">Suma de todos los comparativos</div></div>
       <div class="kpi acc"><div class="kpi-label">Ahorro Máx. Detectado</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Mayor diferencia entre opciones</div></div>
     </div>
@@ -1440,8 +1469,13 @@ function renderResumen(){
         </div>
         <div id="ch-spider" style="height:220px"></div>
       </div>
-      <div class="chart-card"><div class="chart-title">Gasto por Departamento</div><div id="ch-dept" style="height:220px"></div></div>
-      <div class="chart-card"><div class="chart-title">Proveedor más Seleccionado</div><div id="ch-prov" style="height:220px"></div></div>
+      <div class="chart-card"><div class="chart-title">Gasto Autorizado por Departamento <span style="font-size:9px;color:var(--green);font-weight:600">● Solo autorizados</span></div><div id="ch-dept" style="height:220px"></div></div>
+      <div class="chart-card"><div class="chart-title">Proveedor más Seleccionado <span style="font-size:9px;color:var(--muted)">(click para desglose)</span></div><div id="ch-prov" style="height:220px"></div></div>
+    </div>
+    <!-- VEHICLE INVESTMENT CHART -->
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-title">Índice de Inversión por Unidad Vehicular <span style="font-size:9px;color:var(--green);font-weight:600">● Montos autorizados</span></div>
+      <div id="ch-vehiculo" style="height:260px"></div>
     </div>
 
     <!-- FULL LIST -->
@@ -1496,7 +1530,7 @@ function renderFT(data){
 ══════════════════════════════════════════ */
 let catF='all';
 function setCatF(f){catF=f;['all','ref','srv'].forEach(k=>document.getElementById('cf-'+k)?.classList.remove('on'));document.getElementById('cf-'+(f==='all'?'all':f==='REFACCIONES'?'ref':'srv'))?.classList.add('on');renderChartSpider();}
-function renderCharts(){renderChartFunnel();renderChartSpider();renderChartDept();renderChartProv();}
+function renderCharts(){renderChartFunnel();renderChartSpider();renderChartDept();renderChartProv();renderChartVehiculo();}
 function initC(id){const el=document.getElementById(id);if(!el)return null;if(CHARTS[id])CHARTS[id].dispose();CHARTS[id]=echarts.init(el);return CHARTS[id];}
 const ECT={backgroundColor:'transparent',textStyle:{color:'#8b949e',fontFamily:'Plus Jakarta Sans'},tooltip:{backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3',fontSize:11}}};
 
@@ -1553,8 +1587,191 @@ function renderChartProv(){
 }
 
 /* ══════════════════════════════════════════
-   EXCEL EXPORT
+   VISTA DIRECCIÓN — INTERACTIVE MODULES
 ══════════════════════════════════════════ */
+
+// ── A. KPI Modals ────────────────────────────────────────────────────────────
+function openKpiModal(type){
+  const titles={total:'📁 Todos los Folios',aut:'✅ Folios Autorizados',pend:'⏳ Folios Sin Decisión'};
+  let data=[];
+  if(type==='total') data=folios;
+  else if(type==='aut') data=folios.filter(f=>f.decision.estatus==='AUTORIZADO');
+  else if(type==='pend') data=folios.filter(f=>f.decision.ganador===null&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2);
+  document.getElementById('kpiModalTitle').textContent=titles[type]+' ('+data.length+')';
+  const stm={AUTORIZADO:'bg',CANCELADO:'br',PENDIENTE:'by','EN PROCESO':'bb'};
+  if(!data.length){document.getElementById('kpiModalBody').innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Sin registros en esta categoría.</div>';}
+  else{
+    document.getElementById('kpiModalBody').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>${['Folio','Descripción','Depto.','Estatus','Responsable','Proveedor Ganador','Fecha Decisión'].map(h=>`<th style="padding:8px 12px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+      <tbody>${data.map(f=>{
+        const st=f.decision.estatus;
+        const gan=f.decision.ganador;
+        const ganName=gan!==null?(f.prov[gan]?.rz||PLBL[gan]):'—';
+        const autoriza=f.decision.autoriza||'—';
+        const fechaAut=f.decision.fechaAut||'—';
+        return`<tr style="cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''" onclick="document.getElementById('kpiModal').classList.remove('open');selectFolio('${f.id}')">
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);font-weight:600">${f.name}</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd);color:var(--dim);font-size:11px;max-width:160px">${trunc(f.general.descripcion||f.desc||'—',32)}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--dim)">${f.general.depto||'—'}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd)">${st?`<span class="badge ${stm[st]||'bx'}">${st}</span>`:'<span class="badge bx">Sin definir</span>'}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--text)">${autoriza}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd);font-size:11px;color:${gan!==null?'var(--acc2)':'var(--muted)'}">${gan!==null?'🏆 '+trunc(ganName,24):'Sin decisión'}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)">${fechaAut}</td>
+        </tr>`;}).join('')}
+      </tbody>
+    </table>`;
+  }
+  document.getElementById('kpiModal').classList.add('open');
+}
+
+// ── B. Proveedor detail modal ────────────────────────────────────────────────
+function openProvModal(provName){
+  // Gather all folios where this prov was the winner
+  const winFolios=folios.filter(f=>{
+    const g=f.decision.ganador;
+    return g!==null&&(f.prov[g]?.rz||PLBL[g])===provName;
+  });
+  // Score breakdown: average across all appearances
+  const allScores={precio:0,entrega:0,garantia:0,condPago:0,factura:0,calificacion:0,n:0};
+  const allAnalysis=[];
+  folios.forEach(f=>{
+    const a=scoreAll(f);if(!a)return;
+    a.forEach(x=>{if((x.prov.rz||PLBL[x.prov.idx])===provName){
+      allScores.precio+=x.s.precio;allScores.entrega+=x.s.entrega;allScores.garantia+=x.s.garantia;
+      allScores.condPago+=x.s.condPago;allScores.factura+=x.s.factura;allScores.calificacion+=x.s.calificacion;allScores.n++;
+      allAnalysis.push({folio:f.name,total:x.total,rec:buildRec(a,f)});
+    }});
+  });
+  const n=allScores.n||1;
+  // Dept usage
+  const deptMap={};winFolios.forEach(f=>{const d=f.general.depto||'Sin depto';deptMap[d]=(deptMap[d]||0)+1;});
+  const topDept=Object.entries(deptMap).sort((a,b)=>b[1]-a[1]);
+  const dims=[['precio','Precio',33],['entrega','Entrega',17],['garantia','Garantía',12],['condPago','Condiciones',13],['factura','Factura',10],['calificacion','Calificación',15]];
+  document.getElementById('provModalTitle').textContent='🏆 '+trunc(provName,40);
+  document.getElementById('provModalBody').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:4px 0 14px">
+      <div>
+        <div class="section-sep" style="margin-bottom:10px">📊 Ponderación de Criterios (promedio)</div>
+        ${dims.map(([k,l,max])=>{
+          const sc=Math.round(allScores[k]/n);const pct=Math.round((sc/max)*100);
+          return`<div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:11px;color:var(--dim)">${l}</span>
+              <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--acc2)">${sc}/${max}</span>
+            </div>
+            <div class="sbar-bg"><div class="sbar-fill" style="width:${pct}%;background:var(--acc)"></div></div>
+          </div>`;}).join('')}
+      </div>
+      <div>
+        <div class="section-sep" style="margin-bottom:10px">📋 Uso por Departamento</div>
+        ${topDept.map(([d,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12px"><span style="color:var(--dim)">${d}</span><span style="font-weight:700;color:var(--text)">${c} vez${c!==1?'es':''}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px">Sin datos</div>'}
+        <div style="margin-top:10px;padding:10px;background:var(--acc-bg);border-radius:var(--r);border:1px solid var(--acc-d)">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:2px">TOTAL SELECCIONADO</div>
+          <div style="font-size:18px;font-weight:800;color:var(--acc2)">${winFolios.length} folio${winFolios.length!==1?'s':''}</div>
+        </div>
+      </div>
+    </div>
+    ${allAnalysis.length?`<div class="section-sep" style="margin-bottom:10px">🤖 Insights de Análisis IA</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${allAnalysis.slice(0,3).map(a=>`<div style="background:var(--surf2);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;color:var(--acc2);margin-bottom:4px">${a.folio} · ${a.total}/100 pts</div>
+        <div style="font-size:11px;color:var(--dim);line-height:1.6">${a.rec.text.replace(/<[^>]+>/g,'')}</div>
+      </div>`).join('')}
+    </div>`:''}`;
+  document.getElementById('provModal').classList.add('open');
+}
+
+// ── C. Fixed Dept Chart — authorized only ───────────────────────────────────
+function renderChartDept(){
+  const ch=initC('ch-dept');if(!ch)return;
+  const dt={};
+  folios.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null).forEach(f=>{
+    const dep=f.general.depto||'Sin depto';
+    const g=f.decision.ganador;
+    const difs=getDifs(f);
+    const ganDif=difs[g];
+    if(ganDif&&ganDif.tot>0)dt[dep]=(dt[dep]||0)+ganDif.tot;
+  });
+  const sorted=Object.entries(dt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin folios autorizados',fill:'#484f58',fontSize:12}}]});return;}
+  ch.setOption({...ECT,grid:{left:85,right:60,top:10,bottom:25},
+    xAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:'#30363d'}},axisLabel:{color:'#8b949e',fontSize:9,formatter:v=>'$'+v.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:0})}},
+    yAxis:{type:'category',data:sorted.map(d=>d[0]).reverse(),axisLabel:{color:'#8b949e',fontSize:10},axisLine:{show:false}},
+    series:[{type:'bar',data:sorted.map(d=>d[1]).reverse(),barMaxWidth:16,
+      itemStyle:{borderRadius:[0,3,3,0],color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#1a4d26'},{offset:1,color:'#3fb950'}]}},
+      label:{show:true,position:'right',formatter:p=>'$'+p.value.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:1}),color:'#8b949e',fontSize:9}}]});
+}
+
+// ── B. Fixed Prov Chart — with click handler ─────────────────────────────────
+function renderChartProv(){
+  const ch=initC('ch-prov');if(!ch)return;
+  const wins={};folios.forEach(f=>{if(f.decision.ganador!==null){const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador];wins[nm]=(wins[nm]||0)+1;}});
+  const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin decisiones aún',fill:'#484f58',fontSize:12}}]});return;}
+  const colors=['#d4a843','#79c0ff','#3fb950','#bc8cff','#f0883e','#f85149','#5eca80'];
+  ch.setOption({...ECT,grid:{left:15,right:15,top:10,bottom:55},
+    xAxis:{type:'category',data:sorted.map(d=>trunc(d[0],14)),axisLabel:{color:'#8b949e',fontSize:9,rotate:15,interval:0},axisLine:{show:false}},
+    yAxis:{type:'value',axisLabel:{color:'#8b949e',fontSize:9},splitLine:{lineStyle:{color:'#30363d'}},axisLine:{show:false}},
+    series:[{type:'bar',data:sorted.map((d,i)=>({value:d[1],itemStyle:{color:colors[i%colors.length],borderRadius:[3,3,0,0]}})),barMaxWidth:28,
+      label:{show:true,position:'top',formatter:'{c}',color:'#8b949e',fontSize:10}}]});
+  // Click handler
+  ch.off('click');ch.on('click',params=>{
+    if(params.componentType==='series'){
+      const provName=sorted[params.dataIndex]?.[0];
+      if(provName)openProvModal(provName);
+    }
+  });
+}
+
+// ── D. Vehicle Investment Chart ──────────────────────────────────────────────
+function renderChartVehiculo(){
+  const ch=initC('ch-vehiculo');if(!ch)return;
+  // Gather authorized folios with a vehicle unit
+  const vMap={};// key: "DEPTO|UNIDAD" → {depto, unidad, total, count}
+  folios.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null&&f.general.unidad).forEach(f=>{
+    const depto=f.general.depto||'Sin depto';
+    const unidad=f.general.unidad;
+    const key=depto+'|'+unidad;
+    const g=f.decision.ganador;const difs=getDifs(f);const ganDif=difs[g];
+    if(ganDif&&ganDif.tot>0){
+      if(!vMap[key])vMap[key]={depto,unidad,total:0,count:0};
+      vMap[key].total+=ganDif.tot;vMap[key].count++;
+    }
+  });
+  const entries=Object.values(vMap).sort((a,b)=>b.total-a.total).slice(0,12);
+  if(!entries.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin datos vehiculares autorizados',fill:'#484f58',fontSize:12}}]});return;}
+  // Color by depto
+  const deptos=[...new Set(entries.map(e=>e.depto))];
+  const dColors=['#79c0ff','#f0883e','#3fb950','#bc8cff','#d4a843','#f85149'];
+  const dColorMap={};deptos.forEach((d,i)=>{dColorMap[d]=dColors[i%dColors.length];});
+  const scatterData=entries.map(e=>({
+    value:[e.depto,e.total,e.count],
+    name:e.unidad,
+    depto:e.depto,
+    itemStyle:{color:dColorMap[e.depto],opacity:.85}
+  }));
+  ch.setOption({...ECT,
+    tooltip:{trigger:'item',formatter:p=>{
+      const [depto,total,count]=p.value;
+      return`<strong>${p.name}</strong><br>Depto: ${depto}<br>Inversión total: <strong>$${total.toLocaleString('es-MX',{minimumFractionDigits:2})}</strong><br>Folios: ${count}`;
+    },backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3',fontSize:11}},
+    grid:{left:90,right:80,top:30,bottom:60},
+    xAxis:{type:'category',data:entries.map(e=>trunc(e.unidad,14)),axisLabel:{color:'#8b949e',fontSize:9,rotate:20,interval:0},axisLine:{lineStyle:{color:'#30363d'}}},
+    yAxis:{type:'value',name:'Inversión ($)',nameTextStyle:{color:'#8b949e',fontSize:9},axisLabel:{color:'#8b949e',fontSize:9,formatter:v=>'$'+v.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:0})},splitLine:{lineStyle:{color:'#30363d'}},axisLine:{show:false}},
+    series:[
+      {type:'bar',data:entries.map(e=>({value:e.total,itemStyle:{color:dColorMap[e.depto],borderRadius:[3,3,0,0]}})),barMaxWidth:30,
+        label:{show:true,position:'top',formatter:p=>'$'+p.value.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:1}),color:'#8b949e',fontSize:9}},
+      {type:'line',data:entries.map(e=>e.total),lineStyle:{color:'#d4a843',width:2,type:'dashed'},
+        symbol:'circle',symbolSize:6,itemStyle:{color:'#d4a843'},smooth:true,
+        tooltip:{show:false}}
+    ],
+    legend:{data:deptos.map(d=>({name:d,icon:'circle'})),bottom:5,textStyle:{color:'#8b949e',fontSize:10},
+      data:deptos.map((d,i)=>({name:d,icon:'circle',itemStyle:{color:dColors[i%dColors.length]}}))}
+  });
+}
+
+
 function exportExcel(){
   if(!folios.length){notify('Sin folios para exportar',true);return;}
   const wb=XLSX.utils.book_new();
@@ -1703,16 +1920,77 @@ function can(action){
 }
 
 /* ══════════════════════════════════════════
+   POLLING — auto-refresh every 45s
+══════════════════════════════════════════ */
+let _pollTimer=null;let _lastCloudUpdated='';
+function startPolling(){
+  if(_pollTimer)clearInterval(_pollTimer);
+  if(!settings.jsonbinKey||!settings.jsonbinBin)return;
+  _pollTimer=setInterval(async()=>{
+    try{
+      // Use HEAD-like approach: fetch metadata only to check updated timestamp
+      const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{headers:{'X-Master-Key':settings.jsonbinKey}});
+      if(!rp.ok)return;
+      const rd=await rp.json();
+      const remoteUpdated=rd.record?.updated||'';
+      if(remoteUpdated&&remoteUpdated!==_lastCloudUpdated){
+        if(_lastCloudUpdated){
+          // New version detected — pull silently
+          if(rd.record.folios){
+            // Merge using last-write-wins per folio
+            const remoteMap={};rd.record.folios.forEach(rf=>{remoteMap[rf.id]=rf;});
+            const localMap={};folios.forEach(lf=>{localMap[lf.id]=lf;});
+            const allIds=[...new Set([...rd.record.folios.map(f=>f.id),...folios.map(f=>f.id)])];
+            folios=allIds.map(id=>{
+              const r=remoteMap[id],l=localMap[id];
+              if(!r)return l;if(!l)return r;
+              const rt=new Date(r.updatedAt||r.createdAt||0).getTime();
+              const lt=new Date(l.updatedAt||l.createdAt||0).getTime();
+              return lt>=rt?l:r;
+            }).filter(Boolean);
+            ss();if(rd.record.customOpts){customOpts=rd.record.customOpts;saveCO();}
+            if(!getActive()&&folios.length)activeId=folios[0].id;
+            renderAll();
+            setSyncState('ok','Auto-sync · '+new Date().toLocaleTimeString('es-MX'));
+            notify('↓ Datos actualizados desde la nube');
+          }
+        }
+        _lastCloudUpdated=remoteUpdated;
+      }
+    }catch(e){}
+  },45000);
+}
+
+/* ══════════════════════════════════════════
    HELPERS & INIT
 ══════════════════════════════════════════ */
 function renderAll(){renderSidebar();renderFolioBar();renderResumen();renderCapture();renderComp();renderIA();}
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
-function appStart(){
-  folios=ls();
+async function appStart(){
+  // Always pull from cloud first if configured — localStorage may be stale
+  if(settings.jsonbinKey&&settings.jsonbinBin){
+    setSyncState('syncing');
+    try{
+      const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{headers:{'X-Master-Key':settings.jsonbinKey}});
+      if(rp.ok){
+        const rd=await rp.json();
+        if(rd.record&&rd.record.folios){
+          folios=rd.record.folios;ss();
+          if(rd.record.customOpts){customOpts=rd.record.customOpts;saveCO();}
+        }
+      }
+      setSyncState('ok','Datos cargados · '+new Date().toLocaleTimeString('es-MX'));
+    }catch(e){
+      folios=ls();setSyncState('error','Offline — datos locales');
+    }
+  }else{
+    folios=ls();
+    if(settings.jsonbinKey)setSyncState('ok','Key configurada');
+  }
   if(!folios.length){folios.push(mkFolio('COMP-2026-001','Primer comparativo'));ss();}
   activeId=folios[0].id;
-  if(settings.jsonbinKey)setSyncState('ok','Key configurada');
+  startPolling();
   renderAll();switchTab('resumen');
 }
 (function init(){initAuth();})();
