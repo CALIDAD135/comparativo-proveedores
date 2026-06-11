@@ -689,94 +689,154 @@ function addTombstone(id){
   }
 }
 
+/* ──────────────────────────────────────────────────────────────
+   mergeFolios(localArr, remoteArr, tombIds)
+   Pure function — no side effects.
+   Returns the definitive reconciled array using these rules:
+
+   R1. TOMBSTONE  — any id in tombIds is ALWAYS excluded (Coordinator delete wins).
+   R2. REMOTE ONLY — folio exists in remote but not local → always include (prevents rollback).
+   R3. LOCAL ONLY  — folio exists in local but not remote → include ONLY if it was never
+                     synced before (no lastSynced field) OR its updatedAt > settings.lastSync.
+                     This prevents a stale local folio from re-appearing after it was deleted
+                     by another user before tombstones were introduced.
+   R4. BOTH EXIST  — keep whichever has the newer updatedAt (last-write-wins).
+                     Tie → remote wins (remote is the committed version).
+   R5. ORDER        — remote order is canonical; local-only new folios append at the end
+                     sorted by createdAt ascending so newest last.
+────────────────────────────────────────────────────────────── */
+function mergeFolios(localArr, remoteArr, tombIds){
+  const remoteMap = new Map(remoteArr.map(f=>[f.id, f]));
+  const localMap  = new Map(localArr.map(f=>[f.id, f]));
+
+  const result = [];
+  const seen   = new Set();
+
+  // Walk remote order first (R2, R4)
+  for(const remote of remoteArr){
+    if(tombIds.has(remote.id)) continue;           // R1
+    const local = localMap.get(remote.id);
+    if(!local){
+      result.push(remote);                          // R2 — remote only, always keep
+    } else {
+      const rt = new Date(remote.updatedAt||remote.createdAt||0).getTime();
+      const lt = new Date(local.updatedAt||local.createdAt||0).getTime();
+      result.push(lt > rt ? local : remote);        // R4 — newer wins; tie → remote
+    }
+    seen.add(remote.id);
+  }
+
+  // Now walk local-only folios (R3)
+  const lastSyncTs = new Date(settings.lastSync||0).getTime();
+  for(const local of localArr){
+    if(seen.has(local.id))   continue;             // already handled above
+    if(tombIds.has(local.id)) continue;            // R1 tombstone
+    const createdTs  = new Date(local.createdAt||0).getTime();
+    const updatedTs  = new Date(local.updatedAt||local.createdAt||0).getTime();
+    // Include if: never synced (lastSync===0) OR this folio was modified after last sync
+    // This means a folio created/edited AFTER the last successful sync is always preserved.
+    if(lastSyncTs === 0 || updatedTs > lastSyncTs || createdTs > lastSyncTs){
+      result.push(local);                           // R3 — new local work, keep it
+    }
+    // else: stale local folio not in remote → it was deleted remotely, drop it
+  }
+
+  return result;
+}
+
 async function syncCloud(){
   const key=settings.jsonbinKey||document.getElementById('cfgKey')?.value||'';
   if(!key){openCloudModal();return;}
   const binId=settings.jsonbinBin||'';
   setSyncState('syncing');
-  const btn=document.getElementById('hdrSyncBtn');if(btn){btn.textContent='⏳ Sync...';btn.disabled=true;}
+  const btn=document.getElementById('hdrSyncBtn');
+  if(btn){btn.textContent='⏳ Sync...';btn.disabled=true;}
+
   try{
-    // ── STEP 1: PULL from cloud ──────────────────────────────────
+    // ── STEP 1: FETCH — mandatory pull before any write ────────────
+    // Never push without first knowing the current remote state.
     let remoteRec=null;
     if(binId){
-      const rp=await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest',{headers:{'X-Master-Key':key}});
+      const rp=await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest',{
+        headers:{'X-Master-Key':key,'Cache-Control':'no-cache'}
+      });
       if(rp.ok){const rd=await rp.json();remoteRec=rd.record||null;}
+      else if(rp.status!==404){throw new Error('Error al leer la nube: '+rp.status);}
     }
 
-    // ── STEP 2: MERGE with tombstone enforcement ─────────────────
-    // Tombstones = authoritative delete list. Any folio whose id appears
-    // in tombstones (local OR remote) is ALWAYS removed, regardless of
-    // who has it cached. This prevents ghost folios after coordinator deletes.
-    const localTombs=getTombstones();
-    const remoteTombs=(remoteRec?.tombstones)||[];
-    // Merge tombstone lists (union)
-    const allTombs=[...localTombs];
+    // ── STEP 2: MERGE tombstones (union, Coordinator deletes always win) ──
+    const localTombs  = getTombstones();
+    const remoteTombs = (remoteRec?.tombstones)||[];
+    const allTombs    = [...localTombs];
     remoteTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
-    const tombIds=new Set(allTombs.map(t=>t.id));
+    const tombIds     = new Set(allTombs.map(t=>t.id));
 
-    // Remove tombstoned folios from local state immediately
-    const localBeforeCount=folios.length;
-    folios=folios.filter(f=>!tombIds.has(f.id));
-    if(folios.length<localBeforeCount)ss();
+    // Apply tombstones to local state immediately
+    folios = folios.filter(f=>!tombIds.has(f.id));
 
-    if(remoteRec&&remoteRec.folios){
-      // Filter remote folios through tombstones too
-      const remoteClean=remoteRec.folios.filter(f=>!tombIds.has(f.id));
-      const remoteMap={};remoteClean.forEach(rf=>{remoteMap[rf.id]=rf;});
-      const localMap={};folios.forEach(lf=>{localMap[lf.id]=lf;});
-
-      const allIds=[...new Set([...remoteClean.map(f=>f.id),...folios.map(f=>f.id)])];
-      const merged=allIds.map(id=>{
-        const remote=remoteMap[id];const local=localMap[id];
-        if(!remote)return local;
-        if(!local)return remote;
-        const rt=new Date(remote.updatedAt||remote.createdAt||0).getTime();
-        const lt=new Date(local.updatedAt||local.createdAt||0).getTime();
-        return lt>=rt?local:remote;
-      }).filter(Boolean);
-
-      // Preserve remote order
-      merged.sort((a,b)=>{
-        const ri=remoteClean.findIndex(f=>f.id===a.id);
-        const rj=remoteClean.findIndex(f=>f.id===b.id);
-        if(ri>=0&&rj>=0)return ri-rj;
-        if(ri>=0)return 1;if(rj>=0)return -1;return 0;
-      });
-      folios=merged;ss();
+    // ── STEP 3: MERGE folios (Fetch→Merge logic) ──────────────────
+    let addedFromRemote=0; let keptLocal=0;
+    if(remoteRec?.folios){
+      const remoteClean = remoteRec.folios.filter(f=>!tombIds.has(f.id));
+      const before      = folios.length;
+      folios            = mergeFolios(folios, remoteClean, tombIds);
+      addedFromRemote   = folios.filter(f=>!new Map(Array.from({length:before},(_, i)=>folios[i]).map(x=>[x?.id,true])).has(f.id)).length;
+      keptLocal         = folios.length;
       if(remoteRec.customOpts){customOpts=remoteRec.customOpts;saveCO();}
     }
+    ss(); // Persist merged state locally before push
 
-    // Update merged tombstones in settings
-    settings.tombstones=allTombs;
+    // ── STEP 4: UPDATE merged tombstones in settings ──────────────
+    settings.tombstones = allTombs;
     localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
 
-    // ── STEP 3: PUSH merged state + tombstones to cloud ──────────
-    const payload=JSON.stringify({folios,customOpts,tombstones:allTombs,version:'4',updated:new Date().toISOString()});
+    // ── STEP 5: PUSH merged state to cloud ────────────────────────
+    const payload = JSON.stringify({
+      folios,
+      customOpts,
+      tombstones: allTombs,
+      version:    '4',
+      updated:    new Date().toISOString(),
+      pushedBy:   currentRole||'UNKNOWN'
+    });
     let url,method;
     if(binId){url='https://api.jsonbin.io/v3/b/'+binId;method='PUT';}
-    else{url='https://api.jsonbin.io/v3/b';method='POST';}
-    const resp=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Private':'true',...(method==='POST'?{'X-Bin-Name':'IES-Comparativos'}:{})},body:payload});
-    const data=await resp.json();
-    if(!resp.ok)throw new Error(data.message||'Error '+resp.status);
+    else     {url='https://api.jsonbin.io/v3/b';          method='POST';}
+    const resp = await fetch(url,{method,headers:{
+      'Content-Type':  'application/json',
+      'X-Master-Key':  key,
+      'X-Bin-Private': 'true',
+      ...(method==='POST'?{'X-Bin-Name':'IES-Comparativos'}:{})
+    },body:payload});
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.message||'Error '+resp.status);
+
     if(!binId){
       settings.jsonbinBin=data.metadata.id;
       const bi=document.getElementById('cfgBin');if(bi)bi.value=data.metadata.id;
       const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=data.metadata.id;
     }
-    settings.lastSync=new Date().toISOString();
+    settings.lastSync = new Date().toISOString();
     localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+
+    // ── STEP 6: UPDATE UI ─────────────────────────────────────────
     setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
     const ls2=document.getElementById('cloudLastSync');
     if(ls2)ls2.textContent='Última sincronización: '+new Date().toLocaleString('es-MX');
     const setupSec=document.getElementById('cloudSetupSection');
     const syncSec=document.getElementById('cloudSyncSection');
     if(setupSec)setupSec.style.display='none';
-    if(syncSec)syncSec.style.display='block';
+    if(syncSec) syncSec.style.display='block';
     if(folios.length&&!getActive())activeId=folios[0].id;
     renderAll();
     notify('✓ Sincronizado — '+folios.length+' folios');
-  }catch(e){setSyncState('error','Error: '+e.message);notify('Error al sincronizar: '+e.message,true);}
-  finally{if(btn){btn.textContent='☁ Nube';btn.disabled=false;}}
+
+  }catch(e){
+    setSyncState('error','Error: '+e.message);
+    notify('Error al sincronizar: '+e.message,true);
+  }finally{
+    if(btn){btn.textContent='☁ Nube';btn.disabled=false;}
+  }
 }
 
 async function quickSync(){if(!settings.jsonbinKey){openCloudModal();return;}await syncCloud();}
@@ -2228,18 +2288,18 @@ function startPolling(){
         if(_lastCloudUpdated){
           // New version detected — pull silently
           if(rd.record.folios){
-            // Merge using last-write-wins per folio
-            const remoteMap={};rd.record.folios.forEach(rf=>{remoteMap[rf.id]=rf;});
-            const localMap={};folios.forEach(lf=>{localMap[lf.id]=lf;});
-            const allIds=[...new Set([...rd.record.folios.map(f=>f.id),...folios.map(f=>f.id)])];
-            folios=allIds.map(id=>{
-              const r=remoteMap[id],l=localMap[id];
-              if(!r)return l;if(!l)return r;
-              const rt=new Date(r.updatedAt||r.createdAt||0).getTime();
-              const lt=new Date(l.updatedAt||l.createdAt||0).getTime();
-              return lt>=rt?l:r;
-            }).filter(Boolean);
+            // Use same merge logic as syncCloud for consistency
+            const remoteTombs=(rd.record.tombstones)||[];
+            const allTombs=[...getTombstones()];
+            remoteTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
+            const tombIds=new Set(allTombs.map(t=>t.id));
+            const remoteClean=rd.record.folios.filter(f=>!tombIds.has(f.id));
+            folios=folios.filter(f=>!tombIds.has(f.id));
+            folios=mergeFolios(folios,remoteClean,tombIds);
             ss();if(rd.record.customOpts){customOpts=rd.record.customOpts;saveCO();}
+            settings.tombstones=allTombs;
+            settings.lastSync=new Date().toISOString();
+            localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
             if(!getActive()&&folios.length)activeId=folios[0].id;
             renderAll();
             setSyncState('ok','Auto-sync · '+new Date().toLocaleTimeString('es-MX'));
