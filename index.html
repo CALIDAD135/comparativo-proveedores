@@ -257,6 +257,15 @@ select option{background:var(--surf2)}
 .attach-progress.show{display:block}
 .attach-progress-bar-wrap{height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
 .attach-progress-bar{height:100%;background:var(--acc);border-radius:2px;width:0;transition:width .3s}
+
+/* EMAIL AUTH MODAL */
+.email-modal-body{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;white-space:pre-wrap;overflow-y:auto;max-height:340px}
+.email-subject{font-size:12px;font-weight:700;color:var(--acc2);background:var(--acc-bg);border:1px solid var(--acc-d);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.email-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.email-copy-btn{background:var(--surf2);border:1px solid var(--bd2);border-radius:var(--r);color:var(--dim);font-size:11px;padding:5px 11px;cursor:pointer;font-family:inherit;transition:.12s}
+.email-copy-btn:hover{background:var(--surf3);color:var(--text);border-color:var(--acc)}
+.email-copy-btn.copied{border-color:var(--green);color:var(--green)}
+
 /* MODALS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;align-items:center;justify-content:center}
 .overlay.open{display:flex}
@@ -532,6 +541,28 @@ select option{background:var(--surf2)}
     <h3 id="provModalTitle">Desglose de Proveedor</h3>
     <div id="provModalBody" style="overflow:auto;flex:1"></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="document.getElementById('provModal').classList.remove('open')">Cerrar</button></div>
+  </div>
+</div>
+
+
+<!-- MODAL: SOLICITAR AUTORIZACIÓN POR CORREO -->
+<div class="overlay" id="emailAuthModal">
+  <div class="modal" style="width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="margin:0">✉ Solicitar Autorización — <span id="emailFolioName" style="color:var(--acc2)"></span></h3>
+      <span style="font-size:10px;color:var(--muted)">Solo Coordinador / Auxiliar</span>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:8px">Asunto:</div>
+    <div class="email-subject" id="emailSubject"></div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:6px">Cuerpo del mensaje:</div>
+    <div class="email-modal-body" id="emailBody"></div>
+    <div class="email-actions">
+      <button class="btn btn-acc" onclick="openMailClient()">✉ Abrir cliente de correo</button>
+      <button class="email-copy-btn" id="copySubjectBtn" onclick="copyEmailPart('subject')">📋 Copiar asunto</button>
+      <button class="email-copy-btn" id="copyBodyBtn" onclick="copyEmailPart('body')">📋 Copiar cuerpo</button>
+      <button class="email-copy-btn" id="copyLinkBtn" onclick="copyEmailPart('link')">🔗 Copiar enlace</button>
+      <button class="btn btn-ghost" style="margin-left:auto" onclick="document.getElementById('emailAuthModal').classList.remove('open')">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -1510,6 +1541,9 @@ function renderComp(){
   const difs=getDifs(f);const gan=f.decision.ganador;const ganAct=act.find(p=>p.idx===gan);
   function bestIdx(vals,lower){const ns=vals.map(v=>parseFloat(v)||0).filter(v=>v>0);if(!ns.length)return -1;const b=lower?Math.min(...ns):Math.max(...ns);return vals.findIndex(v=>Math.abs((parseFloat(v)||0)-b)<0.01);}
   cont.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:${gan!==null?'0':'14px'}">
+      ${canSendEmail()?`<button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" style="margin-left:auto" title="Solicitar autorización a Ing. Ana Ferrer">✉ Solicitar Autorización</button>`:''}
+    </div>
     ${gan!==null?`<div style="background:var(--acc-bg);border:1px solid var(--acc-d);border-radius:var(--rl);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div><div style="font-size:10px;font-weight:700;color:var(--acc-d);text-transform:uppercase;letter-spacing:.5px">Proveedor Autorizado</div>
       <div style="font-size:15px;font-weight:700">🏆 ${ganAct?.rz||PLBL[gan]} <span class="fbadge">${PLBL[gan]}</span></div></div>
@@ -1591,6 +1625,7 @@ function renderResumen(){
             <div class="pc-actions">
               <button class="btn btn-acc btn-sm" onclick="selectFolio('${f.id}');switchTab('ia')">🤖 Ver Análisis IA</button>
               <button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}');switchTab('comp')">📋 Comparativo</button>
+              ${canSendEmail()?`<button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" title="Solicitar autorización">✉ Autorización</button>`:''}
             </div>
           </div>`;}).join('')}
       </div>
@@ -1659,6 +1694,7 @@ function renderFT(data){
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectFolio('${f.id}');switchTab('comp')">📋</button>
           <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectFolio('${f.id}');switchTab('ia')">🤖</button>
+          ${canSendEmail()?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();requestAutorizacion('${f.id}')" title="Solicitar autorización a Gerencia" style="color:var(--blue)">✉</button>`:''}
         </div></td>
       </tr>`;}).join('')}
     </tbody>
@@ -1912,6 +1948,119 @@ function renderChartVehiculo(){
 }
 
 
+/* ══════════════════════════════════════════
+   EMAIL AUTORIZACIÓN — Solicitar a Ing. Ana Ferrer
+══════════════════════════════════════════ */
+const EMAIL_GERENCIA='ana.ferrer@ies.com.mx';
+const AUTOLOGIN_PIN_GERENCIA='3690';
+let _emailData={subject:'',body:'',link:''};
+
+function canSendEmail(){return currentRole==='COORDINADOR'||currentRole==='AUXILIAR';}
+
+function buildAutoLoginLink(folioId){
+  const token=btoa('GERENCIA:'+AUTOLOGIN_PIN_GERENCIA+':'+folioId);
+  const base=window.location.origin+window.location.pathname;
+  return base+'?token='+encodeURIComponent(token)+'&folio='+encodeURIComponent(folioId);
+}
+
+function requestAutorizacion(folioId){
+  if(!canSendEmail()){notify('Sin permiso para solicitar autorización',true);return;}
+  const f=folios.find(x=>x.id===folioId)||getActive();
+  if(!f){notify('Folio no encontrado',true);return;}
+  const g=f.general;
+  const unidad=g.unidad||'—';
+  const zona=g.zona||'—';
+  const justificacion=(g.justificacion||'Sin justificación registrada').slice(0,300).trim();
+  const provLines=f.prov.map((p,i)=>{
+    if(!p.active)return null;
+    const difs=getDifs(f);
+    const cost=difs[i]&&difs[i].tot>0?fmt(difs[i].tot):'Sin precio';
+    const entrega=p.entrega||'No especificado';
+    return'• '+(p.rz||PLBL[i])+' | Costo: '+cost+' | Tiempo estimado: '+entrega;
+  }).filter(Boolean);
+  if(!provLines.length){notify('No hay proveedores capturados en este folio',true);return;}
+  const link=buildAutoLoginLink(f.id);
+  const remitente=(ROLES[currentRole]?.label||currentRole);
+  const subject='Revisión y Autorización Requerida - '+f.name+' - '+unidad;
+  const body=[
+    'Ing. Ana María Ferrer,',
+    '',
+    'Se presenta para su evaluación el comparativo correspondiente al mantenimiento de la unidad '+unidad+' asignada a la zona '+zona+'.',
+    '',
+    'Justificación de la intervención: '+justificacion,
+    '',
+    'Proveedores Evaluados:',
+    ...provLines,
+    '',
+    'Para revisar los diagnósticos detallados, evaluar el cuadro comparativo y emitir su autorización, por favor ingrese directamente al folio a través del siguiente enlace de acceso rápido:',
+    '',
+    link,
+    '',
+    'Quedo a la espera de su resolución.',
+    '',
+    remitente
+  ].join('\n');
+  _emailData={subject,body,link};
+  document.getElementById('emailFolioName').textContent=f.name;
+  document.getElementById('emailSubject').textContent=subject;
+  document.getElementById('emailBody').textContent=body;
+  ['copySubjectBtn','copyBodyBtn','copyLinkBtn'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.classList.remove('copied');
+    el.textContent=id==='copySubjectBtn'?'📋 Copiar asunto':id==='copyBodyBtn'?'📋 Copiar cuerpo':'🔗 Copiar enlace';
+  });
+  document.getElementById('emailAuthModal').classList.add('open');
+}
+
+function openMailClient(){
+  const{subject,body}=_emailData;
+  const mailto='mailto:'+EMAIL_GERENCIA+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  if(mailto.length>8000){notify('Correo largo — usa "Copiar cuerpo" y pégalo manualmente',true);}
+  else{window.open(mailto,'_self');notify('Cliente de correo abierto');}
+}
+
+function copyEmailPart(part){
+  let text='';let btnId='';
+  if(part==='subject'){text=_emailData.subject;btnId='copySubjectBtn';}
+  else if(part==='body'){text=_emailData.body;btnId='copyBodyBtn';}
+  else if(part==='link'){text=_emailData.link;btnId='copyLinkBtn';}
+  if(!text)return;
+  navigator.clipboard?.writeText(text).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(btn){btn.classList.add('copied');btn.textContent='✓ Copiado';
+    setTimeout(()=>{btn.classList.remove('copied');btn.textContent=part==='subject'?'📋 Copiar asunto':part==='body'?'📋 Copiar cuerpo':'🔗 Copiar enlace';},2000);}
+    notify('Copiado al portapapeles ✓');
+  }).catch(()=>notify('Error al copiar',true));
+}
+
+function checkAutoLoginToken(){
+  const params=new URLSearchParams(window.location.search);
+  const token=params.get('token');
+  const targetFolio=params.get('folio');
+  if(!token)return false;
+  try{
+    const decoded=atob(decodeURIComponent(token));
+    const parts=decoded.split(':');
+    const role=parts[0];const pin=parts[1];const folioId=parts[2]||targetFolio;
+    if(ROLES[role]&&ROLES[role].pin===pin){
+      currentRole=role;
+      localStorage.setItem('ies_role_v4',role);
+      document.getElementById('loginScreen').style.display='none';
+      applyRole(role);
+      window.history.replaceState({},'',window.location.origin+window.location.pathname);
+      if(folioId){
+        window.addEventListener('_appReady',()=>{
+          const target=folios.find(f=>f.id===folioId);
+          if(target)selectFolio(target.id);
+          else notify('Folio no encontrado — puede haber sido actualizado',true);
+        },{once:true});
+      }
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
 function exportExcel(){
   if(!folios.length){notify('Sin folios para exportar',true);return;}
   const wb=XLSX.utils.book_new();
@@ -1965,6 +2114,8 @@ let currentRole=localStorage.getItem('ies_role_v4')||null;
 let pinBuffer='';let pendingRole=null;
 
 function initAuth(){
+  // Check for auto-login token from email link first
+  if(checkAutoLoginToken()){appStart();return;}
   if(currentRole&&ROLES[currentRole]){
     document.getElementById('loginScreen').style.display='none';
     applyRole(currentRole);
@@ -2146,6 +2297,7 @@ async function appStart(){
   startPolling();
   renderSidebar();
   openDashboard();
+  window.dispatchEvent(new Event('_appReady'));
 }
 (function init(){initAuth();})();
 </script>
