@@ -347,7 +347,14 @@ select option{background:var(--surf2)}
 </header>
 <div class="main">
   <aside>
-    <div class="sb-head">Folios <button class="btn btn-ghost btn-sm" onclick="openFolioModal()" style="padding:3px 6px">＋</button></div>
+    <div class="sb-head" style="flex-direction:column;align-items:stretch;gap:0;padding:0">
+      <div id="sbDashBtn" onclick="openDashboard()" style="display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--bd);font-size:12px;font-weight:700;color:var(--acc2);background:var(--acc-bg);transition:.15s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--acc-bg)'">
+        <span style="font-size:15px">📊</span> Dashboard
+      </div>
+      <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd)">
+        Folios <button class="btn btn-ghost btn-sm" onclick="openFolioModal()" style="padding:3px 6px" id="sbNewFolioBtn">＋</button>
+      </div>
+    </div>
     <div class="folio-list" id="folioList"></div>
   </aside>
   <div class="content">
@@ -358,16 +365,21 @@ select option{background:var(--surf2)}
       </div>
       <div class="prov-pills" id="fbPills"></div>
     </div>
-    <div class="tabs">
-      <span class="tab active" id="tab-resumen" onclick="switchTab('resumen')">📊 Vista Dirección</span>
-      <span class="tab" id="tab-captura" onclick="switchTab('captura')">✏️ Captura</span>
-      <span class="tab" id="tab-comp" onclick="switchTab('comp')">📋 Comparativo</span>
-      <span class="tab" id="tab-ia" onclick="switchTab('ia')">🤖 Análisis IA</span>
+    <!-- DASHBOARD panel (full-width, replaces Vista Dirección) -->
+    <div id="panel-dashboard" style="display:none;padding:14px 18px;overflow-y:auto;height:100%"><div id="dashboardContent"></div></div>
+    <!-- FOLIO panels -->
+    <div id="panel-folio" style="display:flex;flex-direction:column;height:100%">
+      <div class="tabs">
+        <span class="tab active" id="tab-captura" onclick="switchTab('captura')">✏️ Captura</span>
+        <span class="tab" id="tab-comp" onclick="switchTab('comp')">📋 Comparativo</span>
+        <span class="tab" id="tab-ia" onclick="switchTab('ia')">🤖 Análisis IA</span>
+      </div>
+      <div style="flex:1;overflow:hidden;position:relative">
+        <div class="panel active" id="panel-captura"><div class="accordion" id="captureAccordion"></div></div>
+        <div class="panel" id="panel-comp"><div id="compContent"></div></div>
+        <div class="panel" id="panel-ia"><div id="iaContent"></div></div>
+      </div>
     </div>
-    <div class="panel active" id="panel-resumen"><div id="resumenContent"></div></div>
-    <div class="panel" id="panel-captura"><div class="accordion" id="captureAccordion"></div></div>
-    <div class="panel" id="panel-comp"><div id="compContent"></div></div>
-    <div class="panel" id="panel-ia"><div id="iaContent"></div></div>
   </div>
 </div>
 
@@ -516,6 +528,30 @@ const IVA=0.16;
 const PHEX=['#79c0ff','#bc8cff','#f0883e'];
 const PCLS=['pp1','pp2','pp3'];
 const PLBL=['Proveedor 1','Proveedor 2','Proveedor 3'];
+const ZONA_COD={'CANCUN':'CUN','CABOS':'CB','PDC':'PC'};
+function buildFolioName(zona,unidad,existingName){
+  const zc=ZONA_COD[zona]||zona?.slice(0,3).toUpperCase()||'XX';
+  const unit=(unidad||'').replace(/\s+/g,'_').replace(/[^A-Z0-9_]/gi,'').toUpperCase()||'UNIT';
+  // Preserve consecutive number from existing name if it follows the CT pattern
+  let seq='01';
+  if(existingName){const m=existingName.match(/^CT[A-Z]+_(\d{2})_/);if(m)seq=m[1];}
+  // Auto-assign consecutive across all folios for this zone+unit combo
+  else{
+    const pattern=new RegExp('^CT'+zc+'_(\\d{2})_'+unit.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$');
+    const used=folios.map(f=>f.name).filter(n=>pattern.test(n)).map(n=>{const m=n.match(/CT[A-Z]+_(\d{2})_/);return m?parseInt(m[1]):0;});
+    const next=(used.length?Math.max(...used):0)+1;
+    seq=String(next).padStart(2,'0');
+  }
+  return'CT'+zc+'_'+seq+'_'+unit;
+}
+function updateFolioNomenclature(){
+  const f=getActive();if(!f)return;
+  const zona=document.getElementById('g_zona')?.value||f.general.zona;
+  const unidad=document.getElementById('g_unidad')?.value||f.general.unidad;
+  if(!zona||!unidad)return;
+  const newName=buildFolioName(zona,unidad,f.name);
+  if(newName!==f.name){f.name=newName;f.updatedAt=new Date().toISOString();ss();renderSidebar();renderFolioBar();notify('Folio renombrado: '+newName);}
+}
 const PHDCLS=['prov-head-1 ph1','prov-head-2 ph2','prov-head-3 ph3'];
 const PCCLS=['c1','c2','c3'];const PHCLS=['h1','h2','h3'];const PBCLS=['b1','b2','b3'];const SBCLS=['sb1','sb2','sb3'];
 
@@ -566,7 +602,7 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',unidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[]};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',unidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[]};}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
 /* ══════════════════════════════════════════
@@ -746,7 +782,15 @@ function confirmFolio(){
   const f=mkFolio(name,desc);folios.push(f);ss();setSyncState('pending');
   closeFolioModal();selectFolio(f.id);notify('Folio "'+name+'" creado');
 }
-function selectFolio(id){activeId=id;renderSidebar();renderFolioBar();renderCapture();renderComp();renderIA();switchTab('captura');}
+function selectFolio(id){
+  activeId=id;
+  document.getElementById('panel-dashboard').style.display='none';
+  document.getElementById('panel-folio').style.display='flex';
+  document.getElementById('sbDashBtn').style.background='var(--acc-bg)';
+  renderSidebar();renderFolioBar();
+  const fb=document.getElementById('folioBar');if(fb)fb.style.display='flex';
+  renderCapture();renderComp();renderIA();switchTab('captura');
+}
 function deleteFolioRequest(id){if(!can('deleteFolio')){notify('Sin permiso para eliminar folios',true);return;}pendingDel=id;document.getElementById('adminPass').value='';document.getElementById('adminError').textContent='';document.getElementById('adminModal').classList.add('open');setTimeout(()=>document.getElementById('adminPass').focus(),100);}
 function closeAdminModal(){document.getElementById('adminModal').classList.remove('open');pendingDel=null;}
 function confirmAdmin(){
@@ -800,7 +844,7 @@ function dynSel(id,cat,val,ph,allowNew){
     <button class="btn btn-ghost btn-sm" onclick="cancelOpt('${id}')">✕</button>
   </div>`;
 }
-function handleSel(el,id,cat){if(el.value==='__new__'){el.value='';const nw=document.getElementById(id+'_nw');if(nw){nw.classList.add('show');document.getElementById(id+'_ni').focus();}}else autoSave();}
+function handleSel(el,id,cat){if(el.value==='__new__'){el.value='';const nw=document.getElementById(id+'_nw');if(nw){nw.classList.add('show');document.getElementById(id+'_ni').focus();}}else{autoSave();if(id==='g_zona'||id==='g_unidad')updateFolioNomenclature();}}
 function addOpt(id,cat){
   const inp=document.getElementById(id+'_ni');const val=(inp?.value||'').trim();
   if(!val){notify('Ingresa un valor',true);return;}
@@ -826,7 +870,8 @@ function renderSidebar(){
 }
 function renderFolioBar(){
   const bar=document.getElementById('folioBar');const f=getActive();
-  if(!f){bar.style.display='none';return;}bar.style.display='flex';
+  if(!f){if(bar)bar.style.display='none';return;}
+  if(bar)bar.style.display='flex';
   const tc=f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:'';
   document.getElementById('fbName').innerHTML=`${f.name} ${tc} <span class="fbadge">${f.createdAt}</span>`;
   document.getElementById('fbDesc').textContent=f.desc||'';
@@ -836,9 +881,25 @@ function renderFolioBar(){
 /* ══════════════════════════════════════════
    TABS
 ══════════════════════════════════════════ */
+function openDashboard(){
+  document.getElementById('panel-dashboard').style.display='block';
+  document.getElementById('panel-folio').style.display='none';
+  document.getElementById('folioBar')?.setAttribute('style','display:none');
+  // Highlight dashboard button
+  document.getElementById('sbDashBtn').style.background='var(--acc-bg)';
+  // Remove active from all folio items
+  document.querySelectorAll('.folio-item').forEach(el=>el.classList.remove('active'));
+  renderResumen();
+  setTimeout(renderCharts,150);
+}
 function switchTab(name){
-  ['resumen','captura','comp','ia'].forEach(t=>{document.getElementById('panel-'+t).classList.toggle('active',t===name);document.getElementById('tab-'+t).classList.toggle('active',t===name);});
-  if(name==='resumen')setTimeout(renderCharts,200);
+  // Ensure folio panel is visible
+  document.getElementById('panel-dashboard').style.display='none';
+  document.getElementById('panel-folio').style.display='flex';
+  ['captura','comp','ia'].forEach(t=>{
+    document.getElementById('panel-'+t)?.classList.toggle('active',t===name);
+    document.getElementById('tab-'+t)?.classList.toggle('active',t===name);
+  });
   if(name==='ia')setTimeout(renderRadarChart,200);
 }
 
@@ -871,8 +932,8 @@ function genCG(f,g,gFilled){
     <div class="acc-body"><div class="acc-inner"><div class="fg">
       <div class="form-group"><label>Gestor</label>${dynSel('g_gestor','GESTOR',g.gestor)}</div>
       <div class="form-group"><label>Fecha Solicitud</label><input type="date" id="g_fecha" value="${esc(g.fecha)}" onchange="autoSave()"/></div>
-      <div class="form-group"><label>Zona</label>${dynSel('g_zona','ZONA',g.zona)}</div>
-      <div class="form-group"><label>Unidad</label>${dynSel('g_unidad','UNIDAD',g.unidad)}</div>
+      <div class="form-group"><label>Zona</label>${dynSel('g_zona','ZONA',g.zona,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
+      <div class="form-group"><label>Unidad</label>${dynSel('g_unidad','UNIDAD',g.unidad,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
       <div class="form-group"><label>Departamento</label>${dynSel('g_depto','DEPTO',g.depto)}</div>
       <div class="form-group"><label>Tipo de Solicitud</label>${dynSel('g_tipo','TIPO',g.tipo,'— Refacciones / Servicio —',false)}</div>
       <div class="form-group"><label># COT Interna</label><input type="text" id="g_cotInterna" value="${esc(g.cotInterna)}" placeholder="COT-001" onchange="autoSave()"/></div>
@@ -881,6 +942,10 @@ function genCG(f,g,gFilled){
       <div class="form-group"><label>Unidad de Medida</label>${dynSel('g_um','UM',g.um)}</div>
       <div class="form-group full"><label>Descripción del Artículo / Servicio</label><textarea id="g_descripcion" rows="2" placeholder="Descripción detallada" onchange="autoSave()">${esc(g.descripcion)}</textarea></div>
       <div class="form-group full"><label>Justificación</label><textarea id="g_justificacion" rows="2" placeholder="Motivo de la compra" onchange="autoSave()">${esc(g.justificacion)}</textarea></div>
+      <div class="form-group full" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:2px">
+        <label style="color:var(--blue);display:flex;align-items:center;gap:6px">🏢 Comentarios de Gerencia Operativa ${g.gerenciaComentarios?'<span style="font-size:9px;background:var(--blu-bg);color:var(--blue);border:1px solid var(--p1bd);border-radius:8px;padding:1px 7px;font-weight:700">Registrado</span>':''}</label>
+        <textarea id="g_gerenciaComentarios" rows="2" placeholder="Anotaciones de Gerencia antes de revisión macro..." onchange="autoSave()" ${(currentRole!=='COORDINADOR'&&currentRole!=='GERENCIA')?'readonly style="opacity:.5;cursor:default"':''}>${esc(g.gerenciaComentarios||'')}</textarea>
+      </div>
     </div></div></div>
   </div>`;
 }
@@ -1225,11 +1290,13 @@ function restoreStars(pi,dim,cid){const f=getActive();if(!f)return;const val=(f.
 ══════════════════════════════════════════ */
 function autoSave(){
   const f=getActive();if(!f)return;
-  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um'};
+  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
   Object.entries(gm).forEach(([k,id])=>{const el=document.getElementById(id);if(el)f.general[k]=el.value;});
   [0,1,2].forEach(i=>{
     const pm={numCot:'numCot',rz:'rz',marca:'marca',pu:'pu',garantia:'garantia',condiciones:'condiciones',entrega:'entrega',factura:'factura',observaciones:'obs'};
-    Object.entries(pm).forEach(([k,sfx])=>{const el=document.getElementById('p'+i+'_'+sfx);if(el)f.prov[i][k]=el.value;});
+    Object.entries(pm).forEach(([k,sfx])=>{const el=document.getElementById('p'+i+'_'+sfx);if(el){const v=el.value;if(v||k!=='rz')f.prov[i][k]=v;}});
+    // Never blank the provider name from a sync/render cycle — only blank from explicit user action
+    if(!f.prov[i].rz){const rzEl=document.getElementById('p'+i+'_rz');if(rzEl&&rzEl.value)f.prov[i].rz=rzEl.value;}
     f.prov[i].active=!!(f.prov[i].rz||f.prov[i].pu||f.prov[i].numCot);
     if(!f.prov[i].rating)f.prov[i].rating={global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''};
     const ro=document.getElementById('p'+i+'_robs');if(ro)f.prov[i].rating.obs=ro.value;
@@ -1251,7 +1318,7 @@ function refreshCalcs(){
     const t=document.getElementById('p'+i+'_tot');if(t)t.value=fmt(c.tot);
   });
 }
-function saveAll(){autoSave();renderSidebar();renderResumen();renderComp();renderIA();notify('Folio guardado');switchTab('comp');}
+function saveAll(){autoSave();renderSidebar();renderComp();renderIA();notify('Folio guardado');switchTab('comp');}
 function setGanador(idx){const f=getActive();if(!f)return;f.decision.ganador=idx;ss();setSyncState('pending');renderCapture();notify(PLBL[idx]+' seleccionado como ganador');}
 
 /* ══════════════════════════════════════════
@@ -1410,7 +1477,7 @@ function renderComp(){
    RESUMEN — VISTA DIRECCIÓN
 ══════════════════════════════════════════ */
 function renderResumen(){
-  const cont=document.getElementById('resumenContent');
+  const cont=document.getElementById('dashboardContent');
   if(!folios.length){cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos IES</h3><p>Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p><div style="margin-top:16px"><button class="btn btn-acc" onclick="openFolioModal()">＋ Crear Primer Folio</button></div></div>';return;}
   const total=folios.length;const aut=folios.filter(f=>f.decision.estatus==='AUTORIZADO').length;
   const pend=folios.filter(f=>!f.decision.ganador&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2).length;
@@ -1964,7 +2031,12 @@ function startPolling(){
 /* ══════════════════════════════════════════
    HELPERS & INIT
 ══════════════════════════════════════════ */
-function renderAll(){renderSidebar();renderFolioBar();renderResumen();renderCapture();renderComp();renderIA();}
+function renderAll(){
+  renderSidebar();renderFolioBar();renderCapture();renderComp();renderIA();
+  // Refresh dashboard if currently visible
+  const db=document.getElementById('panel-dashboard');
+  if(db&&db.style.display!=='none')renderResumen();
+}
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
 async function appStart(){
@@ -1991,7 +2063,8 @@ async function appStart(){
   if(!folios.length){folios.push(mkFolio('COMP-2026-001','Primer comparativo'));ss();}
   activeId=folios[0].id;
   startPolling();
-  renderAll();switchTab('resumen');
+  renderSidebar();
+  openDashboard();
 }
 (function init(){initAuth();})();
 </script>
