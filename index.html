@@ -90,7 +90,7 @@ aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid 
 .folio-gear{opacity:0;font-size:11px;color:var(--muted);cursor:pointer;padding:2px 3px;border-radius:3px;transition:.12s;flex-shrink:0}
 .folio-item:hover .folio-gear{opacity:1}.folio-gear:hover{color:var(--red);background:var(--red-bg)}
 /* CONTENT */
-.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .folio-bar{padding:10px 20px;background:var(--surf);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .folio-bar-name{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
 .fbadge{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;background:var(--acc-bg);color:var(--acc2);font-weight:600}
@@ -108,7 +108,7 @@ aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid 
 .tab{padding:11px 14px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;white-space:nowrap}
 .tab:hover{color:var(--text)}.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
 /* PANELS */
-.panel{display:none;flex:1;overflow-y:auto;padding:18px 22px}.panel.active{display:block}
+.panel{display:none;height:100%;overflow-y:auto;padding:18px 22px}.panel.active{display:block}
 /* EMPTY */
 .empty-hero{text-align:center;padding:80px 20px}
 .empty-hero .icon{font-size:40px;margin-bottom:14px}
@@ -366,15 +366,15 @@ select option{background:var(--surf2)}
       <div class="prov-pills" id="fbPills"></div>
     </div>
     <!-- DASHBOARD panel (full-width, replaces Vista Dirección) -->
-    <div id="panel-dashboard" style="display:none;padding:14px 18px;overflow-y:auto;height:100%"><div id="dashboardContent"></div></div>
+    <div id="panel-dashboard" style="display:none;padding:14px 18px;overflow-y:auto;flex:1;min-height:0"><div id="dashboardContent"></div></div>
     <!-- FOLIO panels -->
-    <div id="panel-folio" style="display:flex;flex-direction:column;height:100%">
+    <div id="panel-folio" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
       <div class="tabs">
         <span class="tab active" id="tab-captura" onclick="switchTab('captura')">✏️ Captura</span>
         <span class="tab" id="tab-comp" onclick="switchTab('comp')">📋 Comparativo</span>
         <span class="tab" id="tab-ia" onclick="switchTab('ia')">🤖 Análisis IA</span>
       </div>
-      <div style="flex:1;overflow:hidden;position:relative">
+      <div style="flex:1;overflow:hidden;position:relative;height:100%">
         <div class="panel active" id="panel-captura"><div class="accordion" id="captureAccordion"></div></div>
         <div class="panel" id="panel-comp"><div id="compContent"></div></div>
         <div class="panel" id="panel-ia"><div id="iaContent"></div></div>
@@ -385,12 +385,30 @@ select option{background:var(--surf2)}
 
 <!-- MODAL: NUEVO FOLIO -->
 <div class="overlay" id="folioModal">
-  <div class="modal">
+  <div class="modal" style="width:480px">
     <h3>📁 Nuevo Folio de Comparativo</h3>
-    <p>Cada folio agrupa hasta 3 cotizaciones para un mismo proceso de compra.</p>
+    <p>Selecciona Zona y Unidad para generar la nomenclatura automática del folio.</p>
     <div class="fg" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
-      <div class="form-group"><label>Número de Folio</label><input type="text" id="nfName" placeholder="COT-2026-001" onkeydown="if(event.key==='Enter')confirmFolio()"/></div>
-      <div class="form-group"><label>Descripción</label><input type="text" id="nfDesc" placeholder="Ej. Mant. flotilla jun26"/></div>
+      <div class="form-group">
+        <label>Zona <span style="color:var(--red)">*</span></label>
+        <select id="nfZona" onchange="previewFolioName()">
+          <option value="">— Seleccionar —</option>
+          <option value="CANCUN">CANCUN</option>
+          <option value="CABOS">CABOS</option>
+          <option value="PDC">PDC</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Unidad <span style="color:var(--red)">*</span></label>
+        <select id="nfUnidad" onchange="previewFolioName()">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Nombre generado</label>
+        <div id="nfPreview" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--acc2);min-height:36px">Selecciona Zona y Unidad…</div>
+      </div>
+      <div class="form-group full"><label>Descripción (opcional)</label><input type="text" id="nfDesc" placeholder="Ej. Servicio menor junio 2026"/></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeFolioModal()">Cancelar</button>
@@ -627,6 +645,19 @@ function setSyncState(state,msg){
   if(banner){banner.className='cloud-status '+(banMap[state]||'cs-off');}
 }
 
+// Tombstone list: ids deleted by Coordinator — stored in settings so they travel with the device
+// Format: {id: string, deletedAt: ISO string}[]
+function getTombstones(){return settings.tombstones||[];}
+function addTombstone(id){
+  if(!settings.tombstones)settings.tombstones=[];
+  if(!settings.tombstones.find(t=>t.id===id)){
+    settings.tombstones.push({id,deletedAt:new Date().toISOString()});
+    // Keep only last 200 tombstones to prevent bloat
+    if(settings.tombstones.length>200)settings.tombstones=settings.tombstones.slice(-200);
+    localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+  }
+}
+
 async function syncCloud(){
   const key=settings.jsonbinKey||document.getElementById('cfgKey')?.value||'';
   if(!key){openCloudModal();return;}
@@ -634,56 +665,62 @@ async function syncCloud(){
   setSyncState('syncing');
   const btn=document.getElementById('hdrSyncBtn');if(btn){btn.textContent='⏳ Sync...';btn.disabled=true;}
   try{
-    // ── STEP 1: PULL from cloud ─────────────────────────────────────
-    // Cloud is the source of truth. We pull, then merge local changes
-    // using updatedAt timestamps, then push the winner.
+    // ── STEP 1: PULL from cloud ──────────────────────────────────
     let remoteRec=null;
     if(binId){
       const rp=await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest',{headers:{'X-Master-Key':key}});
       if(rp.ok){const rd=await rp.json();remoteRec=rd.record||null;}
     }
 
-    // ── STEP 2: MERGE — last-write-wins per folio ───────────────────
-    // Rule: whichever version of a folio has the newer updatedAt wins ENTIRELY
-    // (no partial merges — avoids ghost adjuntos from stale versions)
+    // ── STEP 2: MERGE with tombstone enforcement ─────────────────
+    // Tombstones = authoritative delete list. Any folio whose id appears
+    // in tombstones (local OR remote) is ALWAYS removed, regardless of
+    // who has it cached. This prevents ghost folios after coordinator deletes.
+    const localTombs=getTombstones();
+    const remoteTombs=(remoteRec?.tombstones)||[];
+    // Merge tombstone lists (union)
+    const allTombs=[...localTombs];
+    remoteTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
+    const tombIds=new Set(allTombs.map(t=>t.id));
+
+    // Remove tombstoned folios from local state immediately
+    const localBeforeCount=folios.length;
+    folios=folios.filter(f=>!tombIds.has(f.id));
+    if(folios.length<localBeforeCount)ss();
+
     if(remoteRec&&remoteRec.folios){
-      const remoteMap={};
-      remoteRec.folios.forEach(rf=>{remoteMap[rf.id]=rf;});
-      const localMap={};
-      folios.forEach(lf=>{localMap[lf.id]=lf;});
+      // Filter remote folios through tombstones too
+      const remoteClean=remoteRec.folios.filter(f=>!tombIds.has(f.id));
+      const remoteMap={};remoteClean.forEach(rf=>{remoteMap[rf.id]=rf;});
+      const localMap={};folios.forEach(lf=>{localMap[lf.id]=lf;});
 
-      const allIds=[...new Set([
-        ...remoteRec.folios.map(f=>f.id),
-        ...folios.map(f=>f.id)
-      ])];
-
+      const allIds=[...new Set([...remoteClean.map(f=>f.id),...folios.map(f=>f.id)])];
       const merged=allIds.map(id=>{
-        const remote=remoteMap[id];
-        const local=localMap[id];
-        if(!remote)return local;  // only local → keep
-        if(!local)return remote;  // only remote → keep
-        // Both exist: newer updatedAt wins entirely
+        const remote=remoteMap[id];const local=localMap[id];
+        if(!remote)return local;
+        if(!local)return remote;
         const rt=new Date(remote.updatedAt||remote.createdAt||0).getTime();
         const lt=new Date(local.updatedAt||local.createdAt||0).getTime();
         return lt>=rt?local:remote;
       }).filter(Boolean);
 
-      // Preserve remote order, append new local folios at end
+      // Preserve remote order
       merged.sort((a,b)=>{
-        const ri=remoteRec.folios.findIndex(f=>f.id===a.id);
-        const rj=remoteRec.folios.findIndex(f=>f.id===b.id);
+        const ri=remoteClean.findIndex(f=>f.id===a.id);
+        const rj=remoteClean.findIndex(f=>f.id===b.id);
         if(ri>=0&&rj>=0)return ri-rj;
-        if(ri>=0)return 1;
-        if(rj>=0)return -1;
-        return 0;
+        if(ri>=0)return 1;if(rj>=0)return -1;return 0;
       });
-
       folios=merged;ss();
       if(remoteRec.customOpts){customOpts=remoteRec.customOpts;saveCO();}
     }
 
-    // ── STEP 3: PUSH merged state to cloud ──────────────────────────
-    const payload=JSON.stringify({folios,customOpts,version:'4',updated:new Date().toISOString()});
+    // Update merged tombstones in settings
+    settings.tombstones=allTombs;
+    localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+
+    // ── STEP 3: PUSH merged state + tombstones to cloud ──────────
+    const payload=JSON.stringify({folios,customOpts,tombstones:allTombs,version:'4',updated:new Date().toISOString()});
     let url,method;
     if(binId){url='https://api.jsonbin.io/v3/b/'+binId;method='PUT';}
     else{url='https://api.jsonbin.io/v3/b';method='POST';}
@@ -773,13 +810,42 @@ function copyCfgBin(){
 /* ══════════════════════════════════════════
    FOLIO CRUD
 ══════════════════════════════════════════ */
-function openFolioModal(){document.getElementById('nfName').value='';document.getElementById('nfDesc').value='';document.getElementById('folioModal').classList.add('open');setTimeout(()=>document.getElementById('nfName').focus(),100);}
+function openFolioModal(){
+  // Reset modal fields
+  const nfZona=document.getElementById('nfZona');if(nfZona)nfZona.value='';
+  const nfDesc=document.getElementById('nfDesc');if(nfDesc)nfDesc.value='';
+  const prev=document.getElementById('nfPreview');if(prev)prev.textContent='Selecciona Zona y Unidad…';
+  // Populate unidad options from customOpts
+  populateNfUnidad('');
+  document.getElementById('folioModal').classList.add('open');
+  setTimeout(()=>document.getElementById('nfZona')?.focus(),100);
+}
+function populateNfUnidad(zona){
+  const sel=document.getElementById('nfUnidad');if(!sel)return;
+  const units=getOpts('UNIDAD');
+  sel.innerHTML='<option value="">— Seleccionar —</option>'+units.map(u=>`<option value="${u}">${u}</option>`).join('');
+  sel.value='';
+}
+function previewFolioName(){
+  const zona=document.getElementById('nfZona')?.value||'';
+  const unidad=document.getElementById('nfUnidad')?.value||'';
+  const prev=document.getElementById('nfPreview');
+  if(!zona||!unidad){if(prev)prev.textContent='Selecciona Zona y Unidad…';return;}
+  const name=buildFolioName(zona,unidad,null);
+  if(prev){prev.textContent=name;prev.style.color='var(--acc2)';}
+}
 function closeFolioModal(){document.getElementById('folioModal').classList.remove('open');}
 function confirmFolio(){
-  const name=document.getElementById('nfName').value.trim();const desc=document.getElementById('nfDesc').value.trim();
-  if(!name){notify('Ingresa un número de folio',true);return;}
-  if(folios.find(f=>f.name.toLowerCase()===name.toLowerCase())){notify('Ya existe ese folio',true);return;}
-  const f=mkFolio(name,desc);folios.push(f);ss();setSyncState('pending');
+  const zona=document.getElementById('nfZona')?.value||'';
+  const unidad=document.getElementById('nfUnidad')?.value||'';
+  const desc=document.getElementById('nfDesc')?.value.trim()||'';
+  if(!zona){notify('Selecciona la Zona',true);return;}
+  if(!unidad){notify('Selecciona la Unidad',true);return;}
+  const name=buildFolioName(zona,unidad,null);
+  if(folios.find(f=>f.name===name)){notify('Ya existe el folio "'+name+'"',true);return;}
+  const f=mkFolio(name,desc);
+  f.general.zona=zona;f.general.unidad=unidad;  // Pre-fill from modal
+  folios.push(f);ss();setSyncState('pending');
   closeFolioModal();selectFolio(f.id);notify('Folio "'+name+'" creado');
 }
 function selectFolio(id){
@@ -797,6 +863,7 @@ function confirmAdmin(){
   if(document.getElementById('adminPass').value!==ADMIN_PASS){document.getElementById('adminError').textContent='Contraseña incorrecta';return;}
   if(!pendingDel){closeAdminModal();return;}
   const name=folios.find(f=>f.id===pendingDel)?.name||'';
+  addTombstone(pendingDel);  // Mark as deleted for all users
   folios=folios.filter(f=>f.id!==pendingDel);
   if(activeId===pendingDel)activeId=folios.length?folios[0].id:null;
   ss();closeAdminModal();renderAll();notify('Folio "'+name+'" eliminado — sincronizando...');
@@ -1294,9 +1361,15 @@ function autoSave(){
   Object.entries(gm).forEach(([k,id])=>{const el=document.getElementById(id);if(el)f.general[k]=el.value;});
   [0,1,2].forEach(i=>{
     const pm={numCot:'numCot',rz:'rz',marca:'marca',pu:'pu',garantia:'garantia',condiciones:'condiciones',entrega:'entrega',factura:'factura',observaciones:'obs'};
-    Object.entries(pm).forEach(([k,sfx])=>{const el=document.getElementById('p'+i+'_'+sfx);if(el){const v=el.value;if(v||k!=='rz')f.prov[i][k]=v;}});
-    // Never blank the provider name from a sync/render cycle — only blank from explicit user action
-    if(!f.prov[i].rz){const rzEl=document.getElementById('p'+i+'_rz');if(rzEl&&rzEl.value)f.prov[i].rz=rzEl.value;}
+    const prevRz=f.prov[i].rz;  // Remember before any DOM read
+    Object.entries(pm).forEach(([k,sfx])=>{
+      const el=document.getElementById('p'+i+'_'+sfx);
+      if(!el)return;
+      const v=el.value;
+      // PROTECT rz: only update if DOM has a real value; never blank a saved name
+      if(k==='rz'){if(v)f.prov[i].rz=v;else f.prov[i].rz=prevRz;}
+      else{f.prov[i][k]=v;}
+    });
     f.prov[i].active=!!(f.prov[i].rz||f.prov[i].pu||f.prov[i].numCot);
     if(!f.prov[i].rating)f.prov[i].rating={global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''};
     const ro=document.getElementById('p'+i+'_robs');if(ro)f.prov[i].rating.obs=ro.value;
@@ -2048,7 +2121,15 @@ async function appStart(){
       if(rp.ok){
         const rd=await rp.json();
         if(rd.record&&rd.record.folios){
-          folios=rd.record.folios;ss();
+          // Apply tombstones from cloud on login — clears cached deleted folios
+          const cloudTombs=(rd.record.tombstones)||[];
+          const localTombs=getTombstones();
+          const allTombs=[...localTombs];
+          cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
+          settings.tombstones=allTombs;
+          localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+          const tombIds=new Set(allTombs.map(t=>t.id));
+          folios=rd.record.folios.filter(f=>!tombIds.has(f.id));ss();
           if(rd.record.customOpts){customOpts=rd.record.customOpts;saveCO();}
         }
       }
