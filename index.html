@@ -1727,19 +1727,27 @@ function renderResumen(){
   const cont=document.getElementById('dashboardContent');
   if(!folios.length){cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos IES</h3><p>Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p><div style="margin-top:16px"><button class="btn btn-acc" onclick="openFolioModal()">＋ Crear Primer Folio</button></div></div>';return;}
   const total=folios.length;
-  const aut=folios.filter(f=>f.decision.estatus==='AUTORIZADO').length;
-  // Sin decisión: no ganador assigned (null and not 0) — includes all folios regardless of prov count
+  const autFolios=folios.filter(f=>f.decision.estatus==='AUTORIZADO');
+  const aut=autFolios.length;
+  // Sin decisión: no ganador assigned — all folios not authorized/cancelled
   const sinDecFolios=folios.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
   const sinDec=sinDecFolios.length;
   // Cancelados
   const cancelFolios=folios.filter(f=>f.decision.estatus==='CANCELADO');
   const cancelados=cancelFolios.length;
-  const allTots=folios.flatMap(f=>getDifs(f).filter(Boolean).map(c=>c.tot));
-  const grandTot=allTots.reduce((a,b)=>a+b,0);
+  // Valor Total = ONLY authorized folios (presupuesto comprometido real)
+  const autTots=autFolios.flatMap(f=>{
+    const gan=f.decision.ganador;
+    if(gan===null)return[];
+    const d=getDifs(f);
+    return d[gan]&&d[gan].tot>0?[d[gan].tot]:[];
+  });
+  const grandTot=autTots.reduce((a,b)=>a+b,0);
+  // Ahorro = max dif across all folios
   const allDifs=folios.flatMap(f=>getDifs(f).filter(Boolean).filter(c=>c.dif>0).map(c=>c.dif));
   const ahorro=allDifs.length?Math.max(...allDifs):0;
-  // Pending decisions grid: no ganador, has active provs (for the pending cards section)
-  const pendFolios=folios.filter(f=>f.decision.ganador===null&&f.prov.filter(p=>p.active).length>=2&&f.decision.estatus!=='CANCELADO');
+  // Pending decisions: ALL folios sin decision (any prov count) — for the cards section
+  const pendFolios=sinDecFolios;
   cont.innerHTML=`
     <!-- KPIs -->
     <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
@@ -1761,8 +1769,9 @@ function renderResumen(){
         <div class="kpi-sub">Folios dados de baja</div>
         <div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
       </div>
-      <div class="kpi blue">
-        <div class="kpi-label">Valor Total</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub">Suma de todos los comparativos</div>
+      <div class="kpi blue" style="cursor:pointer" onclick="openKpiModal('aut')" title="Ver autorizados">
+        <div class="kpi-label">Presupuesto Autorizado</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub" style="color:var(--green)">● Solo folios autorizados</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
       </div>
       <div class="kpi acc">
         <div class="kpi-label">Ahorro Máx.</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Mayor diferencia detectada</div>
@@ -1771,28 +1780,40 @@ function renderResumen(){
 
     <!-- PENDING DECISIONS -->
     ${pendFolios.length?`<div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-        <span style="display:inline-block;width:3px;height:11px;background:var(--red);border-radius:2px"></span>
-        Pendientes de Decisión (${pendFolios.length})
+      <div style="font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:3px;height:11px;background:#f59e0b;border-radius:2px"></span>
+        Sin Decisión — Requieren Revisión (${pendFolios.length})
       </div>
       <div class="pending-grid">
         ${pendFolios.map(f=>{
-          const d=getDifs(f);const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
-          const analysis=scoreAll(f);const winner=analysis?[...analysis].sort((a,b)=>b.total-a.total)[0]:null;
-          return`<div class="pending-card">
-            <div style="display:flex;align-items:center;justify-content:space-between"><span class="pc-folio">${f.name}</span>${f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:''}</div>
-            <div class="pc-desc">${trunc(f.general.descripcion||f.desc||'Sin descripción',45)}</div>
-            <div class="pc-meta">${f.general.depto||'—'} · ${f.general.unidad||'—'} · ${f.prov.filter(p=>p.active).length} prov.</div>
-            ${mn>0?`<div class="pc-price">Mejor precio: ${fmt(mn)}</div>`:''}
-            ${winner?`<div style="font-size:11px;color:var(--acc2)">🤖 IA sugiere: <strong>${trunc(winner.prov.rz||PLBL[winner.prov.idx],30)}</strong> (${winner.total} pts)</div>`:''}
-            <div class="pc-actions">
-              <button class="btn btn-acc btn-sm" onclick="selectFolio('${f.id}');switchTab('ia')">🤖 Ver Análisis IA</button>
-              <button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}');switchTab('comp')">📋 Comparativo</button>
-              ${canSendEmail()?`<button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" title="Solicitar autorización">✉ Autorización</button>`:''}
+          const d=getDifs(f);
+          const activeTots=d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot);
+          const mn=activeTots.length?Math.min(...activeTots):0;
+          const actN=f.prov.filter(p=>p.active).length;
+          const analysis=actN>=2?scoreAll(f):null;
+          const winner=analysis?[...analysis].sort((a,b)=>b.total-a.total)[0]:null;
+          const isSC=f.sinComparativo||false;
+          return`<div class="pending-card" style="border-color:#3a2a0a">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
+              <span class="pc-folio">${f.name}</span>
+              <div style="display:flex;gap:4px">
+                ${f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:''}
+                ${isSC?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:var(--acc-bg);color:var(--acc2);border:1px solid var(--acc-d)">Prov. único</span>`:''}
+              </div>
+            </div>
+            <div class="pc-desc">${trunc(f.general.descripcion||f.desc||'Sin descripción',52)}</div>
+            <div class="pc-meta">${f.general.depto||'—'} · ${f.general.unidad||'—'} · ${actN} prov. activo${actN!==1?'s':''}</div>
+            ${mn>0?`<div class="pc-price">Mejor precio: ${fmt(mn)}</div>`:'<div style="font-size:10px;color:var(--muted);margin-top:4px">Sin precios capturados</div>'}
+            ${winner?`<div style="font-size:11px;color:var(--acc2);margin-top:3px">🤖 IA sugiere: <strong>${trunc(winner.prov.rz||PLBL[winner.prov.idx],28)}</strong> (${winner.total} pts)</div>`:''}
+            <div class="pc-actions" style="margin-top:8px">
+              <button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}');switchTab('captura')">✏️ Captura</button>
+              ${actN>=2?`<button class="btn btn-acc btn-sm" onclick="selectFolio('${f.id}');switchTab('ia')">🤖 Análisis IA</button>
+              <button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}');switchTab('comp')">📋 Comparativo</button>`:''}
+              <button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" title="Solicitar autorización" style="${(currentRole==='COORDINADOR'||currentRole==='AUXILIAR')?'':'display:none'}">✉ Autorización</button>
             </div>
           </div>`;}).join('')}
       </div>
-    </div>`:'<div style="background:var(--grn-bg);border:1px solid #2a6e36;border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green)">✓ No hay folios pendientes de decisión. Todos los comparativos tienen una decisión registrada.</div>'}
+    </div>`:`<div style="background:var(--grn-bg);border:1px solid #2a6e36;border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green)">✓ Sin folios pendientes de decisión. Todos los comparativos tienen una decisión registrada.</div>`}
 
     <!-- CHARTS -->
     <div class="charts-grid">
