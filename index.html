@@ -266,6 +266,15 @@ select option{background:var(--surf2)}
 .email-copy-btn:hover{background:var(--surf3);color:var(--text);border-color:var(--acc)}
 .email-copy-btn.copied{border-color:var(--green);color:var(--green)}
 
+
+/* SIN COMPARATIVO */
+.sin-comp-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--r);border:1px dashed var(--bd2);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.sin-comp-btn:hover{border-color:var(--acc);color:var(--acc2);background:var(--acc-bg)}
+.sin-comp-btn.active{border-color:var(--acc);background:var(--acc-bg);color:var(--acc2)}
+.sin-comp-banner{background:var(--acc-bg);border:1px solid var(--acc-d);border-radius:var(--r);padding:7px 12px;font-size:11px;color:var(--acc2);font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.acc-card.sc-disabled{opacity:.42;pointer-events:none;filter:grayscale(.6)}
+.acc-card.sc-disabled .acc-body{display:none!important}
+
 /* MODALS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;align-items:center;justify-content:center}
 .overlay.open{display:flex}
@@ -680,7 +689,7 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',unidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[]};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',unidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[],sinComparativo:false};}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
 /* ══════════════════════════════════════════
@@ -1090,6 +1099,26 @@ function switchTab(name){
   if(name==='ia')setTimeout(renderRadarChart,200);
 }
 
+
+/* ══════════════════════════════════════════
+   SIN COMPARATIVO — proveedor único / de casa
+══════════════════════════════════════════ */
+function toggleSinComparativo(){
+  const f=getActive();if(!f)return;
+  f.sinComparativo=!f.sinComparativo;
+  f.updatedAt=new Date().toISOString();
+  // When activating: clear prov 1 and 2, set prov 0 active
+  if(f.sinComparativo){
+    f.prov[1]=mkProv();f.prov[2]=mkProv();
+    if(!f.prov[0].active)f.prov[0].active=true;
+    notify('Modo proveedor único activado — Proveedores 2 y 3 deshabilitados');
+  }else{
+    notify('Modo comparativo restaurado');
+  }
+  ss();setSyncState('pending');
+  renderCapture();
+}
+
 /* ══════════════════════════════════════════
    CALCULATIONS & HELPERS
 ══════════════════════════════════════════ */
@@ -1142,12 +1171,15 @@ function genCP(f,i){
   if(p.active&&p.rz)st='<span class="acc-status sts-done">Completado</span>';
   else if(p.active)st='<span class="acc-status sts-partial">En proceso</span>';
   const r=p.rating||{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''};
-  return`<div class="acc-card${p.active?' open':''}" id="acc-p${i}">
-    <div class="acc-head ${hcl[0]}" onclick="toggleAcc('acc-p${i}')">
+  const isSC=f.sinComparativo||false;
+  const scDisabled=isSC&&i>0;
+  return`<div class="acc-card${p.active?' open':''}${scDisabled?' sc-disabled':''}" id="acc-p${i}">
+    <div class="acc-head ${hcl[0]}" onclick="${scDisabled?'':"toggleAcc('acc-p"+i+"')"}" style="${scDisabled?'cursor:default':''}">
       <span>📦</span><span class="acc-title ${hcl[1]}">${PLBL[i]}${p.rz?' — '+trunc(p.rz,26):''}</span>
-      ${st}
-      ${p.active?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();requestDelCot(${i})" title="Eliminar esta cotización" style="margin-left:4px">🗑 Eliminar</button>`:''}
-      <span class="acc-arrow">▼</span>
+      ${scDisabled?'<span class="acc-status" style="background:var(--surf2);color:var(--muted);border:1px solid var(--bd)">No aplica</span>':st}
+      ${(!scDisabled&&p.active)?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();requestDelCot(${i})" title="Eliminar esta cotización" style="margin-left:4px">🗑 Eliminar</button>`:''}
+      ${i===0&&can('capture')?`<button class="sin-comp-btn${isSC?' active':''}" onclick="event.stopPropagation();toggleSinComparativo()" title="${isSC?'Desactivar modo proveedor único':'Activar modo proveedor único / sin comparativo'}">${isSC?'✓ Proveedor único':'⊘ Sin comparativo'}</button>`:''}
+      ${!scDisabled?'<span class="acc-arrow">▼</span>':''}
     </div>
     <div class="acc-body"><div class="acc-inner"><div class="fg">
       <div class="form-group"><label># Cot. Proveedor</label><input type="text" id="p${i}_numCot" value="${esc(p.numCot)}" placeholder="Texto libre" onchange="autoSave()"/></div>
@@ -2060,28 +2092,42 @@ function requestAutorizacion(folioId){
   const unidad=g.unidad||'—';
   const zona=g.zona||'—';
   const justificacion=(g.justificacion||'Sin justificación registrada').slice(0,300).trim();
-  const provLines=f.prov.map((p,i)=>{
-    if(!p.active)return null;
+  const isSC=f.sinComparativo||false;
+
+  // Build provider list — sinComparativo: only slot 0; normal: all active
+  const provSlots=isSC?[f.prov[0]]:f.prov;
+  const provLines=provSlots.map((p,rawIdx)=>{
+    const i=isSC?0:rawIdx;
+    if(!p||!p.active)return null;
     const difs=getDifs(f);
     const cost=difs[i]&&difs[i].tot>0?fmt(difs[i].tot):'Sin precio';
     const entrega=p.entrega||'No especificado';
     return'• '+(p.rz||PLBL[i])+' | Costo: '+cost+' | Tiempo estimado: '+entrega;
   }).filter(Boolean);
   if(!provLines.length){notify('No hay proveedores capturados en este folio',true);return;}
+
   const link=buildAutoLoginLink(f.id);
   const remitente=(ROLES[currentRole]?.label||currentRole);
   const subject='Revisión y Autorización Requerida - '+f.name+' - '+unidad;
+
+  // Intro paragraph adapts to sinComparativo mode
+  const introLine=isSC
+    ?'Se presenta la siguiente solicitud de autorización. Nota: Este folio se procesa sin cuadro comparativo debido a que corresponde a un proveedor de casa / servicio exclusivo.'
+    :'Se presenta para su evaluación el comparativo correspondiente al mantenimiento de la unidad '+unidad+' asignada a la zona '+zona+'.';
+
+  const provSection=isSC?'Proveedor de Casa / Servicio Exclusivo:':'Proveedores Evaluados:';
+
   const body=[
     'Ing. Ana María Ferrer,',
     '',
-    'Se presenta para su evaluación el comparativo correspondiente al mantenimiento de la unidad '+unidad+' asignada a la zona '+zona+'.',
+    introLine,
     '',
     'Justificación de la intervención: '+justificacion,
     '',
-    'Proveedores Evaluados:',
+    provSection,
     ...provLines,
     '',
-    'Para revisar los diagnósticos detallados, evaluar el cuadro comparativo y emitir su autorización, por favor ingrese directamente al folio a través del siguiente enlace de acceso rápido:',
+    'Para revisar los diagnósticos detallados'+(isSC?'':', evaluar el cuadro comparativo')+' y emitir su autorización, por favor ingrese directamente al folio a través del siguiente enlace de acceso rápido:',
     '',
     link,
     '',
