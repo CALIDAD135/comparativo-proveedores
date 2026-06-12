@@ -556,21 +556,40 @@ select option{background:var(--surf2)}
 
 <!-- MODAL: SOLICITAR AUTORIZACIÓN POR CORREO -->
 <div class="overlay" id="emailAuthModal">
-  <div class="modal" style="width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+  <div class="modal" style="width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <h3 style="margin:0">✉ Solicitar Autorización — <span id="emailFolioName" style="color:var(--acc2)"></span></h3>
       <span style="font-size:10px;color:var(--muted)">Solo Coordinador / Auxiliar</span>
     </div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:8px">Asunto:</div>
-    <div class="email-subject" id="emailSubject"></div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:6px">Cuerpo del mensaje:</div>
-    <div class="email-modal-body" id="emailBody"></div>
-    <div class="email-actions">
-      <button class="btn btn-acc" onclick="openMailClient()">✉ Abrir cliente de correo</button>
-      <button class="email-copy-btn" id="copySubjectBtn" onclick="copyEmailPart('subject')">📋 Copiar asunto</button>
-      <button class="email-copy-btn" id="copyBodyBtn" onclick="copyEmailPart('body')">📋 Copiar cuerpo</button>
-      <button class="email-copy-btn" id="copyLinkBtn" onclick="copyEmailPart('link')">🔗 Copiar enlace</button>
-      <button class="btn btn-ghost" style="margin-left:auto" onclick="document.getElementById('emailAuthModal').classList.remove('open')">Cerrar</button>
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:0;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:12px;flex-shrink:0">
+      <button id="emailTabEmail" onclick="switchEmailTab('email')" style="flex:1;padding:7px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;border:none;background:var(--acc-bg);color:var(--acc2);border-right:1px solid var(--bd)">✉ Correo electrónico</button>
+      <button id="emailTabMsg" onclick="switchEmailTab('msg')" style="flex:1;padding:7px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;border:none;background:var(--surf2);color:var(--dim)">💬 Formato Libre (Mensajería)</button>
+    </div>
+
+    <!-- PANEL EMAIL -->
+    <div id="emailPanelEmail" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:6px;flex-shrink:0">Asunto:</div>
+      <div class="email-subject" id="emailSubject" style="flex-shrink:0"></div>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:5px;flex-shrink:0">Cuerpo del mensaje:</div>
+      <div class="email-modal-body" id="emailBody" style="flex:1;min-height:0"></div>
+      <div class="email-actions" style="flex-shrink:0">
+        <button class="btn btn-acc" onclick="openMailClient()">✉ Abrir cliente de correo</button>
+        <button class="email-copy-btn" id="copySubjectBtn" onclick="copyEmailPart('subject')">📋 Copiar asunto</button>
+        <button class="email-copy-btn" id="copyBodyBtn" onclick="copyEmailPart('body')">📋 Copiar cuerpo</button>
+        <button class="email-copy-btn" id="copyLinkBtn" onclick="copyEmailPart('link')">🔗 Copiar enlace</button>
+        <button class="btn btn-ghost" style="margin-left:auto" onclick="document.getElementById('emailAuthModal').classList.remove('open')">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- PANEL FORMATO LIBRE -->
+    <div id="emailPanelMsg" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:5px;flex-shrink:0">Texto listo para copiar en WhatsApp, Teams o cualquier mensajería:</div>
+      <div class="email-modal-body" id="msgFreeBody" style="flex:1;min-height:0;background:var(--bg)"></div>
+      <div class="email-actions" style="flex-shrink:0">
+        <button class="btn btn-acc" id="copyMsgBtn" onclick="copyFreeMsg()">📋 Copiar al portapapeles</button>
+        <button class="btn btn-ghost" style="margin-left:auto" onclick="document.getElementById('emailAuthModal').classList.remove('open')">Cerrar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1707,24 +1726,47 @@ function renderComp(){
 function renderResumen(){
   const cont=document.getElementById('dashboardContent');
   if(!folios.length){cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos IES</h3><p>Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p><div style="margin-top:16px"><button class="btn btn-acc" onclick="openFolioModal()">＋ Crear Primer Folio</button></div></div>';return;}
-  const total=folios.length;const aut=folios.filter(f=>f.decision.estatus==='AUTORIZADO').length;
-  const pend=folios.filter(f=>!f.decision.ganador&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2).length;
+  const total=folios.length;
+  const aut=folios.filter(f=>f.decision.estatus==='AUTORIZADO').length;
+  // Sin decisión: no ganador assigned (null and not 0) — includes all folios regardless of prov count
+  const sinDecFolios=folios.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
+  const sinDec=sinDecFolios.length;
+  // Cancelados
+  const cancelFolios=folios.filter(f=>f.decision.estatus==='CANCELADO');
+  const cancelados=cancelFolios.length;
   const allTots=folios.flatMap(f=>getDifs(f).filter(Boolean).map(c=>c.tot));
   const grandTot=allTots.reduce((a,b)=>a+b,0);
   const allDifs=folios.flatMap(f=>getDifs(f).filter(Boolean).filter(c=>c.dif>0).map(c=>c.dif));
   const ahorro=allDifs.length?Math.max(...allDifs):0;
-  const pendFolios=folios.filter(f=>f.decision.ganador===null&&f.prov.filter(p=>p.active).length>=2);
+  // Pending decisions grid: no ganador, has active provs (for the pending cards section)
+  const pendFolios=folios.filter(f=>f.decision.ganador===null&&f.prov.filter(p=>p.active).length>=2&&f.decision.estatus!=='CANCELADO');
   cont.innerHTML=`
     <!-- KPIs -->
-    <div class="kpi-grid">
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
       <div class="kpi acc" style="cursor:pointer" onclick="openKpiModal('total')" title="Ver detalle">
-        <div class="kpi-label">Total Folios</div><div class="kpi-val">${total}</div><div class="kpi-sub">Comparativos registrados</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ click para desglose</div></div>
+        <div class="kpi-label">Total Folios</div><div class="kpi-val">${total}</div><div class="kpi-sub">Todos los comparativos</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
+      </div>
       <div class="kpi green" style="cursor:pointer" onclick="openKpiModal('aut')" title="Ver autorizados">
-        <div class="kpi-label">Autorizados</div><div class="kpi-val">${aut}</div><div class="kpi-sub">Con decisión emitida</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ click para desglose</div></div>
-      <div class="kpi red" style="cursor:pointer" onclick="openKpiModal('pend')" title="Ver pendientes">
-        <div class="kpi-label">Sin Decisión</div><div class="kpi-val">${pend}</div><div class="kpi-sub">Requieren autorización</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ click para desglose</div></div>
-      <div class="kpi blue"><div class="kpi-label">Valor Total</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub">Suma de todos los comparativos</div></div>
-      <div class="kpi acc"><div class="kpi-label">Ahorro Máx. Detectado</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Mayor diferencia entre opciones</div></div>
+        <div class="kpi-label">Autorizados</div><div class="kpi-val">${aut}</div><div class="kpi-sub">Con decisión emitida</div><div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
+      </div>
+      <div class="kpi" style="border-color:#b45309;background:linear-gradient(135deg,rgba(180,83,9,.08),transparent);cursor:pointer" onclick="openKpiModal('sinDec')" title="Ver sin decisión">
+        <div class="kpi-label" style="color:#b45309">Sin Decisión</div>
+        <div class="kpi-val" style="color:#f59e0b">${sinDec}</div>
+        <div class="kpi-sub">Sin definir / pendientes</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
+      </div>
+      <div class="kpi" style="border-color:#6e2929;background:linear-gradient(135deg,rgba(110,41,41,.1),transparent);cursor:pointer" onclick="openKpiModal('cancel')" title="Ver cancelados">
+        <div class="kpi-label" style="color:#9e3030">Cancelados</div>
+        <div class="kpi-val" style="color:var(--red)">${cancelados}</div>
+        <div class="kpi-sub">Folios dados de baja</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
+      </div>
+      <div class="kpi blue">
+        <div class="kpi-label">Valor Total</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub">Suma de todos los comparativos</div>
+      </div>
+      <div class="kpi acc">
+        <div class="kpi-label">Ahorro Máx.</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Mayor diferencia detectada</div>
+      </div>
     </div>
 
     <!-- PENDING DECISIONS -->
@@ -1889,11 +1931,13 @@ function renderChartProv(){
 
 // ── A. KPI Modals ────────────────────────────────────────────────────────────
 function openKpiModal(type){
-  const titles={total:'📁 Todos los Folios',aut:'✅ Folios Autorizados',pend:'⏳ Folios Sin Decisión'};
+  const titles={total:'📁 Todos los Folios',aut:'✅ Folios Autorizados',pend:'⏳ Folios Sin Decisión',sinDec:'🟠 Sin Decisión / Sin Definir',cancel:'🔴 Folios Cancelados'};
   let data=[];
-  if(type==='total') data=folios;
-  else if(type==='aut') data=folios.filter(f=>f.decision.estatus==='AUTORIZADO');
-  else if(type==='pend') data=folios.filter(f=>f.decision.ganador===null&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2);
+  if(type==='total')  data=folios;
+  else if(type==='aut')    data=folios.filter(f=>f.decision.estatus==='AUTORIZADO');
+  else if(type==='pend')   data=folios.filter(f=>f.decision.ganador===null&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2);
+  else if(type==='sinDec') data=folios.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
+  else if(type==='cancel') data=folios.filter(f=>f.decision.estatus==='CANCELADO');
   document.getElementById('kpiModalTitle').textContent=titles[type]+' ('+data.length+')';
   const stm={AUTORIZADO:'bg',CANCELADO:'br',PENDIENTE:'by','EN PROCESO':'bb'};
   if(!data.length){document.getElementById('kpiModalBody').innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Sin registros en esta categoría.</div>';}
@@ -2084,6 +2128,67 @@ function buildAutoLoginLink(folioId){
   return base+'?token='+encodeURIComponent(token)+'&folio='+encodeURIComponent(folioId);
 }
 
+
+function switchEmailTab(tab){
+  const isEmail=tab==='email';
+  document.getElementById('emailPanelEmail').style.display=isEmail?'flex':'none';
+  document.getElementById('emailPanelMsg').style.display=isEmail?'none':'flex';
+  const btnEmail=document.getElementById('emailTabEmail');
+  const btnMsg=document.getElementById('emailTabMsg');
+  if(btnEmail){btnEmail.style.background=isEmail?'var(--acc-bg)':'var(--surf2)';btnEmail.style.color=isEmail?'var(--acc2)':'var(--dim)';}
+  if(btnMsg){btnMsg.style.background=isEmail?'var(--surf2)':'var(--acc-bg)';btnMsg.style.color=isEmail?'var(--dim)':'var(--acc2)';}
+  if(!isEmail){buildFreeMsg();}
+}
+
+function buildFreeMsg(){
+  const{_emailData:ed}=window;const f=folios.find(x=>x.id===(ed&&ed._folioId))||getActive();
+  if(!f)return;
+  const g=f.general;
+  const isSC=f.sinComparativo||false;
+  // Pick best active prov for display
+  const activeProvs=f.prov.map((p,i)=>({...p,i})).filter(p=>p.active);
+  const provDisplay=isSC?'Sin Comparativo — Proveedor de Casa':((activeProvs[0]?.rz)||'Sin proveedor capturado');
+  // Concepts: description field
+  const conceptos=g.descripcion||'Sin concepto registrado';
+  // Best entrega
+  const entrega=activeProvs.find(p=>p.entrega)?.entrega||'No especificado';
+  // Best total cost
+  const difs=getDifs(f);
+  const bestCost=difs.reduce((best,d,i)=>{
+    if(!d||!activeProvs.find(p=>p.i===i))return best;
+    return(!best||d.tot<best)?d.tot:best;
+  },null);
+  const costStr=bestCost?fmt(bestCost):'Sin precio capturado';
+
+  const text=[
+    'Estimada Ing. Ana María Ferrer (Gerencia de Operaciones),',
+    '',
+    'Se solicita su autorización para proceder con el siguiente requerimiento:',
+    '',
+    '• Folio: '+f.name,
+    '• Proveedor: '+provDisplay,
+    '• Conceptos/Rubros Capturados: '+conceptos,
+    '• Tiempo de Entrega: '+entrega,
+    '• Costo Total (Calculado con IVA): '+costStr,
+    '',
+    'Quedo a la espera de su validación y confirmación de autorización para proceder con el registro.'
+  ].join('\n');
+
+  const el=document.getElementById('msgFreeBody');
+  if(el)el.textContent=text;
+  window._freeMsgText=text;
+}
+
+function copyFreeMsg(){
+  const text=window._freeMsgText||document.getElementById('msgFreeBody')?.textContent||'';
+  if(!text)return;
+  navigator.clipboard?.writeText(text).then(()=>{
+    const btn=document.getElementById('copyMsgBtn');
+    if(btn){btn.textContent='✓ Copiado';setTimeout(()=>{btn.textContent='📋 Copiar al portapapeles';},2000);}
+    notify('Texto copiado al portapapeles ✓');
+  }).catch(()=>notify('Error al copiar',true));
+}
+
 function requestAutorizacion(folioId){
   if(!canSendEmail()){notify('Sin permiso para solicitar autorización',true);return;}
   const f=folios.find(x=>x.id===folioId)||getActive();
@@ -2135,7 +2240,7 @@ function requestAutorizacion(folioId){
     '',
     remitente
   ].join('\n');
-  _emailData={subject,body,link};
+  _emailData={subject,body,link,_folioId:f.id};
   document.getElementById('emailFolioName').textContent=f.name;
   document.getElementById('emailSubject').textContent=subject;
   document.getElementById('emailBody').textContent=body;
