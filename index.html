@@ -81,8 +81,14 @@ aside{width:210px;min-width:210px;background:var(--surf);border-right:1px solid 
 .folio-list{flex:1;overflow-y:auto;padding:6px 0}
 .folio-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:.12s}
 .folio-item:hover{background:var(--surf2)}.folio-item.active{background:var(--surf2);border-left-color:var(--acc)}
-.folio-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.folio-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .15s}
 .folio-item.active .folio-dot{background:var(--acc)}
+.folio-dot.dot-aut{background:#3fb950}
+.folio-dot.dot-cancel{background:#f85149}
+.folio-dot.dot-other{background:#f0883e}
+.folio-item.active .folio-dot.dot-aut{background:#3fb950}
+.folio-item.active .folio-dot.dot-cancel{background:#f85149}
+.folio-item.active .folio-dot.dot-other{background:#f0883e}
 .folio-info{flex:1;min-width:0}
 .folio-name{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .folio-item.active .folio-name{color:var(--text)}
@@ -1076,12 +1082,15 @@ function cancelOpt(id){const nw=document.getElementById(id+'_nw');if(nw)nw.class
 function renderSidebar(){
   const list=document.getElementById('folioList');
   if(!folios.length){list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin folios. Crea uno con ＋</div>';return;}
-  list.innerHTML=folios.map(f=>`<div class="folio-item${f.id===activeId?' active':''}" onclick="selectFolio('${f.id}')">
-    <span class="folio-dot"></span>
+  list.innerHTML=folios.map(f=>{
+    const st=f.decision?.estatus||'';
+    const dotCls=st==='AUTORIZADO'?'dot-aut':st==='CANCELADO'?'dot-cancel':st?'dot-other':'';
+    return`<div class="folio-item${f.id===activeId?' active':''}" onclick="selectFolio('${f.id}')">
+    <span class="folio-dot ${dotCls}" title="${st||'Sin estatus'}"></span>
     <div class="folio-info"><div class="folio-name" title="${esc(f.name)}">${f.name}</div>
     <div class="folio-meta">${f.prov.filter(p=>p.active).length} prov · ${f.general.tipo||'Sin tipo'}</div></div>
     ${currentRole==='COORDINADOR'?`<span class="folio-gear" onclick="event.stopPropagation();deleteFolioRequest('${f.id}')" title="Eliminar (Admin)">⚙</span>`:''}
-  </div>`).join('');
+  </div>`;}).join('');
 }
 function renderFolioBar(){
   const bar=document.getElementById('folioBar');const f=getActive();
@@ -1179,7 +1188,7 @@ function genCG(f,g,gFilled){
       <div class="form-group full"><label>Justificación</label><textarea id="g_justificacion" rows="2" placeholder="Motivo de la compra" onchange="autoSave()">${esc(g.justificacion)}</textarea></div>
       <div class="form-group full" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:2px">
         <label style="color:var(--blue);display:flex;align-items:center;gap:6px">🏢 Comentarios de Gerencia Operativa ${g.gerenciaComentarios?'<span style="font-size:9px;background:var(--blu-bg);color:var(--blue);border:1px solid var(--p1bd);border-radius:8px;padding:1px 7px;font-weight:700">Registrado</span>':''}</label>
-        <textarea id="g_gerenciaComentarios" rows="2" placeholder="Anotaciones de Gerencia antes de revisión macro..." onchange="autoSave()" ${(currentRole!=='COORDINADOR'&&currentRole!=='GERENCIA')?'readonly style="opacity:.5;cursor:default"':''}>${esc(g.gerenciaComentarios||'')}</textarea>
+        <textarea id="g_gerenciaComentarios" rows="2" placeholder="Anotaciones de Gerencia antes de revisión macro..." onchange="saveDecision()" ${(currentRole!=='COORDINADOR'&&currentRole!=='GERENCIA')?'readonly style="opacity:.5;cursor:default"':''}>${esc(g.gerenciaComentarios||'')}</textarea>
       </div>
     </div></div></div>
   </div>`;
@@ -1231,7 +1240,7 @@ function genCP(f,i){
 function genCD(f){
   const d=f.decision;const st=d.ganador!==null?'<span class="acc-status sts-done">Decisión tomada</span>':'<span class="acc-status sts-empty">Pendiente</span>';
   const canEdit=currentRole==='COORDINADOR'||currentRole==='GERENCIA';
-  const ro=canEdit?'':'readonly';const roOnchange=canEdit?'onchange="autoSave()"':'';
+  const ro=canEdit?'':'readonly';const roOnchange=canEdit?'onchange="saveDecision()"':'';
   const roBtn=canEdit?'':"style='pointer-events:none;opacity:.5'";
   return`<div class="acc-card${d.ganador!==null?' open':''}" id="acc-dec">
     <div class="acc-head" onclick="toggleAcc('acc-dec')"><span>✅</span><span class="acc-title">Decisión y Autorización</span>${st}<span class="acc-arrow">▼</span></div>
@@ -1548,9 +1557,23 @@ function autoSave(){
   const da=document.getElementById('d_autoriza');if(da)f.decision.autoriza=da.value;
   const dfa=document.getElementById('d_fechaAut');if(dfa)f.decision.fechaAut=dfa.value;
   const ds=document.getElementById('d_estatus');if(ds)f.decision.estatus=ds.value;
-  f.updatedAt=new Date().toISOString();
-  ss();setSyncState('pending');renderFolioBar();
+  // NOTE: Do NOT stamp updatedAt here — autoSave fires on every keystroke.
+  // updatedAt is stamped only by saveAll() and explicit save actions,
+  // so that cloud merge (last-write-wins by updatedAt) reflects intentional saves,
+  // not the last person who happened to type a character.
+  ss();renderFolioBar();
 }
+
+// Called when Gerencia changes decision fields — stamps updatedAt immediately
+// so their authorization is never overwritten by a stale Auxiliar sync
+function saveDecision(){
+  autoSave();
+  const f=getActive();if(!f)return;
+  f.updatedAt=new Date().toISOString();
+  ss();setSyncState('pending');
+  notify('Decisión guardada — presiona ☁ Nube para sincronizar');
+}
+
 function refreshCalcs(){
   const f=getActive();if(!f)return;
   const qty=parseFloat(document.getElementById('g_cantidad')?.value||f.general.cantidad)||0;
@@ -1562,7 +1585,15 @@ function refreshCalcs(){
     const t=document.getElementById('p'+i+'_tot');if(t)t.value=fmt(c.tot);
   });
 }
-function saveAll(){autoSave();renderSidebar();renderComp();renderIA();notify('Folio guardado');switchTab('comp');}
+function saveAll(){
+  autoSave();
+  const f=getActive();
+  if(f){f.updatedAt=new Date().toISOString();}  // Intentional save — stamp timestamp
+  ss();setSyncState('pending');
+  renderSidebar();renderComp();renderIA();
+  notify('Folio guardado ✓ — presiona ☁ Nube para sincronizar');
+  switchTab('comp');
+}
 function setGanador(idx){const f=getActive();if(!f)return;f.decision.ganador=idx;ss();setSyncState('pending');renderCapture();notify(PLBL[idx]+' seleccionado como ganador');}
 
 /* ══════════════════════════════════════════
