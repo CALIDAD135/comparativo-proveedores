@@ -411,7 +411,7 @@ select option{background:var(--surf2)}
 <div class="overlay" id="folioModal">
   <div class="modal" style="width:480px">
     <h3>📁 Nuevo Folio de Comparativo</h3>
-    <p>Selecciona Zona y Unidad para generar la nomenclatura automática del folio.</p>
+    <p>Selecciona Zona y Activo para generar la nomenclatura automática del folio.</p>
     <div class="fg" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
       <div class="form-group">
         <label>Zona <span style="color:var(--red)">*</span></label>
@@ -419,18 +419,19 @@ select option{background:var(--surf2)}
           <option value="">— Seleccionar —</option>
           <option value="CANCUN">CANCUN</option>
           <option value="CABOS">CABOS</option>
-          <option value="PDC">PDC</option>
+          <option value="PDC">PLAYA DEL CARMEN</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Unidad <span style="color:var(--red)">*</span></label>
+        <label>Activo <span style="color:var(--red)">*</span></label>
         <select id="nfUnidad" onchange="previewFolioName()">
           <option value="">— Seleccionar —</option>
+          <option value="__EDIFICIOS__" style="font-weight:700;color:var(--blue)">🏢 Edificios (Infraestructura)</option>
         </select>
       </div>
       <div class="form-group full">
         <label>Nombre generado</label>
-        <div id="nfPreview" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--acc2);min-height:36px">Selecciona Zona y Unidad…</div>
+        <div id="nfPreview" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--acc2);min-height:36px">Selecciona Zona y Activo…</div>
       </div>
       <div class="form-group full"><label>Descripción (opcional)</label><input type="text" id="nfDesc" placeholder="Ej. Servicio menor junio 2026"/></div>
     </div>
@@ -614,6 +615,23 @@ const PLBL=['Proveedor 1','Proveedor 2','Proveedor 3'];
 const ZONA_COD={'CANCUN':'CUN','CABOS':'CB','PDC':'PC'};
 function buildFolioName(zona,assetName,existingName,activoTipo){
   const zc=ZONA_COD[zona]||zona?.slice(0,3).toUpperCase()||'XX';
+  // ─── EDIFICIO sentinel: special EDI nomenclature [PREFIJO_ZONA]_EDI_[NN] ───
+  // Used when modal selects "Edificios" generic option OR activoTipo === 'EDIFICIO'
+  // and the specific building isn't yet known.
+  const isEdificioSentinel=(assetName==='__EDIFICIOS__')||(activoTipo==='EDIFICIO'&&!assetName);
+  if(isEdificioSentinel){
+    // Pattern: CT[ZONA]_EDI_NN  (e.g. CTCUN_EDI_01)
+    let seq='01';
+    if(existingName){const m=existingName.match(/^CT[A-Z]+_EDI_(\d{2})$/);if(m)seq=m[1];}
+    else{
+      const pat=new RegExp('^CT'+zc+'_EDI_(\\d{2})$');
+      const used=folios.map(f=>f.name).filter(n=>pat.test(n)).map(n=>{const m=n.match(/^CT[A-Z]+_EDI_(\d{2})$/);return m?parseInt(m[1]):0;});
+      const next=(used.length?Math.max(...used):0)+1;
+      seq=String(next).padStart(2,'0');
+    }
+    return'CT'+zc+'_EDI_'+seq;
+  }
+  // ─── VEHICULO or specific EDIFICIO unit: standard nomenclature ───
   const prefix=activoTipo==='EDIFICIO'?'CTE':'CT';
   const unit=(assetName||'').replace(/\s+/g,'_').replace(/[^A-Z0-9_]/gi,'').toUpperCase()||'UNIT';
   let seq='01';
@@ -982,30 +1000,48 @@ function openFolioModal(){
 function populateNfUnidad(zona){
   const sel=document.getElementById('nfUnidad');if(!sel)return;
   const units=getOpts('UNIDAD');
-  sel.innerHTML='<option value="">— Seleccionar —</option>'+units.map(u=>`<option value="${u}">${u}</option>`).join('');
+  sel.innerHTML=
+    '<option value="">— Seleccionar —</option>'+
+    '<option value="__EDIFICIOS__" style="font-weight:700;color:var(--blue)">🏢 Edificios (Infraestructura)</option>'+
+    '<optgroup label="Vehículos">'+units.map(u=>`<option value="${u}">${u}</option>`).join('')+'</optgroup>';
   sel.value='';
 }
 function previewFolioName(){
   const zona=document.getElementById('nfZona')?.value||'';
-  const unidad=document.getElementById('nfUnidad')?.value||'';
+  const activo=document.getElementById('nfUnidad')?.value||'';
   const prev=document.getElementById('nfPreview');
-  if(!zona||!unidad){if(prev)prev.textContent='Selecciona Zona y Unidad…';return;}
-  const name=buildFolioName(zona,unidad,null);
-  if(prev){prev.textContent=name;prev.style.color='var(--acc2)';}
+  if(!zona||!activo){if(prev)prev.textContent='Selecciona Zona y Activo…';return;}
+  const isEdificio=(activo==='__EDIFICIOS__');
+  const name=buildFolioName(zona,activo,null,isEdificio?'EDIFICIO':'VEHICULO');
+  if(prev){
+    prev.textContent=name;prev.style.color='var(--acc2)';
+    if(isEdificio){prev.innerHTML=name+' <span style="color:var(--blue);font-size:10px;font-family:inherit;margin-left:6px">🏢 Infraestructura</span>';}
+  }
 }
 function closeFolioModal(){document.getElementById('folioModal').classList.remove('open');}
 function confirmFolio(){
   const zona=document.getElementById('nfZona')?.value||'';
-  const unidad=document.getElementById('nfUnidad')?.value||'';
+  const activo=document.getElementById('nfUnidad')?.value||'';
   const desc=document.getElementById('nfDesc')?.value.trim()||'';
   if(!zona){notify('Selecciona la Zona',true);return;}
-  if(!unidad){notify('Selecciona la Unidad',true);return;}
-  const name=buildFolioName(zona,unidad,null);
+  if(!activo){notify('Selecciona el Activo',true);return;}
+  const isEdificio=(activo==='__EDIFICIOS__');
+  const activoTipo=isEdificio?'EDIFICIO':'VEHICULO';
+  const name=buildFolioName(zona,activo,null,activoTipo);
   if(folios.find(f=>f.name===name)){notify('Ya existe el folio "'+name+'"',true);return;}
   const f=mkFolio(name,desc);
-  f.general.zona=zona;f.general.unidad=unidad;  // Pre-fill from modal
+  f.general.zona=zona;
+  f.general.activoTipo=activoTipo;
+  if(isEdificio){
+    // Generic Edificio folio — specific edificio/area/especialidad chosen later in Captura
+    f.general.unidad='';
+    f.general.edificio='';
+  }else{
+    f.general.unidad=activo;
+  }
   folios.push(f);ss();setSyncState('pending');
-  closeFolioModal();selectFolio(f.id);notify('Folio "'+name+'" creado');
+  closeFolioModal();selectFolio(f.id);
+  notify('Folio "'+name+'" creado'+(isEdificio?' — completa Edificio, Área y Especialidad en Captura':''));
 }
 function selectFolio(id){
   activeId=id;
