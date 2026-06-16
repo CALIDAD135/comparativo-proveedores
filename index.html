@@ -612,27 +612,29 @@ const PHEX=['#79c0ff','#bc8cff','#f0883e'];
 const PCLS=['pp1','pp2','pp3'];
 const PLBL=['Proveedor 1','Proveedor 2','Proveedor 3'];
 const ZONA_COD={'CANCUN':'CUN','CABOS':'CB','PDC':'PC'};
-function buildFolioName(zona,unidad,existingName){
+function buildFolioName(zona,assetName,existingName,activoTipo){
   const zc=ZONA_COD[zona]||zona?.slice(0,3).toUpperCase()||'XX';
-  const unit=(unidad||'').replace(/\s+/g,'_').replace(/[^A-Z0-9_]/gi,'').toUpperCase()||'UNIT';
-  // Preserve consecutive number from existing name if it follows the CT pattern
+  const prefix=activoTipo==='EDIFICIO'?'CTE':'CT';
+  const unit=(assetName||'').replace(/\s+/g,'_').replace(/[^A-Z0-9_]/gi,'').toUpperCase()||'UNIT';
   let seq='01';
-  if(existingName){const m=existingName.match(/^CT[A-Z]+_(\d{2})_/);if(m)seq=m[1];}
-  // Auto-assign consecutive across all folios for this zone+unit combo
+  if(existingName){const m=existingName.match(/^CTE?[A-Z]+_(\d{2})_/);if(m)seq=m[1];}
   else{
-    const pattern=new RegExp('^CT'+zc+'_(\\d{2})_'+unit.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$');
-    const used=folios.map(f=>f.name).filter(n=>pattern.test(n)).map(n=>{const m=n.match(/CT[A-Z]+_(\d{2})_/);return m?parseInt(m[1]):0;});
+    const pattern=new RegExp('^'+prefix+zc+'_(\\d{2})_'+unit.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$');
+    const used=folios.map(f=>f.name).filter(n=>pattern.test(n)).map(n=>{const m=n.match(/CTE?[A-Z]+_(\d{2})_/);return m?parseInt(m[1]):0;});
     const next=(used.length?Math.max(...used):0)+1;
     seq=String(next).padStart(2,'0');
   }
-  return'CT'+zc+'_'+seq+'_'+unit;
+  return prefix+zc+'_'+seq+'_'+unit;
 }
 function updateFolioNomenclature(){
   const f=getActive();if(!f)return;
   const zona=document.getElementById('g_zona')?.value||f.general.zona;
-  const unidad=document.getElementById('g_unidad')?.value||f.general.unidad;
-  if(!zona||!unidad)return;
-  const newName=buildFolioName(zona,unidad,f.name);
+  const t=getAssetType(f);
+  const asset=t==='EDIFICIO'
+    ?(document.getElementById('g_edificio')?.value||f.general.edificio)
+    :(document.getElementById('g_unidad')?.value||f.general.unidad);
+  if(!zona||!asset)return;
+  const newName=buildFolioName(zona,asset,f.name,t);
   if(newName!==f.name){f.name=newName;f.updatedAt=new Date().toISOString();ss();renderSidebar();renderFolioBar();notify('Folio renombrado: '+newName);}
 }
 const PHDCLS=['prov-head-1 ph1','prov-head-2 ph2','prov-head-3 ph3'];
@@ -642,8 +644,11 @@ const DD_BASE={
   GESTOR:['LIC. MARCOS XOOL','LIC. JOSE REJON'],
   ZONA:['CANCUN','PDC','CABOS'],
   UNIDAD:['AVEO_01','BEAT_02','BEAT_04','BEAT_05','BEAT_06','BEAT_07','BEAT_08','BEAT_09','BEAT_10','DOBLE CABINA_02','ESTACA NP300_02','ESTACA NP300_03','FRONTIER_01','INTERNATIONAL_01','MARCH_01','MARCH_02','MARCH_03','MARCH_04','MARCH_05','MIRAGE_01','Q5_DIRECCIÓN','S10 CREW CAB_02','S10 CREW_01','SPARK_AFI01','SPARK_AFI02','STEPWAY_01','SUPER DUTY_01','TORNADO_01','TORNADO_02','TSURU_02','V DRIVE_02','V DRIVE_03','V DRIVE_04','V DRIVE_05','V DRIVE_06','V DRIVE_07','V DRIVE_08','V DRIVE_09','VENTO_01','VERSA_01','VERSA_02','YARIS_01'],
+  EDIFICIO:['OFICINAS GENERALES_PLANTA ALTA','OFICINAS GENERALES_PLANTA BAJA','ALMACEN GENERAL','TALLER 3','OFICINAS GENERALES_PLAYA DEL CARMEN','OFICINAS GENERALES_CABOS','OFICINAS EDIFICIO B'],
+  AREA:['ENTRADA LOBBY','RECEPCION','OFICINA VENTAS','OFICINA COMPRAS','OFICINA SISTEMAS','OFICINA OYS_ADMINISTRACION','OFICINA OYS_JEFE ADMON','OFICINA OYS_MANTTTO PREV','OFICINA TDA','OFICINA ACTIVOS','OFICINA DIRECCIÓN','OFICINA ADMINISTRACIÓN','OFICINA FINANZAS','OFICINAS CONTABILIDAD','RH_GERENCIA','RH_RECLUTAMIENTO','OFICINAS_B_SISTEMAS','OFICINA PROYECTOS','OFICINA GERENCIA OYS','ALMACEN GENERAL_VENTANILLA','ALMACEN GENERAL_OFICINA','TALLER 3_OFICINA ALMACEN','TALLER 3_O&S','TALLER 3_GERENCIA_AUTOMATIZACION','TALLER 3_OFICINA_PROYECTOS_OPERACION','BAÑO PLANTA BAJA CABALLEROS','BAÑO PLANTA BAJA DAMAS','BAÑO PLANTA ALTA CABALLEROS','BAÑO PLANTA ALTA DAMAS','ALMACEN_BAÑO','BAÑOS EDIFICIO B_CABALLEROS','BAÑO EDIFICIO B_DAMAS','SISTEMAS_SITE','TECHO AZOTEA','PUERTA PASILLO ACCESO EDIFICIO A-B','PATIO /COMEDOR','COCINA','JARDINERA 1','JARDINERA 2','JARDINERA 3','JARDINERA 4'],
+  ESPECIALIDAD:['ELECTRICIDAD','ALBAÑILERIA','LIMPIEZA','CARPINTERIA','HERRERIA','AIRE ACONDICIONADO','PINTURA','JARDINERÍA','TABLAROCA','ALUMINIO','IMPERMIABILIZADO','FUMIGACION','MOBILIARIO','PLOMERÍA','ALARMAS','CERRAJERÍA','OFICINA CONTABILIDAD'],
   DEPTO:['OYS','PROYECTOS','VENTAS','DIRECCION','COMPRAS','TDA','ALMACEN','ADMINISTRACION','ACTIVOS','FINANZAS','RRHH','OBRA','SISTEMAS','AUTOMATIZACION'],
-  TIPO:['REFACCIONES','SERVICIO'],
+  TIPO:['REFACCIONES','SERVICIO','ARTICULOS','MATERIALES','REFACCIONES Y SERVICIOS'],
   PROV_RZ:['ABRIL MARÍN TORRES / BEBIS','AGENCIA COMERCIALIZADORA INDUSTRIAL DEL SURESTE SA','AGENCIAS MERCANTILES SA DE CV','ALIANZA A Y R DE OPERACIONES/ EL GRANERO','ALVAREZ AUTOMOTRIZ S.A. DE C.V.','ARGUS TECNOLOGÍAS','AUTOSUR - MAYA MOTRIZ S.A. DE C.V.','BATERIAS EL CARIBE S DE RL DE CV','BEPENSA MOTRIZ','CBC AUTOPARTES','CHEVROLET DEL CARIBE SA DE CV','CRISTALES Y PARTES ROTO','DIRMARK GROUP','DOMINGUEZ CARROCERIAS SA DE CV','GESTORIA AL MOMENTO','GRUPO GOMIVOZA SA DE CV','HDI SEGUROS','ITZACALCO MOTORS','LATIN TIRES SA DE CV','LLANTAS KENDA SA DE CV','LLANTAS Y REFACCIONES DE MATAMOROS SA DE CV','MARTHA GUADALUPE LEON HERNANDEZ/AUTOPARTES CARIBE','MHA SA DE CV','MOTORES LA PAZ S.A.P.I DE C.V.','NUEVA WAL MART DE MEXICO','PROVEDORA DE RINES Y LLANTAS MONTERREY','QUALITAS COMPAÑÍA DE SEGUROS','RADIAL LLANTAS SAPI DE CV','REFACCIONARIA AUTOMOTRIZ ANCONA SA DE CV','REPARACION Y RESPALDO AUTOMOTRIZ PROTECT','SAMS CLUB','SIEH PADAMO SA DE CV','STEREN','VEHICULOS AUTOMOTORES DE MAZATLAN SA DE CV','WESTLAKE TIRES'],
   CONDICIONES:['CONTADO','CREDITO','TRANSFERENCIA'],
   FACTURA:['SI','NO'],
@@ -714,7 +719,7 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',unidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[],sinComparativo:false};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[],sinComparativo:false};}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
 /* ══════════════════════════════════════════
@@ -1065,7 +1070,7 @@ function dynSel(id,cat,val,ph,allowNew){
     <button class="btn btn-ghost btn-sm" onclick="cancelOpt('${id}')">✕</button>
   </div>`;
 }
-function handleSel(el,id,cat){if(el.value==='__new__'){el.value='';const nw=document.getElementById(id+'_nw');if(nw){nw.classList.add('show');document.getElementById(id+'_ni').focus();}}else{autoSave();if(id==='g_zona'||id==='g_unidad')updateFolioNomenclature();}}
+function handleSel(el,id,cat){if(el.value==='__new__'){el.value='';const nw=document.getElementById(id+'_nw');if(nw){nw.classList.add('show');document.getElementById(id+'_ni').focus();}}else{autoSave();if(id==='g_zona'||id==='g_unidad'||id==='g_edificio')updateFolioNomenclature();}}
 function addOpt(id,cat){
   const inp=document.getElementById(id+'_ni');const val=(inp?.value||'').trim();
   if(!val){notify('Ingresa un valor',true);return;}
@@ -1128,6 +1133,32 @@ function switchTab(name){
 }
 
 
+
+/* ══════════════════════════════════════════
+   ACTIVO TIPO — vehículo / edificio
+══════════════════════════════════════════ */
+function setActivoTipo(t){
+  const f=getActive();if(!f)return;
+  if(!can('capture')){notify('Sin permiso para modificar',true);return;}
+  f.general.activoTipo=t;
+  // Clear opposing fields to avoid confusion
+  if(t==='EDIFICIO'){f.general.unidad='';}
+  else{f.general.edificio='';f.general.area='';f.general.especialidad='';}
+  f.updatedAt=new Date().toISOString();
+  ss();setSyncState('pending');
+  renderCapture();
+  notify('Tipo de activo: '+(t==='VEHICULO'?'🚗 Vehículo':'🏢 Edificio'));
+}
+
+// Returns the asset display label depending on type
+function getAssetName(f){
+  if(!f||!f.general)return'';
+  return(f.general.activoTipo==='EDIFICIO')
+    ?(f.general.edificio||'')
+    :(f.general.unidad||'');
+}
+function getAssetType(f){return f?.general?.activoTipo||'VEHICULO';}
+
 /* ══════════════════════════════════════════
    SIN COMPARATIVO — proveedor único / de casa
 ══════════════════════════════════════════ */
@@ -1174,12 +1205,29 @@ function genCG(f,g,gFilled){
   const genRO=!can('capture');return`<div class="acc-card open" id="acc-gen">
     <div class="acc-head" onclick="toggleAcc('acc-gen')"><span>📋</span><span class="acc-title">Información General</span>${st}<span class="acc-arrow">▼</span></div>
     <div class="acc-body"><div class="acc-inner"><div class="fg">
+      <div class="form-group full" style="border:1px solid var(--bd2);border-radius:var(--r);padding:8px 12px;background:var(--surf2);margin-bottom:6px">
+        <label style="margin-bottom:6px;display:block">🏷 Tipo de Activo</label>
+        <div style="display:flex;gap:14px">
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
+            <input type="radio" name="g_activoTipo" value="VEHICULO" ${(g.activoTipo||'VEHICULO')==='VEHICULO'?'checked':''} onchange="setActivoTipo('VEHICULO')" style="cursor:pointer"/> 🚗 Vehículo
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
+            <input type="radio" name="g_activoTipo" value="EDIFICIO" ${g.activoTipo==='EDIFICIO'?'checked':''} onchange="setActivoTipo('EDIFICIO')" style="cursor:pointer"/> 🏢 Edificio
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label>Gestor</label>${dynSel('g_gestor','GESTOR',g.gestor)}</div>
       <div class="form-group"><label>Fecha Solicitud</label><input type="date" id="g_fecha" value="${esc(g.fecha)}" onchange="autoSave()"/></div>
       <div class="form-group"><label>Zona</label>${dynSel('g_zona','ZONA',g.zona,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
+      ${(g.activoTipo||'VEHICULO')==='VEHICULO'?`
       <div class="form-group"><label>Unidad</label>${dynSel('g_unidad','UNIDAD',g.unidad,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
+      `:`
+      <div class="form-group"><label>Edificio</label>${dynSel('g_edificio','EDIFICIO',g.edificio,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
+      <div class="form-group"><label>Área</label>${dynSel('g_area','AREA',g.area,'— Seleccionar —',true)}</div>
+      <div class="form-group"><label>Especialidad / Concepto</label>${dynSel('g_especialidad','ESPECIALIDAD',g.especialidad,'— Seleccionar —',true)}</div>
+      `}
       <div class="form-group"><label>Departamento</label>${dynSel('g_depto','DEPTO',g.depto)}</div>
-      <div class="form-group"><label>Tipo de Solicitud</label>${dynSel('g_tipo','TIPO',g.tipo,'— Refacciones / Servicio —',false)}</div>
+      <div class="form-group"><label>Tipo de Solicitud</label>${dynSel('g_tipo','TIPO',g.tipo,'— Seleccionar tipo —',false)}</div>
       <div class="form-group"><label># COT Interna</label><input type="text" id="g_cotInterna" value="${esc(g.cotInterna)}" placeholder="COT-001" onchange="autoSave()"/></div>
       <div class="form-group"><label># SOLPED</label><input type="text" id="g_solped" value="${esc(g.solped)}" placeholder="Texto libre" onchange="autoSave()"/></div>
       <div class="form-group"><label>Cantidad</label><input type="number" id="g_cantidad" value="${esc(g.cantidad)}" placeholder="0" step="any" oninput="autoSave();refreshCalcs()"/></div>
@@ -1537,7 +1585,7 @@ function restoreStars(pi,dim,cid){const f=getActive();if(!f)return;const val=(f.
 ══════════════════════════════════════════ */
 function autoSave(){
   const f=getActive();if(!f)return;
-  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
+  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',edificio:'g_edificio',area:'g_area',especialidad:'g_especialidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
   Object.entries(gm).forEach(([k,id])=>{const el=document.getElementById(id);if(el)f.general[k]=el.value;});
   [0,1,2].forEach(i=>{
     const pm={numCot:'numCot',rz:'rz',marca:'marca',pu:'pu',garantia:'garantia',condiciones:'condiciones',entrega:'entrega',factura:'factura',observaciones:'obs'};
@@ -1757,29 +1805,53 @@ function renderComp(){
 function renderResumen(){
   const cont=document.getElementById('dashboardContent');
   if(!folios.length){cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos IES</h3><p>Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p><div style="margin-top:16px"><button class="btn btn-acc" onclick="openFolioModal()">＋ Crear Primer Folio</button></div></div>';return;}
-  const total=folios.length;
-  const autFolios=folios.filter(f=>f.decision.estatus==='AUTORIZADO');
+  // Apply global activo type filter to ALL dashboard data
+  const FF=getFilteredFolios();
+  const total=FF.length;
+  const autFolios=FF.filter(f=>f.decision.estatus==='AUTORIZADO');
   const aut=autFolios.length;
-  // Sin decisión: no ganador assigned — all folios not authorized/cancelled
-  const sinDecFolios=folios.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
+  const sinDecFolios=FF.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
   const sinDec=sinDecFolios.length;
-  // Cancelados
-  const cancelFolios=folios.filter(f=>f.decision.estatus==='CANCELADO');
+  const cancelFolios=FF.filter(f=>f.decision.estatus==='CANCELADO');
   const cancelados=cancelFolios.length;
-  // Valor Total = ONLY authorized folios (presupuesto comprometido real)
-  const autTots=autFolios.flatMap(f=>{
-    const gan=f.decision.ganador;
-    if(gan===null)return[];
-    const d=getDifs(f);
-    return d[gan]&&d[gan].tot>0?[d[gan].tot]:[];
+  // Budget (Presupuesto Autorizado): apply month/range filter on top of activo filter
+  const budgetFolios=filterAutByBudget(autFolios);
+  const autTots=budgetFolios.flatMap(f=>{
+    const gan=f.decision.ganador;if(gan===null)return[];
+    const d=getDifs(f);return d[gan]&&d[gan].tot>0?[d[gan].tot]:[];
   });
   const grandTot=autTots.reduce((a,b)=>a+b,0);
-  // Ahorro = max dif across all folios
-  const allDifs=folios.flatMap(f=>getDifs(f).filter(Boolean).filter(c=>c.dif>0).map(c=>c.dif));
+  const allDifs=FF.flatMap(f=>getDifs(f).filter(Boolean).filter(c=>c.dif>0).map(c=>c.dif));
   const ahorro=allDifs.length?Math.max(...allDifs):0;
-  // Pending decisions: ALL folios sin decision (any prov count) — for the cards section
   const pendFolios=sinDecFolios;
+  // Activo filter chip + budget mode label
+  const af=dashFilter.activoType;
+  const bm=dashFilter.budgetMode;
   cont.innerHTML=`
+    <!-- GLOBAL DASHBOARD FILTER -->
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--surf2);border:1px solid var(--bd);border-radius:var(--rl);padding:10px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px">Tipo de Activo</span>
+        <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:var(--r);overflow:hidden">
+          <button onclick="setActivoFilter('ALL')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='ALL'?'var(--acc-bg)':'transparent'};color:${af==='ALL'?'var(--acc2)':'var(--dim)'};border-right:1px solid var(--bd2)">📊 Total</button>
+          <button onclick="setActivoFilter('VEHICULO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='VEHICULO'?'var(--acc-bg)':'transparent'};color:${af==='VEHICULO'?'var(--acc2)':'var(--dim)'};border-right:1px solid var(--bd2)">🚗 Vehículos</button>
+          <button onclick="setActivoFilter('EDIFICIO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='EDIFICIO'?'var(--acc-bg)':'transparent'};color:${af==='EDIFICIO'?'var(--acc2)':'var(--dim)'}">🏢 Edificios</button>
+        </div>
+        <span style="font-size:10px;color:var(--muted)">Filtrando: <strong style="color:var(--text)">${total}</strong> folios</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px">Presupuesto</span>
+        <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:var(--r);overflow:hidden">
+          <button onclick="setBudgetMode('MONTH')" style="padding:5px 10px;border:none;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;background:${bm==='MONTH'?'var(--blu-bg)':'transparent'};color:${bm==='MONTH'?'var(--blue)':'var(--dim)'};border-right:1px solid var(--bd2)">📅 Mes actual</button>
+          <button onclick="setBudgetMode('RANGE')" style="padding:5px 10px;border:none;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;background:${bm==='RANGE'?'var(--blu-bg)':'transparent'};color:${bm==='RANGE'?'var(--blue)':'var(--dim)'}">📊 Rango</button>
+        </div>
+        ${bm==='RANGE'?`
+        <input type="date" id="budgetFrom" value="${dashFilter.dateFrom}" onchange="setBudgetRange()" style="background:var(--bg);border:1px solid var(--bd2);color:var(--text);border-radius:var(--r);padding:4px 8px;font-size:11px;font-family:inherit"/>
+        <span style="font-size:10px;color:var(--muted)">a</span>
+        <input type="date" id="budgetTo" value="${dashFilter.dateTo}" onchange="setBudgetRange()" style="background:var(--bg);border:1px solid var(--bd2);color:var(--text);border-radius:var(--r);padding:4px 8px;font-size:11px;font-family:inherit"/>
+        `:''}
+      </div>
+    </div>
     <!-- KPIs -->
     <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
       <div class="kpi acc" style="cursor:pointer" onclick="openKpiModal('total')" title="Ver detalle">
@@ -1800,9 +1872,11 @@ function renderResumen(){
         <div class="kpi-sub">Folios dados de baja</div>
         <div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
       </div>
-      <div class="kpi blue" style="cursor:pointer" onclick="openKpiModal('aut')" title="Ver autorizados">
-        <div class="kpi-label">Presupuesto Autorizado</div><div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div><div class="kpi-sub" style="color:var(--green)">● Solo folios autorizados</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:4px">↗ desglose</div>
+      <div class="kpi blue" style="cursor:pointer" onclick="openKpiModal('budget')" title="Ver folios autorizados en el periodo">
+        <div class="kpi-label">Presupuesto Autorizado</div>
+        <div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div>
+        <div class="kpi-sub" style="color:var(--blue)">📅 ${budgetLabel()}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px">${budgetFolios.length} folio${budgetFolios.length!==1?'s':''} · ↗ desglose</div>
       </div>
       <div class="kpi acc">
         <div class="kpi-label">Ahorro Máx.</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Mayor diferencia detectada</div>
@@ -1926,9 +2000,10 @@ function initC(id){const el=document.getElementById(id);if(!el)return null;if(CH
 const ECT={backgroundColor:'transparent',textStyle:{color:'#8b949e',fontFamily:'Plus Jakarta Sans'},tooltip:{backgroundColor:'#161b22',borderColor:'#30363d',textStyle:{color:'#e6edf3',fontSize:11}}};
 
 function renderChartFunnel(){
+  const FF=getFilteredFolios();
   const ch=initC('ch-funnel');if(!ch)return;
   const so=['EN PROCESO','PENDIENTE','AUTORIZADO','CANCELADO'];
-  const counts={};folios.forEach(f=>{const s=f.decision.estatus||'Sin definir';counts[s]=(counts[s]||0)+1;});
+  const counts={};FF.forEach(f=>{const s=f.decision.estatus||'Sin definir';counts[s]=(counts[s]||0)+1;});
   const data=Object.entries(counts).sort((a,b)=>(so.indexOf(a[0])<0?99:so.indexOf(a[0]))-(so.indexOf(b[0])<0?99:so.indexOf(b[0]))).map(([name,value])=>({name,value}));
   const cm={AUTORIZADO:'#3fb950',PENDIENTE:'#d4a843','EN PROCESO':'#79c0ff',CANCELADO:'#f85149','Sin definir':'#484f58'};
   ch.setOption({...ECT,series:[{type:'funnel',left:'15%',top:15,bottom:25,width:'70%',min:0,max:Math.max(...data.map(d=>d.value),1)+1,
@@ -1937,9 +2012,10 @@ function renderChartFunnel(){
     itemStyle:{borderWidth:0},data:data.map(d=>({name:d.name,value:d.value,itemStyle:{color:cm[d.name]||'#484f58'}}))}]});
 }
 function renderChartSpider(){
+  const FF=getFilteredFolios();
   const ch=initC('ch-spider');if(!ch)return;
   const filter=catF==='all'?null:catF;const ps={};
-  folios.filter(f=>!filter||f.general.tipo===filter).forEach(f=>{
+  FF.filter(f=>!filter||f.general.tipo===filter).forEach(f=>{
     const a=scoreAll(f);if(!a)return;
     a.forEach(x=>{const nm=x.prov.rz||PLBL[x.prov.idx];if(!ps[nm])ps[nm]={p:0,e:0,g:0,c:0,f:0,r:0,n:0};
     ps[nm].p+=x.s.precio;ps[nm].e+=x.s.entrega;ps[nm].g+=x.s.garantia;ps[nm].c+=x.s.condPago;ps[nm].f+=x.s.factura;ps[nm].r+=x.s.calificacion;ps[nm].n++;});
@@ -1954,8 +2030,9 @@ function renderChartSpider(){
     series:[{type:'radar',data:entries.map((e,i)=>({name:e.nm,value:e.vals,areaStyle:{opacity:.12},lineStyle:{width:2,color:colors[i]}}))}]});
 }
 function renderChartDept(){
+  const FF=getFilteredFolios();
   const ch=initC('ch-dept');if(!ch)return;
-  const dt={};folios.forEach(f=>{const dep=f.general.depto||'Sin depto';getDifs(f).forEach(d=>{if(d&&d.tot>0)dt[dep]=(dt[dep]||0)+d.tot;});});
+  const dt={};FF.forEach(f=>{const dep=f.general.depto||'Sin depto';getDifs(f).forEach(d=>{if(d&&d.tot>0)dt[dep]=(dt[dep]||0)+d.tot;});});
   const sorted=Object.entries(dt).sort((a,b)=>b[1]-a[1]).slice(0,8);
   if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin datos',fill:'#484f58',fontSize:12}}]});return;}
   ch.setOption({...ECT,grid:{left:85,right:15,top:10,bottom:25},
@@ -1965,8 +2042,9 @@ function renderChartDept(){
       label:{show:true,position:'right',formatter:p=>'$'+p.value.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:1}),color:'#8b949e',fontSize:9}}]});
 }
 function renderChartProv(){
+  const FF=getFilteredFolios();
   const ch=initC('ch-prov');if(!ch)return;
-  const wins={};folios.forEach(f=>{if(f.decision.ganador!==null){const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador];wins[nm]=(wins[nm]||0)+1;}});
+  const wins={};FF.forEach(f=>{if(f.decision.ganador!==null){const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador];wins[nm]=(wins[nm]||0)+1;}});
   const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,7);
   if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin decisiones aún',fill:'#484f58',fontSize:12}}]});return;}
   const colors=['#d4a843','#79c0ff','#3fb950','#bc8cff','#f0883e','#f85149','#5eca80'];
@@ -1977,19 +2055,82 @@ function renderChartProv(){
       label:{show:true,position:'top',formatter:'{c}',color:'#8b949e',fontSize:10}}]});
 }
 
+
+/* ══════════════════════════════════════════
+   DASHBOARD FILTERS — activo type + date range
+══════════════════════════════════════════ */
+let dashFilter={
+  activoType:'ALL',   // ALL | VEHICULO | EDIFICIO
+  budgetMode:'MONTH', // MONTH | RANGE
+  dateFrom:'',        // YYYY-MM-DD
+  dateTo:''           // YYYY-MM-DD
+};
+
+// Filter folios according to dashFilter.activoType
+function getFilteredFolios(){
+  if(dashFilter.activoType==='ALL')return folios;
+  if(dashFilter.activoType==='VEHICULO')return folios.filter(f=>getAssetType(f)==='VEHICULO');
+  if(dashFilter.activoType==='EDIFICIO')return folios.filter(f=>getAssetType(f)==='EDIFICIO');
+  return folios;
+}
+
+// Filter authorized folios by current budget mode + date range
+function filterAutByBudget(autFolios){
+  if(dashFilter.budgetMode==='MONTH'){
+    const now=new Date();
+    const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    return autFolios.filter(f=>{const d=f.decision.fechaAut||'';return d.startsWith(ym);});
+  }
+  if(dashFilter.budgetMode==='RANGE'&&(dashFilter.dateFrom||dashFilter.dateTo)){
+    return autFolios.filter(f=>{
+      const d=f.decision.fechaAut||'';if(!d)return false;
+      if(dashFilter.dateFrom&&d<dashFilter.dateFrom)return false;
+      if(dashFilter.dateTo&&d>dashFilter.dateTo)return false;
+      return true;
+    });
+  }
+  return autFolios;
+}
+
+function setActivoFilter(t){dashFilter.activoType=t;renderResumen();setTimeout(renderCharts,150);}
+function setBudgetMode(m){
+  dashFilter.budgetMode=m;
+  if(m==='MONTH'){dashFilter.dateFrom='';dashFilter.dateTo='';}
+  renderResumen();setTimeout(renderCharts,150);
+}
+function setBudgetRange(){
+  const fr=document.getElementById('budgetFrom')?.value||'';
+  const to=document.getElementById('budgetTo')?.value||'';
+  dashFilter.dateFrom=fr;dashFilter.dateTo=to;
+  dashFilter.budgetMode='RANGE';
+  renderResumen();setTimeout(renderCharts,150);
+}
+
+function budgetLabel(){
+  if(dashFilter.budgetMode==='MONTH'){
+    const m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const d=new Date();return m[d.getMonth()]+' '+d.getFullYear();
+  }
+  if(dashFilter.dateFrom||dashFilter.dateTo)return(dashFilter.dateFrom||'inicio')+' → '+(dashFilter.dateTo||'hoy');
+  return'Todo el historial';
+}
+
 /* ══════════════════════════════════════════
    VISTA DIRECCIÓN — INTERACTIVE MODULES
 ══════════════════════════════════════════ */
 
 // ── A. KPI Modals ────────────────────────────────────────────────────────────
 function openKpiModal(type){
-  const titles={total:'📁 Todos los Folios',aut:'✅ Folios Autorizados',pend:'⏳ Folios Sin Decisión',sinDec:'🟠 Sin Decisión / Sin Definir',cancel:'🔴 Folios Cancelados'};
+  const titles={total:'📁 Todos los Folios',aut:'✅ Folios Autorizados',pend:'⏳ Folios Sin Decisión',sinDec:'🟠 Sin Decisión / Sin Definir',cancel:'🔴 Folios Cancelados',budget:'💰 Presupuesto Autorizado — '+budgetLabel()};
+  // Apply same activo filter the dashboard uses
+  const baseFolios=getFilteredFolios();
   let data=[];
-  if(type==='total')  data=folios;
-  else if(type==='aut')    data=folios.filter(f=>f.decision.estatus==='AUTORIZADO');
-  else if(type==='pend')   data=folios.filter(f=>f.decision.ganador===null&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2);
-  else if(type==='sinDec') data=folios.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
-  else if(type==='cancel') data=folios.filter(f=>f.decision.estatus==='CANCELADO');
+  if(type==='total')       data=baseFolios;
+  else if(type==='aut')    data=baseFolios.filter(f=>f.decision.estatus==='AUTORIZADO');
+  else if(type==='pend')   data=baseFolios.filter(f=>f.decision.ganador===null&&f.decision.ganador!==0&&f.prov.filter(p=>p.active).length>=2);
+  else if(type==='sinDec') data=baseFolios.filter(f=>f.decision.ganador===null&&f.decision.estatus!=='CANCELADO'&&f.decision.estatus!=='AUTORIZADO');
+  else if(type==='cancel') data=baseFolios.filter(f=>f.decision.estatus==='CANCELADO');
+  else if(type==='budget') data=filterAutByBudget(baseFolios.filter(f=>f.decision.estatus==='AUTORIZADO'));
   document.getElementById('kpiModalTitle').textContent=titles[type]+' ('+data.length+')';
   const stm={AUTORIZADO:'bg',CANCELADO:'br',PENDIENTE:'by','EN PROCESO':'bb'};
   if(!data.length){document.getElementById('kpiModalBody').innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Sin registros en esta categoría.</div>';}
@@ -2079,7 +2220,7 @@ function openProvModal(provName){
 function renderChartDept(){
   const ch=initC('ch-dept');if(!ch)return;
   const dt={};
-  folios.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null).forEach(f=>{
+  FF.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null).forEach(f=>{
     const dep=f.general.depto||'Sin depto';
     const g=f.decision.ganador;
     const difs=getDifs(f);
@@ -2099,7 +2240,7 @@ function renderChartDept(){
 // ── B. Fixed Prov Chart — with click handler ─────────────────────────────────
 function renderChartProv(){
   const ch=initC('ch-prov');if(!ch)return;
-  const wins={};folios.forEach(f=>{if(f.decision.ganador!==null){const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador];wins[nm]=(wins[nm]||0)+1;}});
+  const wins={};FF.forEach(f=>{if(f.decision.ganador!==null){const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador];wins[nm]=(wins[nm]||0)+1;}});
   const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,7);
   if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin decisiones aún',fill:'#484f58',fontSize:12}}]});return;}
   const colors=['#d4a843','#79c0ff','#3fb950','#bc8cff','#f0883e','#f85149','#5eca80'];
@@ -2119,10 +2260,11 @@ function renderChartProv(){
 
 // ── D. Vehicle Investment Chart ──────────────────────────────────────────────
 function renderChartVehiculo(){
+  const FF=getFilteredFolios();
   const ch=initC('ch-vehiculo');if(!ch)return;
   // Gather authorized folios with a vehicle unit
   const vMap={};// key: "DEPTO|UNIDAD" → {depto, unidad, total, count}
-  folios.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null&&f.general.unidad).forEach(f=>{
+  FF.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null&&f.general.unidad).forEach(f=>{
     const depto=f.general.depto||'Sin depto';
     const unidad=f.general.unidad;
     const key=depto+'|'+unidad;
