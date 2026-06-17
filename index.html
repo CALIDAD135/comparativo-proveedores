@@ -1974,7 +1974,7 @@ function renderResumen(){
     </div>
     <!-- VEHICLE INVESTMENT CHART -->
     <div class="chart-card" style="margin-bottom:14px">
-      <div class="chart-title">Índice de Inversión por Unidad Vehicular <span style="font-size:9px;color:var(--green);font-weight:600">● Montos autorizados</span></div>
+      <div class="chart-title" id="ch-vehiculo-title">Índice de Inversión por Activo <span style="font-size:9px;color:var(--green);font-weight:600">● Montos autorizados</span></div>
       <div id="ch-vehiculo" style="height:260px"></div>
     </div>
 
@@ -1986,13 +1986,15 @@ function renderResumen(){
       </div>
       <div id="ftBody"></div>
     </div>`;
-  renderFT(folios);
+  renderFT(FF);
   setTimeout(renderCharts,150);
 }
 
 function filterFT(){
   const q=(document.getElementById('ftSearch')?.value||'').toLowerCase();
-  const filtered=q?folios.filter(f=>f.name.toLowerCase().includes(q)||f.desc.toLowerCase().includes(q)||(f.general.descripcion||'').toLowerCase().includes(q)||(f.general.depto||'').toLowerCase().includes(q)||f.prov.some(p=>p.rz.toLowerCase().includes(q))):folios;
+  // Apply global activo filter FIRST, then text search on top
+  const base=getFilteredFolios();
+  const filtered=q?base.filter(f=>f.name.toLowerCase().includes(q)||f.desc.toLowerCase().includes(q)||(f.general.descripcion||'').toLowerCase().includes(q)||(f.general.depto||'').toLowerCase().includes(q)||f.prov.some(p=>p.rz.toLowerCase().includes(q))):base;
   renderFT(filtered);
 }
 
@@ -2000,18 +2002,21 @@ function renderFT(data){
   const tb=document.getElementById('ftBody');if(!tb)return;
   const stm={AUTORIZADO:'bg',CANCELADO:'br',PENDIENTE:'by','EN PROCESO':'bb'};
   tb.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead><tr>${['Folio','Descripción','Tipo','Depto.','Unidad','Provs.','Mejor Precio','Decisión','Estatus','Acciones'].map(h=>`<th style="padding:8px 14px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;text-align:${h==='Mejor Precio'?'right':'left'}">${h}</th>`).join('')}</tr></thead>
+    <thead><tr>${['Folio','Descripción','Tipo','Depto.','Activo','Provs.','Mejor Precio','Decisión','Estatus','Acciones'].map(h=>`<th style="padding:8px 14px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;text-align:${h==='Mejor Precio'?'right':'left'}">${h}</th>`).join('')}</tr></thead>
     <tbody>${data.map(f=>{
       const actN=f.prov.filter(p=>p.active).length;
       const d=getDifs(f);const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
       const st=f.decision.estatus;const gan=f.decision.ganador;
       const ganName=gan!==null?(f.prov[gan]?.rz||PLBL[gan]):'—';
+      const at=getAssetType(f);
+      const assetVal=at==='EDIFICIO'?(f.general.edificio||'—'):(f.general.unidad||'—');
+      const assetIcon=at==='EDIFICIO'?'🏢':'🚗';
       return`<tr style="cursor:pointer" onclick="selectFolio('${f.id}')">
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);font-weight:600">${f.name}</span></td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd);color:var(--dim);font-size:11px">${trunc(f.general.descripcion||f.desc||'—',35)}</td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd)">${f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:'—'}</td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--dim)">${f.general.depto||'—'}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--dim)">${f.general.unidad||'—'}</td>
+        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--dim)"><span style="margin-right:4px">${assetIcon}</span>${trunc(assetVal,22)}</td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:center"><span class="acc-status ${actN===3?'sts-done':actN>0?'sts-partial':'sts-empty'}">${actN}/3</span></td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">${mn>0?fmt(mn):'—'}</td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:${gan!==null?'var(--acc2)':'var(--muted)'}">${gan!==null?'🏆 '+trunc(ganName,22):'Sin decisión'}</td>
@@ -2252,66 +2257,35 @@ function openProvModal(provName){
   document.getElementById('provModal').classList.add('open');
 }
 
-// ── C. Fixed Dept Chart — authorized only ───────────────────────────────────
-function renderChartDept(){
-  const ch=initC('ch-dept');if(!ch)return;
-  const dt={};
-  FF.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null).forEach(f=>{
-    const dep=f.general.depto||'Sin depto';
-    const g=f.decision.ganador;
-    const difs=getDifs(f);
-    const ganDif=difs[g];
-    if(ganDif&&ganDif.tot>0)dt[dep]=(dt[dep]||0)+ganDif.tot;
-  });
-  const sorted=Object.entries(dt).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin folios autorizados',fill:'#484f58',fontSize:12}}]});return;}
-  ch.setOption({...ECT,grid:{left:85,right:60,top:10,bottom:25},
-    xAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:'#30363d'}},axisLabel:{color:'#8b949e',fontSize:9,formatter:v=>'$'+v.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:0})}},
-    yAxis:{type:'category',data:sorted.map(d=>d[0]).reverse(),axisLabel:{color:'#8b949e',fontSize:10},axisLine:{show:false}},
-    series:[{type:'bar',data:sorted.map(d=>d[1]).reverse(),barMaxWidth:16,
-      itemStyle:{borderRadius:[0,3,3,0],color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#1a4d26'},{offset:1,color:'#3fb950'}]}},
-      label:{show:true,position:'right',formatter:p=>'$'+p.value.toLocaleString('es-MX',{notation:'compact',maximumFractionDigits:1}),color:'#8b949e',fontSize:9}}]});
-}
-
-// ── B. Fixed Prov Chart — with click handler ─────────────────────────────────
-function renderChartProv(){
-  const ch=initC('ch-prov');if(!ch)return;
-  const wins={};FF.forEach(f=>{if(f.decision.ganador!==null){const nm=f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador];wins[nm]=(wins[nm]||0)+1;}});
-  const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,7);
-  if(!sorted.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin decisiones aún',fill:'#484f58',fontSize:12}}]});return;}
-  const colors=['#d4a843','#79c0ff','#3fb950','#bc8cff','#f0883e','#f85149','#5eca80'];
-  ch.setOption({...ECT,grid:{left:15,right:15,top:10,bottom:55},
-    xAxis:{type:'category',data:sorted.map(d=>trunc(d[0],14)),axisLabel:{color:'#8b949e',fontSize:9,rotate:15,interval:0},axisLine:{show:false}},
-    yAxis:{type:'value',axisLabel:{color:'#8b949e',fontSize:9},splitLine:{lineStyle:{color:'#30363d'}},axisLine:{show:false}},
-    series:[{type:'bar',data:sorted.map((d,i)=>({value:d[1],itemStyle:{color:colors[i%colors.length],borderRadius:[3,3,0,0]}})),barMaxWidth:28,
-      label:{show:true,position:'top',formatter:'{c}',color:'#8b949e',fontSize:10}}]});
-  // Click handler
-  ch.off('click');ch.on('click',params=>{
-    if(params.componentType==='series'){
-      const provName=sorted[params.dataIndex]?.[0];
-      if(provName)openProvModal(provName);
-    }
-  });
-}
-
 // ── D. Vehicle Investment Chart ──────────────────────────────────────────────
 function renderChartVehiculo(){
   const FF=getFilteredFolios();
   const ch=initC('ch-vehiculo');if(!ch)return;
-  // Gather authorized folios with a vehicle unit
-  const vMap={};// key: "DEPTO|UNIDAD" → {depto, unidad, total, count}
-  FF.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null&&f.general.unidad).forEach(f=>{
+  // Update title dynamically based on active filter
+  const titleEl=document.getElementById('ch-vehiculo-title');
+  if(titleEl){
+    const af=dashFilter.activoType;
+    const t=af==='VEHICULO'?'Índice de Inversión por Unidad Vehicular'
+          :af==='EDIFICIO'?'Índice de Inversión por Edificio'
+          :'Índice de Inversión por Activo';
+    titleEl.innerHTML=t+' <span style="font-size:9px;color:var(--green);font-weight:600">● Montos autorizados</span>';
+  }
+  // Gather authorized folios with an asset (vehicle OR building) — respects global filter
+  const vMap={};
+  FF.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null).forEach(f=>{
+    const at=getAssetType(f);
+    const asset=at==='EDIFICIO'?(f.general.edificio||f.general.unidad):(f.general.unidad||f.general.edificio);
+    if(!asset)return;
     const depto=f.general.depto||'Sin depto';
-    const unidad=f.general.unidad;
-    const key=depto+'|'+unidad;
+    const key=depto+'|'+asset;
     const g=f.decision.ganador;const difs=getDifs(f);const ganDif=difs[g];
     if(ganDif&&ganDif.tot>0){
-      if(!vMap[key])vMap[key]={depto,unidad,total:0,count:0};
+      if(!vMap[key])vMap[key]={depto,unidad:asset,total:0,count:0,type:at};
       vMap[key].total+=ganDif.tot;vMap[key].count++;
     }
   });
   const entries=Object.values(vMap).sort((a,b)=>b.total-a.total).slice(0,12);
-  if(!entries.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin datos vehiculares autorizados',fill:'#484f58',fontSize:12}}]});return;}
+  if(!entries.length){ch.setOption({...ECT,graphic:[{type:'text',left:'center',top:'middle',style:{text:'Sin activos autorizados en este filtro',fill:'#484f58',fontSize:12}}]});return;}
   // Color by depto
   const deptos=[...new Set(entries.map(e=>e.depto))];
   const dColors=['#79c0ff','#f0883e','#3fb950','#bc8cff','#d4a843','#f85149'];
