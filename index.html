@@ -378,6 +378,15 @@ select option{background:var(--surf2)}
       <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd)">
         Folios <button class="btn btn-ghost btn-sm" onclick="openFolioModal()" style="padding:3px 6px" id="sbNewFolioBtn">＋</button>
       </div>
+      <div style="padding:4px 8px 4px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:5px;background:var(--surf2)">
+        <span style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;flex-shrink:0">⇅</span>
+        <select id="folioSortSelect" onchange="setFolioSort(this.value)" style="background:transparent;border:none;color:var(--dim);font-size:10px;outline:none;cursor:pointer;flex:1;padding:3px 0;font-family:inherit;-webkit-appearance:none">
+          <option value="fecha">Fecha (reciente)</option>
+          <option value="activoTipo">Tipo de Activo</option>
+          <option value="autorizacion">Estatus Autorización</option>
+          <option value="pago">Estatus de Pago</option>
+        </select>
+      </div>
     </div>
     <div class="folio-list" id="folioList"></div>
   </aside>
@@ -731,13 +740,14 @@ let folios=[];
 let activeId=null;
 let pendingDel=null;
 let pendingDelCot=null;
+let folioSortOrder='fecha';
 const CHARTS={};
 
 function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:''},adjuntos:[],sinComparativo:false};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:''},adjuntos:[],sinComparativo:false};}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
 /* ══════════════════════════════════════════
@@ -1120,18 +1130,84 @@ function cancelOpt(id){const nw=document.getElementById(id+'_nw');if(nw)nw.class
 /* ══════════════════════════════════════════
    SIDEBAR & FOLIO BAR
 ══════════════════════════════════════════ */
+function setFolioSort(val){
+  folioSortOrder=val;
+  const sel=document.getElementById('folioSortSelect');
+  if(sel)sel.value=val;
+  renderSidebar();
+}
+
 function renderSidebar(){
   const list=document.getElementById('folioList');
   if(!folios.length){list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin folios. Crea uno con ＋</div>';return;}
-  list.innerHTML=folios.map(f=>{
+
+  // ── SORT: opera sobre copia; nunca modifica el array original ──
+  let sorted=[...folios];
+  switch(folioSortOrder){
+    case 'activoTipo':
+      sorted.sort((a,b)=>{
+        // EDIFICIO primero, luego VEHICULO, luego sin tipo
+        const rank=t=>t==='EDIFICIO'?0:t==='VEHICULO'?1:2;
+        const at=rank(a.general?.activoTipo||'');
+        const bt=rank(b.general?.activoTipo||'');
+        if(at!==bt)return at-bt;
+        return a.name.localeCompare(b.name);
+      });
+      break;
+    case 'autorizacion':
+      sorted.sort((a,b)=>{
+        // AUTORIZADO primero, luego EN PROCESO, PENDIENTE, CANCELADO, sin estatus
+        const rank=s=>s==='AUTORIZADO'?0:s==='EN PROCESO'?1:s==='PENDIENTE'?2:s==='CANCELADO'?3:4;
+        return rank(a.decision?.estatus||'')-rank(b.decision?.estatus||'');
+      });
+      break;
+    case 'pago':
+      sorted.sort((a,b)=>{
+        // Solicitado y Aplicado arriba, Anticipo y sin definir abajo
+        const rank=s=>s==='Solicitado'?0:s==='Aplicado'?1:s==='Anticipo'?2:3;
+        return rank(a.decision?.pagoEstatus||'')-rank(b.decision?.pagoEstatus||'');
+      });
+      break;
+    default: // 'fecha' — más reciente primero
+      sorted.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+      break;
+  }
+
+  // ── ICONOS de estatus de pago ──
+  const pagoIcon={
+    'Solicitado':'<span style="color:var(--purple);font-size:13px;line-height:1;flex-shrink:0;font-weight:700" title="Pago Solicitado">↑</span>',
+    'Aplicado':  '<span style="color:var(--blue);font-size:13px;line-height:1;flex-shrink:0;font-weight:700" title="Pago Aplicado">↓</span>',
+    'Anticipo':  '<span style="color:#eac96d;font-size:13px;line-height:1;flex-shrink:0;font-weight:700" title="Anticipo">→</span>'
+  };
+
+  // ── Separadores visuales para Tipo de Activo ──
+  let lastTipoGroup='';
+
+  list.innerHTML=sorted.map(f=>{
     const st=f.decision?.estatus||'';
     const dotCls=st==='AUTORIZADO'?'dot-aut':st==='CANCELADO'?'dot-cancel':st?'dot-other':'';
-    return`<div class="folio-item${f.id===activeId?' active':''}" onclick="selectFolio('${f.id}')">
-    <span class="folio-dot ${dotCls}" title="${st||'Sin estatus'}"></span>
-    <div class="folio-info"><div class="folio-name" title="${esc(f.name)}">${f.name}</div>
-    <div class="folio-meta">${f.prov.filter(p=>p.active).length} prov · ${f.general.tipo||'Sin tipo'}</div></div>
-    ${currentRole==='COORDINADOR'?`<span class="folio-gear" onclick="event.stopPropagation();deleteFolioRequest('${f.id}')" title="Eliminar (Admin)">⚙</span>`:''}
-  </div>`;}).join('');
+    const ico=pagoIcon[f.decision?.pagoEstatus||'']||'';
+
+    let sep='';
+    if(folioSortOrder==='activoTipo'){
+      const g=f.general?.activoTipo||'SIN TIPO';
+      if(g!==lastTipoGroup){
+        lastTipoGroup=g;
+        const sepLbl=g==='VEHICULO'?'🚗 Vehículos':g==='EDIFICIO'?'🏢 Edificios':'Sin tipo';
+        sep=`<div style="padding:5px 14px 3px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-top:1px solid var(--bd);margin-top:2px">${sepLbl}</div>`;
+      }
+    }
+
+    return sep+`<div class="folio-item${f.id===activeId?' active':''}" onclick="selectFolio('${f.id}')">
+      <span class="folio-dot ${dotCls}" title="${st||'Sin estatus'}"></span>
+      <div class="folio-info">
+        <div class="folio-name" title="${esc(f.name)}">${f.name}</div>
+        <div class="folio-meta">${f.prov.filter(p=>p.active).length} prov · ${f.general.tipo||'Sin tipo'}</div>
+      </div>
+      ${ico}
+      ${currentRole==='COORDINADOR'?`<span class="folio-gear" onclick="event.stopPropagation();deleteFolioRequest('${f.id}')" title="Eliminar (Admin)">⚙</span>`:''}
+    </div>`;
+  }).join('');
 }
 function renderFolioBar(){
   const bar=document.getElementById('folioBar');const f=getActive();
@@ -1230,7 +1306,7 @@ function renderCapture(){
   const acc=document.getElementById('captureAccordion');const f=getActive();
   if(!f){acc.innerHTML='<div class="empty-hero"><div class="icon">📂</div><h3>Sin folio activo</h3><p>Selecciona o crea un folio.</p></div>';return;}
   const g=f.general;const gFilled=g.gestor||g.descripcion||g.cantidad;
-  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCD(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
+  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCD(f),genEP(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
     <button class="btn btn-ghost" onclick="switchTab('comp')">Ver Comparativo →</button>
     ${can('capture')?`<button class="btn btn-acc" onclick="saveAll()">💾 Guardar Todo</button>`:''}
   </div>`;
@@ -1343,6 +1419,75 @@ function genCD(f){
   </div>`;
 }
 function toggleAcc(id){document.getElementById(id)?.classList.toggle('open');}
+
+/* ══════════════════════════════════════════
+   ESTATUS DE PAGO
+══════════════════════════════════════════ */
+function setPayStatus(val){
+  if(!can('payStatus')){notify('Sin permisos para editar el Estatus de Pago',true);return;}
+  const f=getActive();if(!f)return;
+  f.decision.pagoEstatus=f.decision.pagoEstatus===val?'':val; // toggle off si ya está activo
+  f.updatedAt=new Date().toISOString();
+  ss();setSyncState('pending');
+  renderCapture();renderSidebar();
+  notify('Estatus de Pago: '+(f.decision.pagoEstatus||'Sin definir'));
+}
+
+function genEP(f){
+  const ep=(f.decision?.pagoEstatus)||'';
+  const canEdit=can('payStatus');
+  const OPT={
+    Solicitado:{icon:'↑',color:'var(--purple)',bg:'var(--pur-bg)',border:'var(--p2bd)',
+      desc:'El pago ha sido solicitado y está en proceso de aprobación.'},
+    Aplicado:  {icon:'↓',color:'var(--blue)',  bg:'var(--blu-bg)',border:'var(--p1bd)',
+      desc:'El pago ha sido aplicado y procesado correctamente.'},
+    Anticipo:  {icon:'→',color:'#eac96d',      bg:'var(--acc-bg)',border:'var(--acc-d)',
+      desc:'Anticipo registrado — pendiente de aplicar el saldo restante.'}
+  };
+  const cur=OPT[ep];
+  const st=ep
+    ?`<span class="acc-status sts-done" style="color:${OPT[ep].color}">${OPT[ep].icon} ${ep}</span>`
+    :'<span class="acc-status sts-empty">Sin definir</span>';
+
+  return`<div class="acc-card${ep?' open':''}" id="acc-ep">
+    <div class="acc-head" onclick="toggleAcc('acc-ep')">
+      <span>💳</span>
+      <span class="acc-title">Estatus de Pago</span>
+      ${st}
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;background:var(--surf2);color:var(--muted);margin-right:4px">${canEdit?'Editable':'Solo lectura'}</span>
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      ${!canEdit?`<div style="font-size:11px;color:var(--dim);margin-bottom:12px;padding:7px 10px;background:var(--surf2);border-radius:var(--r);border-left:3px solid var(--bd2)">
+        🔒 Este módulo solo puede ser editado por <strong>Coordinador</strong> y <strong>Auxiliar</strong>.
+      </div>`:''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        ${Object.entries(OPT).map(([lbl,s])=>{
+          const isOn=ep===lbl;
+          return`<button onclick="${canEdit?`setPayStatus('${lbl}')`:''}"
+            style="padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:700;
+                   cursor:${canEdit?'pointer':'default'};
+                   border:1px solid ${isOn?s.color:'var(--bd2)'};
+                   background:${isOn?s.bg:'transparent'};
+                   color:${isOn?s.color:'var(--dim)'};
+                   transition:.15s;font-family:inherit;
+                   display:inline-flex;align-items:center;gap:8px;
+                   ${!canEdit?'opacity:.6;':''}">
+            <span style="font-size:18px">${s.icon}</span>${lbl}
+          </button>`;
+        }).join('')}
+      </div>
+      ${cur?`<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;
+        background:${cur.bg};border:1px solid ${cur.border};border-radius:var(--r)">
+        <span style="font-size:26px;flex-shrink:0">${cur.icon}</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:${cur.color};margin-bottom:2px">${ep}</div>
+          <div style="font-size:11px;color:var(--dim)">${cur.desc}</div>
+        </div>
+      </div>`:'<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px">Sin estatus de pago definido.</div>'}
+    </div></div>
+  </div>`;
+}
 
 /* ══════════════════════════════════════════
    ADJUNTOS (Attachments)
@@ -2529,6 +2674,7 @@ function exportExcel(){
       ['Obs. Historial',...act.map(p=>(p.rating||{}).obs||'—')],[],
       ['DECISIÓN'],['Proveedor Ganador:',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'Sin definir'],
       ['Autoriza:',f.decision.autoriza||'—','Fecha:',f.decision.fechaAut||'—'],['Estatus:',f.decision.estatus||'Sin definir'],
+      ['Estatus de Pago:',f.decision.pagoEstatus||'Sin definir'],
     ];
     const analysis=scoreAll(f);
     if(analysis){data.push([],['ANÁLISIS IA'],['Proveedor','Precio(33)','Entrega(17)','Garantía(12)','Cond.(13)','Factura(10)','Calif.(15)','TOTAL(100)']);
@@ -2536,11 +2682,11 @@ function exportExcel(){
     const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:28},{wch:32},{wch:32},{wch:32}];
     XLSX.utils.book_append_sheet(wb,ws,f.name.replace(/[:\\/?*\[\]]/g,'').slice(0,31));
   });
-  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','PROVEEDOR GANADOR','ESTATUS','AUTORIZA','FECHA'],...folios.map(f=>{
+  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','PROVEEDOR GANADOR','ESTATUS','ESTATUS PAGO','AUTORIZA','FECHA'],...folios.map(f=>{
     const d=getDifs(f);const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
-    return[f.name,f.general.descripcion||f.desc||'—',f.general.tipo||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'—',f.decision.estatus||'—',f.decision.autoriza||'—',f.decision.fechaAut||'—'];
+    return[f.name,f.general.descripcion||f.desc||'—',f.general.tipo||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'—',f.decision.estatus||'—',f.decision.pagoEstatus||'—',f.decision.autoriza||'—',f.decision.fechaAut||'—'];
   })];
-  const wss=XLSX.utils.aoa_to_sheet(sum);wss['!cols']=[{wch:18},{wch:35},{wch:13},{wch:7},{wch:16},{wch:35},{wch:13},{wch:22},{wch:14}];
+  const wss=XLSX.utils.aoa_to_sheet(sum);wss['!cols']=[{wch:18},{wch:35},{wch:13},{wch:7},{wch:16},{wch:35},{wch:13},{wch:14},{wch:22},{wch:14}];
   XLSX.utils.book_append_sheet(wb,wss,'RESUMEN GENERAL');
   XLSX.writeFile(wb,'Comparativos_IES_'+new Date().toISOString().slice(0,10)+'.xlsx');
   notify('Excel exportado correctamente');
@@ -2647,9 +2793,9 @@ function logoutRole(){
 function can(action){
   if(!currentRole)return false;
   const perms={
-    COORDINADOR:{deleteFolio:true,createFolio:true,capture:true,decision:true,adjuntos:true,deleteCot:true},
-    AUXILIAR:   {deleteFolio:false,createFolio:true,capture:true,decision:false,adjuntos:true,deleteCot:true},
-    GERENCIA:   {deleteFolio:false,createFolio:false,capture:false,decision:true,adjuntos:false,deleteCot:false}
+    COORDINADOR:{deleteFolio:true,createFolio:true,capture:true,decision:true,adjuntos:true,deleteCot:true,payStatus:true},
+    AUXILIAR:   {deleteFolio:false,createFolio:true,capture:true,decision:false,adjuntos:true,deleteCot:true,payStatus:true},
+    GERENCIA:   {deleteFolio:false,createFolio:false,capture:false,decision:true,adjuntos:false,deleteCot:false,payStatus:false}
   };
   return !!(perms[currentRole]&&perms[currentRole][action]);
 }
