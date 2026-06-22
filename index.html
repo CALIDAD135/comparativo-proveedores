@@ -906,18 +906,16 @@ function mergeCustomOpts(local, remote){
 // Any new device or browser that has never configured the app will use these
 // defaults automatically, connecting to the shared production database.
 // Individual overrides are still stored in localStorage 'ies_settings_v4'.
-const DEFAULT_JSONBIN_KEY = '$2a$10$pfaNLaJgY4LS4WY78u3LROvPK1a58vUGoFO1NS89KiGhsNSMYVDyO';
-const DEFAULT_JSONBIN_BIN = '6a29e86eda38895dfea9dbdd';
+const DEFAULT_JSONBIN_KEY = '$2a$10$pfaNLaJgY4LS4WY78u3LRovPK1a58vUGoFO1NS89KiGhsNSMYVDyO';
+const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804'; // Bin más reciente — 19-Jun-2026
 
 let settings=JSON.parse(localStorage.getItem('ies_settings_v4')||'{}');
-// Apply defaults if not yet configured on this device
+// ALWAYS enforce the production Bin ID — never allow a corrupted or stale
+// localStorage value to override it. The Key can be customised but the Bin
+// is fixed for this deployment.
+settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
 if(!settings.jsonbinKey) settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
-if(!settings.jsonbinBin) settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
-// Persist so subsequent loads skip this step
-if(!localStorage.getItem('ies_settings_v4')||
-   !JSON.parse(localStorage.getItem('ies_settings_v4')).jsonbinKey){
-  localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
-}
+localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
 function saveSettings(){
   const k=document.getElementById('cfgKey')?.value||'';
   const b=document.getElementById('cfgBin')?.value||'';
