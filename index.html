@@ -901,7 +901,23 @@ function mergeCustomOpts(local, remote){
 /* ══════════════════════════════════════════
    SETTINGS (cloud)
 ══════════════════════════════════════════ */
+// ── DEFAULT CREDENTIALS ─────────────────────────────────────────────────────
+// These are the production JSONBin credentials for IES Comparativo de Proveedores.
+// Any new device or browser that has never configured the app will use these
+// defaults automatically, connecting to the shared production database.
+// Individual overrides are still stored in localStorage 'ies_settings_v4'.
+const DEFAULT_JSONBIN_KEY = '$2a$10$pfaNLaJgY4LS4WY78u3LROvPK1a58vUGoFO1NS89KiGhsNSMYVDyO';
+const DEFAULT_JSONBIN_BIN = '6a29e86eda38895dfea9dbdd';
+
 let settings=JSON.parse(localStorage.getItem('ies_settings_v4')||'{}');
+// Apply defaults if not yet configured on this device
+if(!settings.jsonbinKey) settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
+if(!settings.jsonbinBin) settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
+// Persist so subsequent loads skip this step
+if(!localStorage.getItem('ies_settings_v4')||
+   !JSON.parse(localStorage.getItem('ies_settings_v4')).jsonbinKey){
+  localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
+}
 function saveSettings(){
   const k=document.getElementById('cfgKey')?.value||'';
   const b=document.getElementById('cfgBin')?.value||'';
@@ -1151,9 +1167,9 @@ function importJSON(e){
 }
 
 function openCloudModal(){
-  const ki=document.getElementById('cfgKey');if(ki&&settings.jsonbinKey)ki.value=settings.jsonbinKey;
-  const bi=document.getElementById('cfgBin');if(bi&&settings.jsonbinBin)bi.value=settings.jsonbinBin;
-  const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=settings.jsonbinBin||'—';
+  const ki=document.getElementById('cfgKey');if(ki)ki.value=settings.jsonbinKey||DEFAULT_JSONBIN_KEY;
+  const bi=document.getElementById('cfgBin');if(bi)bi.value=settings.jsonbinBin||DEFAULT_JSONBIN_BIN;
+  const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=settings.jsonbinBin||DEFAULT_JSONBIN_BIN;
   const ls2=document.getElementById('cloudLastSync');if(ls2&&settings.lastSync)ls2.textContent='Última sincronización: '+new Date(settings.lastSync).toLocaleString('es-MX');
   const hasKey=!!settings.jsonbinKey;
   const setupSec=document.getElementById('cloudSetupSection');const syncSec=document.getElementById('cloudSyncSection');
