@@ -658,21 +658,22 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
         <div class="form-group">
           <label>API Master Key</label>
           <div style="display:flex;gap:6px">
-            <input type="password" id="cfgKey" placeholder="$2a$10$..." onchange="saveSettings()" style="flex:1"/>
+            <input type="text" id="cfgKey" placeholder="$2a$10$..." onchange="saveSettings()" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px"/>
             <button class="btn btn-acc btn-sm" onclick="activateCloud()">Activar</button>
           </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">El campo es visible para verificar que la key esté correctamente copiada.</div>
         </div>
         <div id="cfgBinRow" style="display:none" class="form-group">
           <label>Bin ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(compartir con otros usuarios)</span></label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="cfgBin" placeholder="Se genera automáticamente" onchange="saveSettings()" style="flex:1"/>
+            <input type="text" id="cfgBin" placeholder="Se genera automáticamente" onchange="saveSettings()" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px"/>
             <button class="btn btn-ghost btn-sm" onclick="copyCfgBin()" title="Copiar">📋</button>
           </div>
         </div>
       </div>
       <div class="steps" style="margin-top:10px">
         <div class="step">Ir a <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> → crear cuenta gratuita.</div>
-        <div class="step">En <strong>API Keys</strong> → generar nueva Master Key → pegarla arriba.</div>
+        <div class="step">En <strong>API Keys</strong> → copiar la Master Key → pegarla arriba.</div>
         <div class="step">Compartir el <strong>Bin ID</strong> generado con otros usuarios del equipo.</div>
       </div>
     </div>
@@ -907,15 +908,23 @@ function mergeCustomOpts(local, remote){
 // defaults automatically, connecting to the shared production database.
 // Individual overrides are still stored in localStorage 'ies_settings_v4'.
 const DEFAULT_JSONBIN_KEY = '$2a$10$pfaNLaJgY4LS4WY78u3LRovPK1a58vUGoFO1NS89KiGhsNSMYVDyO';
-const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804'; // Bin más reciente — 19-Jun-2026
+const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804';
 
 let settings=JSON.parse(localStorage.getItem('ies_settings_v4')||'{}');
-// ALWAYS enforce the production Bin ID — never allow a corrupted or stale
-// localStorage value to override it. The Key can be customised but the Bin
-// is fixed for this deployment.
+
+// Force-clear any corrupted Bin ID that causes persistent 403/401 errors.
+// The corrupted value (_5dfea9dbdd) was stored in multiple browsers during
+// a bad sync session and cannot be fixed by entering the key manually.
+const _badBin = settings.jsonbinBin||'';
+if(!_badBin || _badBin.startsWith('_') || _badBin.length < 20){
+  settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
+  settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
+}
+// Always enforce the correct production Bin ID regardless of localStorage.
 settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
 if(!settings.jsonbinKey) settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
 localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
+
 function saveSettings(){
   const k=document.getElementById('cfgKey')?.value||'';
   const b=document.getElementById('cfgBin')?.value||'';
