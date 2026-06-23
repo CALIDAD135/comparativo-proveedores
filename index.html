@@ -905,23 +905,24 @@ function mergeCustomOpts(local, remote){
 // ── DEFAULT CREDENTIALS ─────────────────────────────────────────────────────
 // These are the production JSONBin credentials for IES Comparativo de Proveedores.
 // Any new device or browser that has never configured the app will use these
-// defaults automatically, connecting to the shared production database.
-// Individual overrides are still stored in localStorage 'ies_settings_v4'.
+// 1. Definir las credenciales correctas como únicas y maestras
 const DEFAULT_JSONBIN_KEY = '$2a$10$s8bzM9MXtKOlfm/reSKeMuyOpiJDC6VN1zoTQMoXnuZQs4qRYXz1e';
-const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804'; // Bin activo con Key nueva
-
-let settings=JSON.parse(localStorage.getItem('ies_settings_v4')||'{}');
-
-// Si el Bin almacenado es el viejo (de la Key anterior que ya no funciona),
-// redirigir al Bin nuevo automáticamente.
-const OLD_BIN = '6a29e86eda38895dfea9dbdd';
-if(settings.jsonbinBin === OLD_BIN || !settings.jsonbinBin || settings.jsonbinBin.startsWith('_') || settings.jsonbinBin.length < 20){
-  settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
+const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804';
+// 2. Recuperar la configuración actual del localStorage (si existe)
+let settings = {};
+try {
+    settings = JSON.parse(localStorage.getItem('ies_settings_v4')) || {};
+} catch(e) {
+    settings = {};
 }
-// Siempre forzar la Key correcta
-settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
-settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
-localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
+// 3. VALIDACIÓN CRÍTICA: Si las llaves guardadas no coinciden con las nuevas, forzar actualización
+if (settings.jsonbinKey !== DEFAULT_JSONBIN_KEY || settings.jsonbinBin !== DEFAULT_JSONBIN_BIN) {
+    settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
+    settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
+    // Guardar los datos limpios en el almacenamiento local del navegador
+    localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
+    console.log("Credenciales de JSONBin actualizadas con éxito.");
+}
 
 function saveSettings(){
   const k=document.getElementById('cfgKey')?.value||'';
