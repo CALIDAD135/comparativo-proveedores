@@ -908,21 +908,19 @@ function mergeCustomOpts(local, remote){
 // defaults automatically, connecting to the shared production database.
 // Individual overrides are still stored in localStorage 'ies_settings_v4'.
 const DEFAULT_JSONBIN_KEY = '$2a$10$s8bzM9MXtKOlfm/reSKeMuyOpiJDC6VN1zoTQMoXnuZQs4qRYXz1e';
-const DEFAULT_JSONBIN_BIN = '6a29e86eda38895dfea9dbdd'; // Bin con historial de Gerencia
+const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804'; // Bin activo con Key nueva
 
 let settings=JSON.parse(localStorage.getItem('ies_settings_v4')||'{}');
 
-// Force-clear any corrupted Bin ID that causes persistent 403/401 errors.
-// The corrupted value (_5dfea9dbdd) was stored in multiple browsers during
-// a bad sync session and cannot be fixed by entering the key manually.
-const _badBin = settings.jsonbinBin||'';
-if(!_badBin || _badBin.startsWith('_') || _badBin.length < 20){
+// Si el Bin almacenado es el viejo (de la Key anterior que ya no funciona),
+// redirigir al Bin nuevo automáticamente.
+const OLD_BIN = '6a29e86eda38895dfea9dbdd';
+if(settings.jsonbinBin === OLD_BIN || !settings.jsonbinBin || settings.jsonbinBin.startsWith('_') || settings.jsonbinBin.length < 20){
   settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
-  settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
 }
-// Always enforce the correct production Bin ID regardless of localStorage.
+// Siempre forzar la Key correcta
+settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
 settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
-if(!settings.jsonbinKey) settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
 localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
 
 function saveSettings(){
@@ -3054,32 +3052,57 @@ function renderAll(){
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
 async function appStart(){
-  // Always pull from cloud first if configured — localStorage may be stale
+  const localFolios=ls();
   if(settings.jsonbinKey&&settings.jsonbinBin){
     setSyncState('syncing');
     try{
-      const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{headers:{'X-Master-Key':settings.jsonbinKey}});
+      const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{
+        headers:{'X-Master-Key':settings.jsonbinKey,'Cache-Control':'no-cache'}
+      });
       if(rp.ok){
         const rd=await rp.json();
-        if(rd.record&&rd.record.folios){
-          // Apply tombstones from cloud on login — clears cached deleted folios
-          const cloudTombs=(rd.record.tombstones)||[];
-          const localTombs=getTombstones();
-          const allTombs=[...localTombs];
+        const remoteFolios=rd.record?.folios||[];
+        if(remoteFolios.length===0&&localFolios.length>0){
+          // ── AUTO-MIGRATION: bin vacío + datos locales → subir datos al bin nuevo ──
+          console.log('[IES] Bin vacío detectado — migrando',localFolios.length,'folios al bin activo...');
+          const payload=JSON.stringify({folios:localFolios,customOpts,tombstones:settings.tombstones||[],version:'4',updated:new Date().toISOString(),pushedBy:'COORDINADOR'});
+          const wp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin,{
+            method:'PUT',
+            headers:{'Content-Type':'application/json','X-Master-Key':settings.jsonbinKey,'X-Bin-Private':'true'},
+            body:payload
+          });
+          if(wp.ok){
+            folios=localFolios;
+            settings.lastSync=new Date().toISOString();
+            localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+            setSyncState('ok','Migración OK — '+localFolios.length+' folios sincronizados ✓');
+            notify('✅ '+localFolios.length+' folios migrados al bin activo correctamente');
+          }else{
+            folios=localFolios;
+            setSyncState('error','Error al migrar — datos locales cargados');
+          }
+        }else if(remoteFolios.length>0){
+          // Bin tiene datos — usar con tombstones
+          const cloudTombs=rd.record.tombstones||[];
+          const allTombs=[...getTombstones()];
           cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
           settings.tombstones=allTombs;
           localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
           const tombIds=new Set(allTombs.map(t=>t.id));
-          folios=rd.record.folios.filter(f=>!tombIds.has(f.id));ss();
+          folios=remoteFolios.filter(f=>!tombIds.has(f.id));ss();
           if(rd.record.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
+          setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
         }
+      }else{
+        folios=localFolios.length?localFolios:ls();
+        setSyncState('error','Error '+rp.status+' — datos locales');
       }
-      setSyncState('ok','Datos cargados · '+new Date().toLocaleTimeString('es-MX'));
     }catch(e){
-      folios=ls();setSyncState('error','Offline — datos locales');
+      folios=localFolios.length?localFolios:ls();
+      setSyncState('error','Sin conexión — datos locales');
     }
   }else{
-    folios=ls();
+    folios=localFolios;
     if(settings.jsonbinKey)setSyncState('ok','Key configurada');
   }
   if(!folios.length){folios.push(mkFolio('COMP-2026-001','Primer comparativo'));ss();}
