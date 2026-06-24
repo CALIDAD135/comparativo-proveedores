@@ -902,27 +902,30 @@ function mergeCustomOpts(local, remote){
 /* ══════════════════════════════════════════
    SETTINGS (cloud)
 ══════════════════════════════════════════ */
-// ── DEFAULT CREDENTIALS ─────────────────────────────────────────────────────
-// These are the production JSONBin credentials for IES Comparativo de Proveedores.
-// Any new device or browser that has never configured the app will use these
-// 1. Definir las credenciales correctas como únicas y maestras
-const DEFAULT_JSONBIN_KEY = '$2a$10$s8bzM9MXtKOlfm/reSKeMuyOpiJDC6VN1zoTQMoXnuZQs4qRYXz1e';
-const DEFAULT_JSONBIN_BIN = '6a356a52f5f4af5e29100804';
-// 2. Recuperar la configuración actual del localStorage (si existe)
+// ── CREDENCIALES MAESTRAS ────────────────────────────────────────────────────
+// Dejar en blanco para inicio limpio. Se configuran manualmente una sola vez
+// desde el modal ☁ Nube → Reconfigurar → Activar.
+// El Bin se autogenerará con el primer POST al presionar Activar.
+const DEFAULT_JSONBIN_KEY = ''; // Configurar manualmente al activar la nube
+const DEFAULT_JSONBIN_BIN = ''; // Se autogenerará con el primer Activar
+
+// Recuperar configuración del localStorage (con protección ante JSON corrupto)
 let settings = {};
 try {
     settings = JSON.parse(localStorage.getItem('ies_settings_v4')) || {};
 } catch(e) {
     settings = {};
 }
-// 3. VALIDACIÓN CRÍTICA: Si las llaves guardadas no coinciden con las nuevas, forzar actualización
-if (settings.jsonbinKey !== DEFAULT_JSONBIN_KEY || settings.jsonbinBin !== DEFAULT_JSONBIN_BIN) {
+
+// Si las constantes están vacías, respetar lo que el usuario haya configurado
+// manualmente. Solo forzar si las constantes tienen valor definido.
+if (DEFAULT_JSONBIN_KEY && settings.jsonbinKey !== DEFAULT_JSONBIN_KEY) {
     settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
-    settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
-    // Guardar los datos limpios en el almacenamiento local del navegador
-    localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
-    console.log("Credenciales de JSONBin actualizadas con éxito.");
 }
+if (DEFAULT_JSONBIN_BIN && settings.jsonbinBin !== DEFAULT_JSONBIN_BIN) {
+    settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
+}
+localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
 
 function saveSettings(){
   const k=document.getElementById('cfgKey')?.value||'';
@@ -3053,7 +3056,9 @@ function renderAll(){
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
 async function appStart(){
-  const localFolios=ls();
+  // Reset limpio: no leer localStorage de folios al inicio.
+  // La nube es la única fuente de verdad. Si no hay nube configurada,
+  // el tablero inicia vacío para todos los usuarios por igual.
   if(settings.jsonbinKey&&settings.jsonbinBin){
     setSyncState('syncing');
     try{
@@ -3063,51 +3068,35 @@ async function appStart(){
       if(rp.ok){
         const rd=await rp.json();
         const remoteFolios=rd.record?.folios||[];
-        if(remoteFolios.length===0&&localFolios.length>0){
-          // ── AUTO-MIGRATION: bin vacío + datos locales → subir datos al bin nuevo ──
-          console.log('[IES] Bin vacío detectado — migrando',localFolios.length,'folios al bin activo...');
-          const payload=JSON.stringify({folios:localFolios,customOpts,tombstones:settings.tombstones||[],version:'4',updated:new Date().toISOString(),pushedBy:'COORDINADOR'});
-          const wp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin,{
-            method:'PUT',
-            headers:{'Content-Type':'application/json','X-Master-Key':settings.jsonbinKey,'X-Bin-Private':'true'},
-            body:payload
-          });
-          if(wp.ok){
-            folios=localFolios;
-            settings.lastSync=new Date().toISOString();
-            localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-            setSyncState('ok','Migración OK — '+localFolios.length+' folios sincronizados ✓');
-            notify('✅ '+localFolios.length+' folios migrados al bin activo correctamente');
-          }else{
-            folios=localFolios;
-            setSyncState('error','Error al migrar — datos locales cargados');
-          }
-        }else if(remoteFolios.length>0){
-          // Bin tiene datos — usar con tombstones
-          const cloudTombs=rd.record.tombstones||[];
-          const allTombs=[...getTombstones()];
-          cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
-          settings.tombstones=allTombs;
-          localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-          const tombIds=new Set(allTombs.map(t=>t.id));
-          folios=remoteFolios.filter(f=>!tombIds.has(f.id));ss();
-          if(rd.record.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
-          setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
-        }
+        // Aplicar tombstones de la nube
+        const cloudTombs=rd.record?.tombstones||[];
+        const allTombs=[...getTombstones()];
+        cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
+        settings.tombstones=allTombs;
+        localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+        const tombIds=new Set(allTombs.map(t=>t.id));
+        // Usar folios de la nube (pueden ser 0 si es inicio limpio)
+        folios=remoteFolios.filter(f=>!tombIds.has(f.id));
+        ss();
+        if(rd.record?.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
+        setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
       }else{
-        folios=localFolios.length?localFolios:ls();
-        setSyncState('error','Error '+rp.status+' — datos locales');
+        // Sin acceso a la nube: iniciar vacío, no cargar localStorage antiguo
+        folios=[];
+        setSyncState('error','Error '+rp.status+' — configure la nube con ☁ Nube → Reconfigurar');
       }
     }catch(e){
-      folios=localFolios.length?localFolios:ls();
-      setSyncState('error','Sin conexión — datos locales');
+      folios=[];
+      setSyncState('error','Sin conexión — configure la nube con ☁ Nube → Reconfigurar');
     }
   }else{
-    folios=localFolios;
-    if(settings.jsonbinKey)setSyncState('ok','Key configurada');
+    // Sin credenciales: tablero vacío, esperar configuración manual
+    folios=[];
+    setSyncState('pending','Configure la nube con ☁ Nube');
   }
-  if(!folios.length){folios.push(mkFolio('COMP-2026-001','Primer comparativo'));ss();}
-  activeId=folios[0].id;
+  // Si no hay folios (inicio limpio o sin nube), mostrar tablero vacío sin placeholder
+  if(!folios.length){ ss(); }
+  activeId=folios.length?folios[0].id:null;
   startPolling();
   renderSidebar();
   openDashboard();
