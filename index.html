@@ -3010,9 +3010,13 @@ function startPolling(){
   if(_pollTimer)clearInterval(_pollTimer);
   if(!settings.jsonbinKey||!settings.jsonbinBin)return;
   _pollTimer=setInterval(async()=>{
+    // Guard adicional: si no hay credenciales, detener el polling limpiamente
+    if(!settings.jsonbinKey||!settings.jsonbinBin){clearInterval(_pollTimer);_pollTimer=null;return;}
     try{
       // Use HEAD-like approach: fetch metadata only to check updated timestamp
       const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{headers:{'X-Master-Key':settings.jsonbinKey}});
+      // Si el bin rechaza el acceso (403/401), detener el polling para no inundar la consola
+      if(rp.status===403||rp.status===401){clearInterval(_pollTimer);_pollTimer=null;return;}
       if(!rp.ok)return;
       const rd=await rp.json();
       const remoteUpdated=rd.record?.updated||'';
@@ -3056,10 +3060,11 @@ function renderAll(){
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
 async function appStart(){
-  // Reset limpio: no leer localStorage de folios al inicio.
-  // La nube es la única fuente de verdad. Si no hay nube configurada,
-  // el tablero inicia vacío para todos los usuarios por igual.
-  if(settings.jsonbinKey&&settings.jsonbinBin){
+  // Reset limpio: la nube es la única fuente de verdad.
+  // Si NO hay credenciales válidas en localStorage, NO disparar ninguna
+  // petición a JSONBin. Mostrar tablero limpio (0 folios) y esperar a que
+  // el Coordinador configure la nueva Key desde ☁ Nube → Reconfigurar.
+  if(settings.jsonbinKey && settings.jsonbinBin){
     setSyncState('syncing');
     try{
       const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{
@@ -3068,33 +3073,31 @@ async function appStart(){
       if(rp.ok){
         const rd=await rp.json();
         const remoteFolios=rd.record?.folios||[];
-        // Aplicar tombstones de la nube
         const cloudTombs=rd.record?.tombstones||[];
         const allTombs=[...getTombstones()];
         cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
         settings.tombstones=allTombs;
         localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
         const tombIds=new Set(allTombs.map(t=>t.id));
-        // Usar folios de la nube (pueden ser 0 si es inicio limpio)
         folios=remoteFolios.filter(f=>!tombIds.has(f.id));
         ss();
         if(rd.record?.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
         setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
       }else{
-        // Sin acceso a la nube: iniciar vacío, no cargar localStorage antiguo
+        // Credenciales configuradas pero rechazadas — tablero limpio, sin loop
         folios=[];
-        setSyncState('error','Error '+rp.status+' — configure la nube con ☁ Nube → Reconfigurar');
+        setSyncState('error','Acceso denegado ('+rp.status+') — verifique la Key en ☁ Nube → Reconfigurar');
       }
     }catch(e){
       folios=[];
-      setSyncState('error','Sin conexión — configure la nube con ☁ Nube → Reconfigurar');
+      setSyncState('error','Sin conexión — reintente o configure en ☁ Nube');
     }
   }else{
-    // Sin credenciales: tablero vacío, esperar configuración manual
+    // ── INICIO LIMPIO: sin credenciales, NO se dispara ninguna petición ──
     folios=[];
-    setSyncState('pending','Configure la nube con ☁ Nube');
+    setSyncState('pending','Sin configurar — abra ☁ Nube para activar la sincronización');
   }
-  // Si no hay folios (inicio limpio o sin nube), mostrar tablero vacío sin placeholder
+  // Tablero vacío sin folio placeholder
   if(!folios.length){ ss(); }
   activeId=folios.length?folios[0].id:null;
   startPolling();
