@@ -5,6 +5,9 @@
 <title>Comparativo de Proveedores v4 — IES Internacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<!-- Firebase SDK v10 compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -653,28 +656,29 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
 
     <!-- ESTADO: NO CONFIGURADO -->
     <div id="cloudSetupSection">
-      <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Ingresa tu API Key de <a href="https://jsonbin.io" target="_blank" style="color:var(--acc)">JSONBin.io</a> para activar la sincronización. Solo se requiere una vez.</p>
+      <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Conecta a <strong>Firebase Realtime Database</strong> — sin límite de peticiones. Configura una sola vez.</p>
       <div class="fg" style="grid-template-columns:1fr">
         <div class="form-group">
-          <label>API Master Key</label>
+          <label>Web API Key</label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="cfgKey" placeholder="$2a$10$..." onchange="saveSettings()" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px"/>
+            <input type="text" id="cfgFbApiKey" placeholder="AIzaSy..." onchange="saveSettings()" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px"/>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">Firebase Console → Configuración del proyecto → Web API Key</div>
+        </div>
+        <div class="form-group">
+          <label>Project ID</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="cfgFbProjectId" placeholder="mi-proyecto-12345" onchange="saveSettings()" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px"/>
             <button class="btn btn-acc btn-sm" onclick="activateCloud()">Activar</button>
           </div>
-          <div style="font-size:10px;color:var(--muted);margin-top:4px">El campo es visible para verificar que la key esté correctamente copiada.</div>
-        </div>
-        <div id="cfgBinRow" style="display:none" class="form-group">
-          <label>Bin ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(compartir con otros usuarios)</span></label>
-          <div style="display:flex;gap:6px">
-            <input type="text" id="cfgBin" placeholder="Se genera automáticamente" onchange="saveSettings()" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px"/>
-            <button class="btn btn-ghost btn-sm" onclick="copyCfgBin()" title="Copiar">📋</button>
-          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">Firebase Console → Configuración del proyecto → Project ID</div>
         </div>
       </div>
       <div class="steps" style="margin-top:10px">
-        <div class="step">Ir a <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> → crear cuenta gratuita.</div>
-        <div class="step">En <strong>API Keys</strong> → copiar la Master Key → pegarla arriba.</div>
-        <div class="step">Compartir el <strong>Bin ID</strong> generado con otros usuarios del equipo.</div>
+        <div class="step">Ir a <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Crear proyecto.</div>
+        <div class="step">Activar <strong>Realtime Database</strong> → Iniciar en <strong>modo prueba</strong>.</div>
+        <div class="step">Configuración del proyecto → obtener <strong>Web API Key</strong> y <strong>Project ID</strong>.</div>
+        <div class="step">Pegar ambos datos arriba → <strong>Activar</strong>.</div>
       </div>
     </div>
 
@@ -902,36 +906,59 @@ function mergeCustomOpts(local, remote){
 /* ══════════════════════════════════════════
    SETTINGS (cloud)
 ══════════════════════════════════════════ */
-// ── CREDENCIALES MAESTRAS ────────────────────────────────────────────────────
-// Dejar en blanco para inicio limpio. Se configuran manualmente una sola vez
-// desde el modal ☁ Nube → Reconfigurar → Activar.
-// El Bin se autogenerará con el primer POST al presionar Activar.
-const DEFAULT_JSONBIN_KEY = ''; // Configurar manualmente al activar la nube
-const DEFAULT_JSONBIN_BIN = ''; // Se autogenerará con el primer Activar
+/* ══════════════════════════════════════════
+   FIREBASE CONFIG — IES Comparativos
+   Credenciales de producción incrustadas.
+   Todos los usuarios conectan automáticamente al cargar.
+══════════════════════════════════════════ */
+const DEFAULT_FB_API_KEY    = 'AIzaSyDq4ZANqM0_dKogrNfk5QehtrRTSsOlTik';
+const DEFAULT_FB_PROJECT_ID = 'ies-comparativos';
+const DEFAULT_FB_PATH       = 'ies-comparativos/v4'; // Ruta en Realtime DB
 
-// Recuperar configuración del localStorage (con protección ante JSON corrupto)
+// Recuperar configuración del localStorage
 let settings = {};
-try {
-    settings = JSON.parse(localStorage.getItem('ies_settings_v4')) || {};
-} catch(e) {
-    settings = {};
-}
+try { settings = JSON.parse(localStorage.getItem('ies_settings_v4')) || {}; }
+catch(e) { settings = {}; }
 
-// Si las constantes están vacías, respetar lo que el usuario haya configurado
-// manualmente. Solo forzar si las constantes tienen valor definido.
-if (DEFAULT_JSONBIN_KEY && settings.jsonbinKey !== DEFAULT_JSONBIN_KEY) {
-    settings.jsonbinKey = DEFAULT_JSONBIN_KEY;
-}
-if (DEFAULT_JSONBIN_BIN && settings.jsonbinBin !== DEFAULT_JSONBIN_BIN) {
-    settings.jsonbinBin = DEFAULT_JSONBIN_BIN;
-}
+// Forzar siempre las credenciales de producción
+settings.fbApiKey    = DEFAULT_FB_API_KEY;
+settings.fbProjectId = DEFAULT_FB_PROJECT_ID;
 localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
 
+// Estado Firebase
+let _fbApp  = null;
+let _fbDb   = null;
+let _fbRef  = null;
+
+function initFirebase(apiKey, projectId){
+  try {
+    if(_fbApp) { try { _fbApp.delete(); } catch(e){} }
+    _fbApp = firebase.initializeApp({
+      apiKey:      apiKey,
+      authDomain:  projectId+'.firebaseapp.com',
+      databaseURL: 'https://'+projectId+'-default-rtdb.firebaseio.com',
+      projectId:   projectId,
+      storageBucket: projectId+'.firebasestorage.app',
+      messagingSenderId: '867998406582',
+      appId: '1:867998406582:web:e781815ac4b2077f671317'
+    }, 'ies-'+Date.now());
+    _fbDb  = firebase.database(_fbApp);
+    _fbRef = _fbDb.ref(DEFAULT_FB_PATH);
+    return true;
+  } catch(e) {
+    console.error('[IES Firebase]', e.message);
+    return false;
+  }
+}
+
+// Inicializar Firebase automáticamente al cargar
+initFirebase(DEFAULT_FB_API_KEY, DEFAULT_FB_PROJECT_ID);
+
 function saveSettings(){
-  const k=document.getElementById('cfgKey')?.value||'';
-  const b=document.getElementById('cfgBin')?.value||'';
-  if(k)settings.jsonbinKey=k;
-  if(b)settings.jsonbinBin=b;
+  const ak=document.getElementById('cfgFbApiKey')?.value.trim()||'';
+  const pid=document.getElementById('cfgFbProjectId')?.value.trim()||'';
+  if(ak) settings.fbApiKey=ak;
+  if(pid) settings.fbProjectId=pid;
   localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
 }
 
@@ -1042,82 +1069,56 @@ function mergeFolios(localArr, remoteArr, tombIds){
   return result;
 }
 
+/* ══════════════════════════════════════════
+   FIREBASE SYNC — reemplaza JSONBin
+   Misma lógica de merge, tombstones y updatedAt.
+   Sin límite de peticiones. Tiempo real nativo.
+══════════════════════════════════════════ */
+
 async function syncCloud(){
-  const key=settings.jsonbinKey||document.getElementById('cfgKey')?.value||'';
-  if(!key){openCloudModal();return;}
-  const binId=settings.jsonbinBin||'';
+  if(!_fbRef){ openCloudModal(); return; }
   setSyncState('syncing');
   const btn=document.getElementById('hdrSyncBtn');
   if(btn){btn.textContent='⏳ Sync...';btn.disabled=true;}
-
   try{
-    // ── STEP 1: FETCH — mandatory pull before any write ────────────
-    // Never push without first knowing the current remote state.
-    let remoteRec=null;
-    if(binId){
-      const rp=await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest',{
-        headers:{'X-Master-Key':key,'Cache-Control':'no-cache'}
-      });
-      if(rp.ok){const rd=await rp.json();remoteRec=rd.record||null;}
-      else if(rp.status!==404){throw new Error('Error al leer la nube: '+rp.status);}
-    }
+    // ── STEP 1: FETCH from Firebase ───────────────────────────────
+    const snap = await _fbRef.once('value');
+    const remoteRec = snap.val() || {};
 
-    // ── STEP 2: MERGE tombstones (union, Coordinator deletes always win) ──
+    // ── STEP 2: MERGE tombstones ──────────────────────────────────
     const localTombs  = getTombstones();
-    const remoteTombs = (remoteRec?.tombstones)||[];
+    const remoteTombs = remoteRec.tombstones || [];
     const allTombs    = [...localTombs];
     remoteTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
-    const tombIds     = new Set(allTombs.map(t=>t.id));
-
-    // Apply tombstones to local state immediately
+    const tombIds = new Set(allTombs.map(t=>t.id));
     folios = folios.filter(f=>!tombIds.has(f.id));
 
-    // ── STEP 3: MERGE folios (Fetch→Merge logic) ──────────────────
-    let addedFromRemote=0; let keptLocal=0;
-    if(remoteRec?.folios){
+    // ── STEP 3: MERGE folios ──────────────────────────────────────
+    if(remoteRec.folios && Array.isArray(remoteRec.folios)){
       const remoteClean = remoteRec.folios.filter(f=>!tombIds.has(f.id));
-      const before      = folios.length;
-      folios            = mergeFolios(folios, remoteClean, tombIds);
-      addedFromRemote   = folios.filter(f=>!new Map(Array.from({length:before},(_, i)=>folios[i]).map(x=>[x?.id,true])).has(f.id)).length;
-      keptLocal         = folios.length;
+      folios = mergeFolios(folios, remoteClean, tombIds);
       if(remoteRec.customOpts){customOpts=mergeCustomOpts(customOpts,remoteRec.customOpts);saveCO();}
     }
-    ss(); // Persist merged state locally before push
+    ss();
 
-    // ── STEP 4: UPDATE merged tombstones in settings ──────────────
+    // ── STEP 4: UPDATE tombstones in settings ─────────────────────
     settings.tombstones = allTombs;
-    localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+    localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
 
-    // ── STEP 5: PUSH merged state to cloud ────────────────────────
-    const payload = JSON.stringify({
+    // ── STEP 5: PUSH merged state to Firebase ─────────────────────
+    const payload = {
       folios,
       customOpts,
       tombstones: allTombs,
       version:    '4',
       updated:    new Date().toISOString(),
       pushedBy:   currentRole||'UNKNOWN'
-    });
-    let url,method;
-    if(binId){url='https://api.jsonbin.io/v3/b/'+binId;method='PUT';}
-    else     {url='https://api.jsonbin.io/v3/b';          method='POST';}
-    const resp = await fetch(url,{method,headers:{
-      'Content-Type':  'application/json',
-      'X-Master-Key':  key,
-      'X-Bin-Private': 'true',
-      ...(method==='POST'?{'X-Bin-Name':'IES-Comparativos'}:{})
-    },body:payload});
-    const data = await resp.json();
-    if(!resp.ok) throw new Error(data.message||'Error '+resp.status);
-
-    if(!binId){
-      settings.jsonbinBin=data.metadata.id;
-      const bi=document.getElementById('cfgBin');if(bi)bi.value=data.metadata.id;
-      const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=data.metadata.id;
-    }
-    settings.lastSync = new Date().toISOString();
-    localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+    };
+    await _fbRef.set(payload);
 
     // ── STEP 6: UPDATE UI ─────────────────────────────────────────
+    settings.lastSync = new Date().toISOString();
+    localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
     setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
     const ls2=document.getElementById('cloudLastSync');
     if(ls2)ls2.textContent='Última sincronización: '+new Date().toLocaleString('es-MX');
@@ -1128,7 +1129,6 @@ async function syncCloud(){
     if(folios.length&&!getActive())activeId=folios[0].id;
     renderAll();
     notify('✓ Sincronizado — '+folios.length+' folios');
-
   }catch(e){
     setSyncState('error','Error: '+e.message);
     notify('Error al sincronizar: '+e.message,true);
@@ -1137,17 +1137,27 @@ async function syncCloud(){
   }
 }
 
-async function quickSync(){if(!settings.jsonbinKey){openCloudModal();return;}await syncCloud();}
+async function quickSync(){if(!_fbRef){openCloudModal();return;}await syncCloud();}
+
 async function activateCloud(){
-  const k=document.getElementById('cfgKey')?.value.trim()||'';
-  if(!k){notify('Ingresa el API Key primero',true);return;}
-  settings.jsonbinKey=k;localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-  await syncCloud();openCloudModal();
+  const ak  = document.getElementById('cfgFbApiKey')?.value.trim()||'';
+  const pid = document.getElementById('cfgFbProjectId')?.value.trim()||'';
+  if(!ak||!pid){notify('Ingresa API Key y Project ID de Firebase',true);return;}
+  const ok = initFirebase(ak, pid);
+  if(!ok){notify('Error al inicializar Firebase. Verifica las credenciales.',true);return;}
+  settings.fbApiKey=ak; settings.fbProjectId=pid;
+  localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+  await syncCloud();
+  openCloudModal();
 }
+
 function resetCloudConfig(){
-  if(!confirm('¿Reconfigurar conexión a la nube?'))return;
-  settings.jsonbinKey='';localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-  setSyncState('off');openCloudModal();
+  if(!confirm('¿Reconfigurar conexión Firebase?'))return;
+  settings.fbApiKey=''; settings.fbProjectId='';
+  localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+  _fbRef=null; _fbDb=null; _fbApp=null;
+  setSyncState('off');
+  openCloudModal();
 }
 
 function exportJSON(){
@@ -1176,24 +1186,25 @@ function importJSON(e){
 }
 
 function openCloudModal(){
-  const ki=document.getElementById('cfgKey');if(ki)ki.value=settings.jsonbinKey||DEFAULT_JSONBIN_KEY;
-  const bi=document.getElementById('cfgBin');if(bi)bi.value=settings.jsonbinBin||DEFAULT_JSONBIN_BIN;
-  const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=settings.jsonbinBin||DEFAULT_JSONBIN_BIN;
-  const ls2=document.getElementById('cloudLastSync');if(ls2&&settings.lastSync)ls2.textContent='Última sincronización: '+new Date(settings.lastSync).toLocaleString('es-MX');
-  const hasKey=!!settings.jsonbinKey;
-  const setupSec=document.getElementById('cloudSetupSection');const syncSec=document.getElementById('cloudSyncSection');
-  const binRow=document.getElementById('cfgBinRow');
+  const ak=document.getElementById('cfgFbApiKey');if(ak)ak.value=settings.fbApiKey||'';
+  const pid=document.getElementById('cfgFbProjectId');if(pid)pid.value=settings.fbProjectId||'';
+  const dbUrl=settings.fbProjectId?'https://'+settings.fbProjectId+'-default-rtdb.firebaseio.com':'—';
+  const biDisp=document.getElementById('cfgBinDisplay');if(biDisp)biDisp.textContent=dbUrl;
+  const ls2=document.getElementById('cloudLastSync');
+  if(ls2&&settings.lastSync)ls2.textContent='Última sincronización: '+new Date(settings.lastSync).toLocaleString('es-MX');
+  const hasKey=!!settings.fbApiKey&&!!settings.fbProjectId;
+  const setupSec=document.getElementById('cloudSetupSection');
+  const syncSec=document.getElementById('cloudSyncSection');
   if(setupSec)setupSec.style.display=hasKey?'none':'block';
   if(syncSec)syncSec.style.display=hasKey?'block':'none';
-  if(binRow)binRow.style.display=settings.jsonbinBin?'flex':'none';
   setSyncState(syncState);
   document.getElementById('cloudModal').classList.add('open');
 }
 function closeCloudModal(){document.getElementById('cloudModal').classList.remove('open');}
 function copyCfgBin(){
-  const v=settings.jsonbinBin||document.getElementById('cfgBin')?.value||'';
-  if(v){navigator.clipboard?.writeText(v).then(()=>notify('Bin ID copiado'));}
-  else notify('Sin Bin ID aún',true);
+  const v=settings.fbProjectId?'https://'+settings.fbProjectId+'-default-rtdb.firebaseio.com':'';
+  if(v){navigator.clipboard?.writeText(v).then(()=>notify('URL Firebase copiada'));}
+  else notify('Sin proyecto Firebase aún',true);
 }
 
 /* ══════════════════════════════════════════
@@ -1274,12 +1285,11 @@ function confirmAdmin(){
   folios=folios.filter(f=>f.id!==pendingDel);
   if(activeId===pendingDel)activeId=folios.length?folios[0].id:null;
   ss();closeAdminModal();renderAll();notify('Folio "'+name+'" eliminado — sincronizando...');
-  // Immediately push to cloud so all users see the deletion
-  if(settings.jsonbinKey&&settings.jsonbinBin){
-    const payload=JSON.stringify({folios,customOpts,version:'4',updated:new Date().toISOString()});
-    fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin,{method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':settings.jsonbinKey,'X-Bin-Private':'true'},body:payload})
-      .then(r=>{if(r.ok){settings.lastSync=new Date().toISOString();localStorage.setItem('ies_settings_v4',JSON.stringify(settings));setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));notify('Folio "'+name+'" eliminado y sincronizado ✓');}else setSyncState('pending');})
+  // Immediately push to Firebase so all users see the deletion
+  if(_fbRef){
+    const payload={folios,customOpts,tombstones:getTombstones(),version:'4',updated:new Date().toISOString(),pushedBy:currentRole||'UNKNOWN'};
+    _fbRef.set(payload)
+      .then(()=>{settings.lastSync=new Date().toISOString();localStorage.setItem('ies_settings_v4',JSON.stringify(settings));setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));notify('Folio "'+name+'" eliminado y sincronizado ✓');})
       .catch(()=>setSyncState('pending'));
   }else{setSyncState('pending');}
 }
@@ -3003,49 +3013,46 @@ function can(action){
 }
 
 /* ══════════════════════════════════════════
-   POLLING — auto-refresh every 45s
+   FIREBASE REALTIME LISTENER — reemplaza polling
+   Firebase notifica cambios en tiempo real.
+   Cero peticiones periódicas = sin límite de cuota.
 ══════════════════════════════════════════ */
-let _pollTimer=null;let _lastCloudUpdated='';
+let _fbListener = null;
+
 function startPolling(){
-  if(_pollTimer)clearInterval(_pollTimer);
-  if(!settings.jsonbinKey||!settings.jsonbinBin)return;
-  _pollTimer=setInterval(async()=>{
-    // Guard adicional: si no hay credenciales, detener el polling limpiamente
-    if(!settings.jsonbinKey||!settings.jsonbinBin){clearInterval(_pollTimer);_pollTimer=null;return;}
+  // Detener listener anterior si existe
+  if(_fbListener && _fbRef){
+    _fbRef.off('value', _fbListener);
+    _fbListener = null;
+  }
+  if(!_fbRef) return;
+
+  // Firebase onValue: se dispara una vez al conectar y luego en cada cambio remoto
+  let _firstCall = true;
+  _fbListener = _fbRef.on('value', async(snap)=>{
+    const remoteRec = snap.val() || {};
+    // Primera llamada ya fue manejada por appStart — ignorar para no duplicar
+    if(_firstCall){ _firstCall=false; return; }
+    // Cambio detectado — merge silencioso
     try{
-      // Use HEAD-like approach: fetch metadata only to check updated timestamp
-      const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{headers:{'X-Master-Key':settings.jsonbinKey}});
-      // Si el bin rechaza el acceso (403/401), detener el polling para no inundar la consola
-      if(rp.status===403||rp.status===401){clearInterval(_pollTimer);_pollTimer=null;return;}
-      if(!rp.ok)return;
-      const rd=await rp.json();
-      const remoteUpdated=rd.record?.updated||'';
-      if(remoteUpdated&&remoteUpdated!==_lastCloudUpdated){
-        if(_lastCloudUpdated){
-          // New version detected — pull silently
-          if(rd.record.folios){
-            // Use same merge logic as syncCloud for consistency
-            const remoteTombs=(rd.record.tombstones)||[];
-            const allTombs=[...getTombstones()];
-            remoteTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
-            const tombIds=new Set(allTombs.map(t=>t.id));
-            const remoteClean=rd.record.folios.filter(f=>!tombIds.has(f.id));
-            folios=folios.filter(f=>!tombIds.has(f.id));
-            folios=mergeFolios(folios,remoteClean,tombIds);
-            ss();if(rd.record.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
-            settings.tombstones=allTombs;
-            settings.lastSync=new Date().toISOString();
-            localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-            if(!getActive()&&folios.length)activeId=folios[0].id;
-            renderAll();
-            setSyncState('ok','Auto-sync · '+new Date().toLocaleTimeString('es-MX'));
-            notify('↓ Datos actualizados desde la nube');
-          }
-        }
-        _lastCloudUpdated=remoteUpdated;
-      }
-    }catch(e){}
-  },45000);
+      const remoteTombs = remoteRec.tombstones||[];
+      const allTombs = [...getTombstones()];
+      remoteTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
+      const tombIds = new Set(allTombs.map(t=>t.id));
+      const remoteClean = (remoteRec.folios||[]).filter(f=>!tombIds.has(f.id));
+      const currentFiltered = folios.filter(f=>!tombIds.has(f.id));
+      folios = mergeFolios(currentFiltered, remoteClean, tombIds);
+      ss();
+      if(remoteRec.customOpts){customOpts=mergeCustomOpts(customOpts,remoteRec.customOpts);saveCO();}
+      settings.tombstones=allTombs;
+      settings.lastSync=new Date().toISOString();
+      localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+      if(!getActive()&&folios.length)activeId=folios[0].id;
+      renderAll();
+      setSyncState('ok','Tiempo real · '+new Date().toLocaleTimeString('es-MX'));
+      notify('↓ Actualización en tiempo real recibida');
+    }catch(e){ console.warn('[IES Firebase listener]', e.message); }
+  }, (err)=>{ console.warn('[IES Firebase]', err.message); });
 }
 
 /* ══════════════════════════════════════════
@@ -3060,47 +3067,36 @@ function renderAll(){
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
 async function appStart(){
-  // Reset limpio: la nube es la única fuente de verdad.
-  // Si NO hay credenciales válidas en localStorage, NO disparar ninguna
-  // petición a JSONBin. Mostrar tablero limpio (0 folios) y esperar a que
-  // el Coordinador configure la nueva Key desde ☁ Nube → Reconfigurar.
-  if(settings.jsonbinKey && settings.jsonbinBin){
+  // Firebase: si hay credenciales, cargar datos desde Realtime DB.
+  // Si no hay credenciales, mostrar tablero limpio sin ninguna petición.
+  if(_fbRef){
     setSyncState('syncing');
     try{
-      const rp=await fetch('https://api.jsonbin.io/v3/b/'+settings.jsonbinBin+'/latest',{
-        headers:{'X-Master-Key':settings.jsonbinKey,'Cache-Control':'no-cache'}
-      });
-      if(rp.ok){
-        const rd=await rp.json();
-        const remoteFolios=rd.record?.folios||[];
-        const cloudTombs=rd.record?.tombstones||[];
-        const allTombs=[...getTombstones()];
-        cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
-        settings.tombstones=allTombs;
-        localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-        const tombIds=new Set(allTombs.map(t=>t.id));
-        folios=remoteFolios.filter(f=>!tombIds.has(f.id));
-        ss();
-        if(rd.record?.customOpts){customOpts=mergeCustomOpts(customOpts,rd.record.customOpts);saveCO();}
-        setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
-      }else{
-        // Credenciales configuradas pero rechazadas — tablero limpio, sin loop
-        folios=[];
-        setSyncState('error','Acceso denegado ('+rp.status+') — verifique la Key en ☁ Nube → Reconfigurar');
-      }
+      const snap = await _fbRef.once('value');
+      const remoteRec = snap.val() || {};
+      const remoteFolios = remoteRec.folios || [];
+      const cloudTombs = remoteRec.tombstones || [];
+      const allTombs = [...getTombstones()];
+      cloudTombs.forEach(rt=>{if(!allTombs.find(t=>t.id===rt.id))allTombs.push(rt);});
+      settings.tombstones = allTombs;
+      localStorage.setItem('ies_settings_v4', JSON.stringify(settings));
+      const tombIds = new Set(allTombs.map(t=>t.id));
+      folios = remoteFolios.filter(f=>!tombIds.has(f.id));
+      ss();
+      if(remoteRec.customOpts){customOpts=mergeCustomOpts(customOpts,remoteRec.customOpts);saveCO();}
+      setSyncState('ok','Sync OK · '+new Date().toLocaleTimeString('es-MX'));
     }catch(e){
-      folios=[];
-      setSyncState('error','Sin conexión — reintente o configure en ☁ Nube');
+      folios = [];
+      setSyncState('error','Error Firebase: '+e.message+' — verifique credenciales en ☁ Nube');
     }
   }else{
-    // ── INICIO LIMPIO: sin credenciales, NO se dispara ninguna petición ──
-    folios=[];
-    setSyncState('pending','Sin configurar — abra ☁ Nube para activar la sincronización');
+    // Sin Firebase configurado — tablero limpio, cero peticiones
+    folios = [];
+    setSyncState('pending','Sin configurar — abra ☁ Nube → Configurar Firebase');
   }
-  // Tablero vacío sin folio placeholder
   if(!folios.length){ ss(); }
-  activeId=folios.length?folios[0].id:null;
-  startPolling();
+  activeId = folios.length ? folios[0].id : null;
+  startPolling(); // Activa el listener de tiempo real de Firebase
   renderSidebar();
   openDashboard();
   window.dispatchEvent(new Event('_appReady'));
