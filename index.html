@@ -298,6 +298,20 @@ select option{background:var(--surf2)}
 .acc-card.sc-disabled{opacity:.42;pointer-events:none;filter:grayscale(.6)}
 .acc-card.sc-disabled .acc-body{display:none!important}
 
+/* PRE-AUTORIZACIÓN */
+.switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch-slider{position:absolute;cursor:pointer;inset:0;background:var(--bd2);transition:.2s;border-radius:24px}
+.switch-slider:before{position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:#fff;transition:.2s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.switch input:checked+.switch-slider{background:var(--orange)}
+.switch input:checked+.switch-slider:before{transform:translateX(18px)}
+.switch input:disabled+.switch-slider{opacity:.4;cursor:not-allowed}
+.preauth-banner{background:var(--org-bg);border:1px solid var(--orange);border-radius:var(--rl);padding:12px 18px;margin-bottom:14px}
+.preauth-banner .pa-title{font-size:13px;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:6px}
+.preauth-banner .pa-just{font-size:12px;color:var(--dim);margin-top:4px;white-space:pre-wrap;line-height:1.5}
+.preauth-readonly{font-size:12px;padding:9px 12px;background:var(--org-bg);border:1px solid var(--orange);border-radius:var(--r);color:var(--orange);line-height:1.5}
+.preauth-readonly .pa-just{color:var(--dim);font-weight:400;margin-top:3px;white-space:pre-wrap}
+
 /* MODALS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;align-items:center;justify-content:center}
 .overlay.open{display:flex}
@@ -483,6 +497,17 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
 .add-new-row input{background:rgba(255,255,255,.80)!important;border-color:rgba(8,145,178,.28)!important;}
 ::-webkit-scrollbar-thumb{background:rgba(8,145,178,.22)!important;}
 ::-webkit-scrollbar-thumb:hover{background:rgba(8,145,178,.42)!important;}
+/* Switch / Pre-Autorización (Ocean Glass) */
+.switch-slider{background:rgba(14,74,110,.18)!important;}
+.switch-slider:before{background:#fff!important;box-shadow:0 1px 3px rgba(3,105,161,.35)!important;}
+.switch input:checked+.switch-slider{background:#d97706!important;}
+.preauth-banner{background:rgba(217,119,6,.09)!important;border-color:rgba(217,119,6,.45)!important;box-shadow:0 1px 0 rgba(255,255,255,.9) inset!important;}
+.preauth-banner .pa-title{color:#d97706!important;}
+.preauth-banner .pa-just{color:#2e7a92!important;}
+.preauth-readonly{background:rgba(217,119,6,.09)!important;border-color:rgba(217,119,6,.45)!important;color:#d97706!important;}
+.preauth-readonly .pa-just{color:#2e7a92!important;}
+#sbSearch{background:rgba(255,255,255,.65)!important;border-color:rgba(8,145,178,.22)!important;color:#0c4a6e!important;}
+#sbSearch::placeholder{color:rgba(14,74,110,.40)!important;}
 
 </style>
 </head>
@@ -566,6 +591,9 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
           <option value="autorizacion">Estatus Autorización</option>
           <option value="pago">Estatus de Pago</option>
         </select>
+      </div>
+      <div style="padding:6px 8px;border-bottom:1px solid var(--bd);background:var(--surf2)">
+        <input type="text" id="sbSearch" placeholder="🔍 Buscar folio, activo, palabra..." oninput="renderSidebar()" style="width:100%;font-size:11px;padding:6px 10px;"/>
       </div>
     </div>
     <div class="folio-list" id="folioList"></div>
@@ -976,7 +1004,7 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:''},adjuntos:[],sinComparativo:false};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:''},adjuntos:[],sinComparativo:false};}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
 /* ══════════════════════════════════════════
@@ -1353,8 +1381,20 @@ function renderSidebar(){
   const list=document.getElementById('folioList');
   if(!folios.length){list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin folios. Crea uno con ＋</div>';return;}
 
+  // ── BÚSQUEDA GLOBAL (folio, activo, palabra) ──
+  const q=(document.getElementById('sbSearch')?.value||'').trim().toLowerCase();
+  let base=folios;
+  if(q){
+    base=folios.filter(f=>{
+      const hay=[f.name,f.desc,f.general?.unidad,f.general?.edificio,f.general?.depto,f.general?.descripcion]
+        .filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  if(!base.length){list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin resultados para "'+esc(q)+'"</div>';return;}
+
   // ── SORT: opera sobre copia; nunca modifica el array original ──
-  let sorted=[...folios];
+  let sorted=[...base];
   switch(folioSortOrder){
     case 'activoTipo':
       sorted.sort((a,b)=>{
@@ -1609,9 +1649,42 @@ function genCP(f,i){
     </div></div>
   </div>`;
 }
+function genPreAuthBlock(f,d,isCoord){
+  if(isCoord){
+    return`<div class="form-group full" style="border-top:1px solid var(--bd);padding-top:12px;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:${d.preAutorizado?'8px':'0'};cursor:pointer;text-transform:none">
+        <span class="switch"><input type="checkbox" id="d_preAuth" ${d.preAutorizado?'checked':''} onchange="togglePreAuth()"/><span class="switch-slider"></span></span>
+        <span style="font-size:12px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:0">🟠 Pre-Autorización de Coordinación</span>
+      </label>
+      ${d.preAutorizado?`<textarea id="d_justPreAuth" rows="2" placeholder="Justificación de la pre-autorización..." onchange="saveDecision()">${esc(d.justificacionPreAuth||'')}</textarea>`:''}
+    </div>`;
+  }
+  if(d.preAutorizado){
+    return`<div class="form-group full" style="border-top:1px solid var(--bd);padding-top:12px;margin-top:4px">
+      <label>🟠 Pre-Autorización de Coordinación</label>
+      <div class="preauth-readonly">
+        Folio pre-autorizado por Coordinación.
+        ${d.justificacionPreAuth?`<div class="pa-just">${esc(d.justificacionPreAuth)}</div>`:''}
+      </div>
+    </div>`;
+  }
+  return'';
+}
+function togglePreAuth(){
+  if(currentRole!=='COORDINADOR'){notify('Solo el Coordinador puede modificar la Pre-Autorización',true);return;}
+  const f=getActive();if(!f)return;
+  const chk=document.getElementById('d_preAuth');
+  f.decision.preAutorizado=!!chk?.checked;
+  if(!f.decision.preAutorizado)f.decision.justificacionPreAuth='';
+  f.updatedAt=new Date().toISOString();
+  ss();setSyncState('pending');
+  renderCapture();
+  notify('Pre-Autorización: '+(f.decision.preAutorizado?'Activada':'Desactivada'));
+}
 function genCD(f){
   const d=f.decision;const st=d.ganador!==null?'<span class="acc-status sts-done">Decisión tomada</span>':'<span class="acc-status sts-empty">Pendiente</span>';
   const canEdit=currentRole==='COORDINADOR'||currentRole==='GERENCIA';
+  const isCoord=currentRole==='COORDINADOR';
   const ro=canEdit?'':'readonly';const roOnchange=canEdit?'onchange="saveDecision()"':'';
   const roBtn=canEdit?'':"style='pointer-events:none;opacity:.5'";
   return`<div class="acc-card${d.ganador!==null?' open':''}" id="acc-dec">
@@ -1626,6 +1699,7 @@ function genCD(f){
         <div class="form-group"><label>Autoriza</label>${canEdit?dynSel('d_autoriza','AUTORIZA',d.autoriza):`<input type="text" value="${esc(d.autoriza)}" readonly/>`}</div>
         <div class="form-group"><label>Fecha Autorización</label><input type="date" id="d_fechaAut" value="${esc(d.fechaAut)}" ${roOnchange} ${ro}/></div>
         <div class="form-group"><label>Estatus</label>${canEdit?dynSel('d_estatus','ESTATUS',d.estatus):`<input type="text" value="${esc(d.estatus)}" readonly/>`}</div>
+        ${genPreAuthBlock(f,d,isCoord)}
       </div>
     </div></div>
   </div>`;
@@ -1998,6 +2072,8 @@ function autoSave(){
   const da=document.getElementById('d_autoriza');if(da)f.decision.autoriza=da.value;
   const dfa=document.getElementById('d_fechaAut');if(dfa)f.decision.fechaAut=dfa.value;
   const ds=document.getElementById('d_estatus');if(ds)f.decision.estatus=ds.value;
+  const dpa=document.getElementById('d_preAuth');if(dpa)f.decision.preAutorizado=dpa.checked;
+  const djp=document.getElementById('d_justPreAuth');if(djp)f.decision.justificacionPreAuth=djp.value;
   // NOTE: Do NOT stamp updatedAt here — autoSave fires on every keystroke.
   // updatedAt is stamped only by saveAll() and explicit save actions,
   // so that cloud merge (last-write-wins by updatedAt) reflects intentional saves,
@@ -2156,6 +2232,10 @@ function renderComp(){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:${gan!==null?'0':'14px'}">
       ${canSendEmail()?`<button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" style="margin-left:auto" title="Solicitar autorización a Ing. Ana Ferrer">✉ Solicitar Autorización</button>`:''}
     </div>
+    ${f.decision.preAutorizado?`<div class="preauth-banner">
+      <div class="pa-title">🟠 Folio Pre-Autorizado por Coordinación</div>
+      ${f.decision.justificacionPreAuth?`<div class="pa-just">${esc(f.decision.justificacionPreAuth)}</div>`:''}
+    </div>`:''}
     ${gan!==null?`<div style="background:var(--acc-bg);border:1px solid var(--acc-d);border-radius:var(--rl);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div><div style="font-size:10px;font-weight:700;color:var(--acc-d);text-transform:uppercase;letter-spacing:.5px">Proveedor Autorizado</div>
       <div style="font-size:15px;font-weight:700">🏆 ${ganAct?.rz||PLBL[gan]} <span class="fbadge">${PLBL[gan]}</span></div></div>
@@ -2182,11 +2262,11 @@ function renderComp(){
         {l:'Factura',vs:act.map(p=>p.factura?`<span class="badge ${p.factura==='SI'?'bg':'br'}">${p.factura}</span>`:'—')},
         {sep:true,l:'CALIFICACIÓN'},
         {l:'Cal. Global',vs:act.map(p=>{const g=(p.rating||{}).global||0;return[1,2,3,4,5].map(s=>`<span style="color:${s<=g?'var(--acc)':'var(--muted)'}">${s<=g?'★':'☆'}</span>`).join('')+` <span style="font-size:10px;color:var(--dim)">${g}/5</span>`;})},
-        {l:'Observaciones',vs:act.map(p=>trunc(p.observaciones,40)||'—')},
+        {l:'Observaciones',vs:act.map(p=>p.observaciones||'—'),wrap:true},
       ].map(r=>{
         if(r.sep)return`<tr class="csep"><td colspan="${act.length+1}">${r.l}</td></tr>`;
         const bi=r.bl!==undefined?bestIdx(act.map((_,ci)=>{const d=difs[act[ci].idx];if(r.l.includes('P.U'))return act[ci].pu;if(r.l.includes('Subtotal'))return d?.sub;if(r.l.includes('Total')&&r.bold)return d?.tot;return null;}),true):-1;
-        return`<tr><td class="fn">${r.l}</td>${act.map((p,ci)=>{const v=r.vs[ci];const isBest=bi===ci;const cls=`${PCCLS[p.idx]}${isBest?' '+PBCLS[p.idx]+' best':''} ${r.money?'mn':''}`;return`<td class="${cls}">${r.bold?`<strong>${v}</strong>`:v}</td>`;}).join('')}</tr>`;
+        return`<tr><td class="fn">${r.l}</td>${act.map((p,ci)=>{const v=r.vs[ci];const isBest=bi===ci;const cls=`${PCCLS[p.idx]}${isBest?' '+PBCLS[p.idx]+' best':''} ${r.money?'mn':''}`;const style=r.wrap?' style="white-space:pre-wrap;text-align:left;min-width:200px;"':'';return`<td class="${cls}"${style}>${r.bold?`<strong>${v}</strong>`:v}</td>`;}).join('')}</tr>`;
       }).join('')}
       </tbody>
     </table></div>`;
@@ -2887,6 +2967,7 @@ function exportExcel(){
       ['DECISIÓN'],['Proveedor Ganador:',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'Sin definir'],
       ['Autoriza:',f.decision.autoriza||'—','Fecha:',f.decision.fechaAut||'—'],['Estatus:',f.decision.estatus||'Sin definir'],
       ['Estatus de Pago:',f.decision.pagoEstatus||'Sin definir'],
+      ['Pre-Autorización:',f.decision.preAutorizado?'Sí':'No','Justificación:',f.decision.justificacionPreAuth||'—'],
     ];
     const analysis=scoreAll(f);
     if(analysis){data.push([],['ANÁLISIS IA'],['Proveedor','Precio(33)','Entrega(17)','Garantía(12)','Cond.(13)','Factura(10)','Calif.(15)','TOTAL(100)']);
