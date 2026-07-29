@@ -832,36 +832,71 @@ const PHEX=['#79c0ff','#bc8cff','#f0883e'];
 const PCLS=['pp1','pp2','pp3'];
 const PLBL=['Proveedor 1','Proveedor 2','Proveedor 3'];
 const ZONA_COD={'CANCUN':'CUN','CABOS':'CB','PDC':'PC'};
+// ── Consecutivo global infinito: busca el número más alto al inicio de
+//    cualquier folio (prefijo NN_) y suma 1. Nunca se reinicia.
+function nextGlobalConsecutivo(){
+  let max=0;
+  folios.forEach(f=>{
+    const m=(f.name||'').match(/^(\d+)_/);
+    if(m){const n=parseInt(m[1],10);if(n>max)max=n;}
+  });
+  return max+1;
+}
+// ── Consecutivo interno de equipo: busca el EQ-NN más alto entre folios EQUIPO
+function nextEquipoConsecutivo(){
+  let max=0;
+  folios.forEach(f=>{
+    const m=(f.name||'').match(/_EQ-(\d+)$/);
+    if(m){const n=parseInt(m[1],10);if(n>max)max=n;}
+  });
+  return max+1;
+}
 function buildFolioName(zona,assetName,existingName,activoTipo){
   const zc=ZONA_COD[zona]||zona?.slice(0,3).toUpperCase()||'XX';
-  // ─── EDIFICIO sentinel: special EDI nomenclature [PREFIJO_ZONA]_EDI_[NN] ───
-  // Used when modal selects "Edificios" generic option OR activoTipo === 'EDIFICIO'
-  // and the specific building isn't yet known.
+  // Consecutivo global: si el folio ya lo tiene, se conserva; si no, se asigna el siguiente global.
+  let globalSeq;
+  const existingGlobal=existingName&&existingName.match(/^(\d+)_/);
+  if(existingGlobal){globalSeq=existingGlobal[1];}
+  else{globalSeq=String(nextGlobalConsecutivo()).padStart(2,'0');}
+
+  // ─── EQUIPO: consecutivo interno EQ-NN en lugar del nombre de herramienta ───
+  if(activoTipo==='EQUIPO'){
+    const prefix='CTQ';
+    let eqSeq;
+    const existingEq=existingName&&existingName.match(/_EQ-(\d+)$/);
+    if(existingEq){eqSeq=existingEq[1];}
+    else{eqSeq=String(nextEquipoConsecutivo()).padStart(2,'0');}
+    // Patrón: NN_CTQ[ZONA]_01_EQ-NN
+    return globalSeq+'_'+prefix+zc+'_01_EQ-'+eqSeq;
+  }
+
+  // ─── EDIFICIO sentinel: nomenclatura EDI ───
   const isEdificioSentinel=(assetName==='__EDIFICIOS__')||(activoTipo==='EDIFICIO'&&!assetName);
   if(isEdificioSentinel){
-    // Pattern: CT[ZONA]_EDI_NN  (e.g. CTCUN_EDI_01)
     let seq='01';
-    if(existingName){const m=existingName.match(/^CT[A-Z]+_EDI_(\d{2})$/);if(m)seq=m[1];}
+    const em=existingName&&existingName.match(/_EDI_(\d{2})$/);
+    if(em)seq=em[1];
     else{
-      const pat=new RegExp('^CT'+zc+'_EDI_(\\d{2})$');
-      const used=folios.map(f=>f.name).filter(n=>pat.test(n)).map(n=>{const m=n.match(/^CT[A-Z]+_EDI_(\d{2})$/);return m?parseInt(m[1]):0;});
-      const next=(used.length?Math.max(...used):0)+1;
-      seq=String(next).padStart(2,'0');
+      const pat=new RegExp('_EDI_(\\d{2})$');
+      const used=folios.map(f=>f.name).filter(n=>pat.test(n)).map(n=>{const m=n.match(/_EDI_(\d{2})$/);return m?parseInt(m[1]):0;});
+      seq=String((used.length?Math.max(...used):0)+1).padStart(2,'0');
     }
-    return'CT'+zc+'_EDI_'+seq;
+    return globalSeq+'_CT'+zc+'_EDI_'+seq;
   }
-  // ─── VEHICULO or specific EDIFICIO unit: standard nomenclature ───
+
+  // ─── VEHICULO o EDIFICIO específico: nomenclatura estándar ───
   const prefix=activoTipo==='EDIFICIO'?'CTE':'CT';
   const unit=(assetName||'').replace(/\s+/g,'_').replace(/[^A-Z0-9_]/gi,'').toUpperCase()||'UNIT';
   let seq='01';
-  if(existingName){const m=existingName.match(/^CTE?[A-Z]+_(\d{2})_/);if(m)seq=m[1];}
+  const um=existingName&&existingName.match(/^\d+_CTE?[A-Z]+_(\d{2})_/);
+  if(um)seq=um[1];
   else{
-    const pattern=new RegExp('^'+prefix+zc+'_(\\d{2})_'+unit.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$');
-    const used=folios.map(f=>f.name).filter(n=>pattern.test(n)).map(n=>{const m=n.match(/CTE?[A-Z]+_(\d{2})_/);return m?parseInt(m[1]):0;});
-    const next=(used.length?Math.max(...used):0)+1;
-    seq=String(next).padStart(2,'0');
+    // consecutivo por unidad (número intermedio)
+    const pattern=new RegExp('_'+prefix+zc+'_(\\d{2})_'+unit.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$');
+    const used=folios.map(f=>f.name).filter(n=>pattern.test(n)).map(n=>{const m=n.match(/_CTE?[A-Z]+_(\d{2})_/);return m?parseInt(m[1]):0;});
+    seq=String((used.length?Math.max(...used):0)+1).padStart(2,'0');
   }
-  return prefix+zc+'_'+seq+'_'+unit;
+  return globalSeq+'_'+prefix+zc+'_'+seq+'_'+unit;
 }
 function updateFolioNomenclature(){
   const f=getActive();if(!f)return;
@@ -869,6 +904,8 @@ function updateFolioNomenclature(){
   const t=getAssetType(f);
   const asset=t==='EDIFICIO'
     ?(document.getElementById('g_edificio')?.value||f.general.edificio)
+    :t==='EQUIPO'
+    ?(document.getElementById('g_equipo')?.value||f.general.equipo)
     :(document.getElementById('g_unidad')?.value||f.general.unidad);
   if(!zona||!asset)return;
   const newName=buildFolioName(zona,asset,f.name,t);
@@ -882,6 +919,7 @@ const DD_BASE={
   ZONA:['CANCUN','PDC','CABOS'],
   UNIDAD:['AVEO_01','BEAT_02','BEAT_04','BEAT_05','BEAT_06','BEAT_07','BEAT_08','BEAT_09','BEAT_10','DOBLE CABINA_02','ESTACA NP300_02','ESTACA NP300_03','FRONTIER_01','INTERNATIONAL_01','MARCH_01','MARCH_02','MARCH_03','MARCH_04','MARCH_05','MIRAGE_01','Q5_DIRECCIÓN','S10 CREW CAB_02','S10 CREW_01','SPARK_AFI01','SPARK_AFI02','STEPWAY_01','SUPER DUTY_01','TORNADO_01','TORNADO_02','TSURU_02','V DRIVE_02','V DRIVE_03','V DRIVE_04','V DRIVE_05','V DRIVE_06','V DRIVE_07','V DRIVE_08','V DRIVE_09','VENTO_01','VERSA_01','VERSA_02','YARIS_01'],
   EDIFICIO:['OFICINAS GENERALES_PLANTA ALTA','OFICINAS GENERALES_PLANTA BAJA','ALMACEN GENERAL','TALLER 3','OFICINAS GENERALES_PLAYA DEL CARMEN','OFICINAS GENERALES_CABOS','OFICINAS EDIFICIO B'],
+  EQUIPO:['TALADRO','COMPRESOR','ROTOMARTILLO','PATIN HIDRAULICO','MINI ESMERIL','ESMERIL'],
   AREA:['ENTRADA LOBBY','RECEPCION','OFICINA VENTAS','OFICINA COMPRAS','OFICINA SISTEMAS','OFICINA OYS_ADMINISTRACION','OFICINA OYS_JEFE ADMON','OFICINA OYS_MANTTTO PREV','OFICINA TDA','OFICINA ACTIVOS','OFICINA DIRECCIÓN','OFICINA ADMINISTRACIÓN','OFICINA FINANZAS','OFICINAS CONTABILIDAD','RH_GERENCIA','RH_RECLUTAMIENTO','OFICINAS_B_SISTEMAS','OFICINA PROYECTOS','OFICINA GERENCIA OYS','ALMACEN GENERAL_VENTANILLA','ALMACEN GENERAL_OFICINA','TALLER 3_OFICINA ALMACEN','TALLER 3_O&S','TALLER 3_GERENCIA_AUTOMATIZACION','TALLER 3_OFICINA_PROYECTOS_OPERACION','BAÑO PLANTA BAJA CABALLEROS','BAÑO PLANTA BAJA DAMAS','BAÑO PLANTA ALTA CABALLEROS','BAÑO PLANTA ALTA DAMAS','ALMACEN_BAÑO','BAÑOS EDIFICIO B_CABALLEROS','BAÑO EDIFICIO B_DAMAS','SISTEMAS_SITE','TECHO AZOTEA','PUERTA PASILLO ACCESO EDIFICIO A-B','PATIO /COMEDOR','COCINA','JARDINERA 1','JARDINERA 2','JARDINERA 3','JARDINERA 4'],
   ESPECIALIDAD:['ELECTRICIDAD','ALBAÑILERIA','LIMPIEZA','CARPINTERIA','HERRERIA','AIRE ACONDICIONADO','PINTURA','JARDINERÍA','TABLAROCA','ALUMINIO','IMPERMIABILIZADO','FUMIGACION','MOBILIARIO','PLOMERÍA','ALARMAS','CERRAJERÍA','OFICINA CONTABILIDAD'],
   DEPTO:['OYS','PROYECTOS','VENTAS','DIRECCION','COMPRAS','TDA','ALMACEN','ADMINISTRACION','ACTIVOS','FINANZAS','RRHH','OBRA','SISTEMAS','AUTOMATIZACION'],
@@ -1004,7 +1042,7 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:''},adjuntos:[],sinComparativo:false};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',equipo:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:''},adjuntos:[],sinComparativo:false};}
 function getActive(){ return folios.find(f=>f.id===activeId)||null; }
 
 /* ══════════════════════════════════════════
@@ -1356,7 +1394,7 @@ function dynSel(id,cat,val,ph,allowNew){
     <button class="btn btn-ghost btn-sm" onclick="cancelOpt('${id}')">✕</button>
   </div>`;
 }
-function handleSel(el,id,cat){if(el.value==='__new__'){el.value='';const nw=document.getElementById(id+'_nw');if(nw){nw.classList.add('show');document.getElementById(id+'_ni').focus();}}else{autoSave();if(id==='g_zona'||id==='g_unidad'||id==='g_edificio')updateFolioNomenclature();}}
+function handleSel(el,id,cat){if(el.value==='__new__'){el.value='';const nw=document.getElementById(id+'_nw');if(nw){nw.classList.add('show');document.getElementById(id+'_ni').focus();}}else{autoSave();if(id==='g_zona'||id==='g_unidad'||id==='g_edificio'||id==='g_equipo')updateFolioNomenclature();}}
 function addOpt(id,cat){
   const inp=document.getElementById(id+'_ni');const val=(inp?.value||'').trim();
   if(!val){notify('Ingresa un valor',true);return;}
@@ -1398,8 +1436,8 @@ function renderSidebar(){
   switch(folioSortOrder){
     case 'activoTipo':
       sorted.sort((a,b)=>{
-        // EDIFICIO primero, luego VEHICULO, luego sin tipo
-        const rank=t=>t==='EDIFICIO'?0:t==='VEHICULO'?1:2;
+        // EDIFICIO primero, luego VEHICULO, luego EQUIPO, luego sin tipo
+        const rank=t=>t==='EDIFICIO'?0:t==='VEHICULO'?1:t==='EQUIPO'?2:3;
         const at=rank(a.general?.activoTipo||'');
         const bt=rank(b.general?.activoTipo||'');
         if(at!==bt)return at-bt;
@@ -1445,7 +1483,7 @@ function renderSidebar(){
       const g=f.general?.activoTipo||'SIN TIPO';
       if(g!==lastTipoGroup){
         lastTipoGroup=g;
-        const sepLbl=g==='VEHICULO'?'🚗 Vehículos':g==='EDIFICIO'?'🏢 Edificios':'Sin tipo';
+        const sepLbl=g==='VEHICULO'?'🚗 Vehículos':g==='EDIFICIO'?'🏢 Edificios':g==='EQUIPO'?'🛠 Equipos':'Sin tipo';
         sep=`<div style="padding:5px 14px 3px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-top:1px solid var(--bd);margin-top:2px">${sepLbl}</div>`;
       }
     }
@@ -1505,21 +1543,23 @@ function setActivoTipo(t){
   const f=getActive();if(!f)return;
   if(!can('capture')){notify('Sin permiso para modificar',true);return;}
   f.general.activoTipo=t;
-  // Clear opposing fields to avoid confusion
-  if(t==='EDIFICIO'){f.general.unidad='';}
-  else{f.general.edificio='';f.general.area='';f.general.especialidad='';}
+  // Limpiar campos que no correspondan al tipo seleccionado
+  if(t==='EDIFICIO'){f.general.unidad='';f.general.equipo='';}
+  else if(t==='EQUIPO'){f.general.unidad='';f.general.edificio='';f.general.area='';f.general.especialidad='';}
+  else{f.general.edificio='';f.general.area='';f.general.especialidad='';f.general.equipo='';}
   f.updatedAt=new Date().toISOString();
   ss();setSyncState('pending');
   renderCapture();
-  notify('Tipo de activo: '+(t==='VEHICULO'?'🚗 Vehículo':'🏢 Edificio'));
+  notify('Tipo de activo: '+(t==='VEHICULO'?'🚗 Vehículo':t==='EDIFICIO'?'🏢 Edificio':'🛠 Equipo'));
 }
 
 // Returns the asset display label depending on type
 function getAssetName(f){
   if(!f||!f.general)return'';
-  return(f.general.activoTipo==='EDIFICIO')
-    ?(f.general.edificio||'')
-    :(f.general.unidad||'');
+  const t=f.general.activoTipo;
+  return t==='EDIFICIO'?(f.general.edificio||'')
+        :t==='EQUIPO'?(f.general.equipo||'')
+        :(f.general.unidad||'');
 }
 function getAssetType(f){return f?.general?.activoTipo||'VEHICULO';}
 
@@ -1578,6 +1618,9 @@ function genCG(f,g,gFilled){
           <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
             <input type="radio" name="g_activoTipo" value="EDIFICIO" ${g.activoTipo==='EDIFICIO'?'checked':''} onchange="setActivoTipo('EDIFICIO')" style="cursor:pointer"/> 🏢 Edificio
           </label>
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
+            <input type="radio" name="g_activoTipo" value="EQUIPO" ${g.activoTipo==='EQUIPO'?'checked':''} onchange="setActivoTipo('EQUIPO')" style="cursor:pointer"/> 🛠 Equipos
+          </label>
         </div>
       </div>
       <div class="form-group"><label>Gestor</label>${dynSel('g_gestor','GESTOR',g.gestor)}</div>
@@ -1585,6 +1628,8 @@ function genCG(f,g,gFilled){
       <div class="form-group"><label>Zona</label>${dynSel('g_zona','ZONA',g.zona,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
       ${(g.activoTipo||'VEHICULO')==='VEHICULO'?`
       <div class="form-group"><label>Unidad</label>${dynSel('g_unidad','UNIDAD',g.unidad,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
+      `:g.activoTipo==='EQUIPO'?`
+      <div class="form-group"><label>Equipo</label>${dynSel('g_equipo','EQUIPO',g.equipo,'— Seleccionar Equipo —',true,'autoSave();updateFolioNomenclature()')}</div>
       `:`
       <div class="form-group"><label>Edificio</label>${dynSel('g_edificio','EDIFICIO',g.edificio,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
       <div class="form-group"><label>Área</label>${dynSel('g_area','AREA',g.area,'— Seleccionar —',true)}</div>
@@ -1693,7 +1738,7 @@ function genCD(f){
       ${!canEdit?'<div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:6px 10px;background:var(--surf2);border-radius:var(--r);border-left:3px solid var(--bd2)">Solo lectura para este rol</div>':''}
       <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Proveedor ganador:</p>
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        ${f.prov.map((p,i)=>p.active?`<button class="select-btn ${SBCLS[i]}${d.ganador===i?' on':''}" onclick="${canEdit?'setGanador('+i+')':''}" ${roBtn}>${p.rz?trunc(p.rz,22):PLBL[i]}</button>`:'').join('')}
+        ${f.prov.map((p,i)=>p.active?`<button class="select-btn ${SBCLS[i]}${d.ganador===i?' on':''}" onclick="${canEdit?'setGanador('+i+')':''}" ${roBtn} style="white-space:normal;text-align:left;max-width:100%;height:auto;line-height:1.35">${p.rz?trunc(p.rz,100):PLBL[i]}</button>`:'').join('')}
       </div>
       <div class="fg">
         <div class="form-group"><label>Autoriza</label>${canEdit?dynSel('d_autoriza','AUTORIZA',d.autoriza):`<input type="text" value="${esc(d.autoriza)}" readonly/>`}</div>
@@ -2052,7 +2097,7 @@ function restoreStars(pi,dim,cid){const f=getActive();if(!f)return;const val=(f.
 ══════════════════════════════════════════ */
 function autoSave(){
   const f=getActive();if(!f)return;
-  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',edificio:'g_edificio',area:'g_area',especialidad:'g_especialidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
+  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',edificio:'g_edificio',equipo:'g_equipo',area:'g_area',especialidad:'g_especialidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
   Object.entries(gm).forEach(([k,id])=>{const el=document.getElementById(id);if(el)f.general[k]=el.value;});
   [0,1,2].forEach(i=>{
     const pm={numCot:'numCot',rz:'rz',marca:'marca',pu:'pu',garantia:'garantia',condiciones:'condiciones',entrega:'entrega',factura:'factura',observaciones:'obs'};
@@ -2289,13 +2334,14 @@ function renderResumen(){
   const cancelados=cancelFolios.length;
   // Budget (Presupuesto Autorizado): apply month/range filter on top of activo filter
   const budgetFolios=filterAutByBudget(autFolios);
+  const useIVA=dashFilter.budgetIncludeIVA;
   const autTots=budgetFolios.flatMap(f=>{
     const gan=f.decision.ganador;if(gan===null)return[];
-    const d=getDifs(f);return d[gan]&&d[gan].tot>0?[d[gan].tot]:[];
+    const d=getDifs(f);if(!d[gan])return[];
+    const val=useIVA?d[gan].tot:d[gan].sub;   // Sin IVA = sub · Con IVA = tot
+    return val>0?[val]:[];
   });
   const grandTot=autTots.reduce((a,b)=>a+b,0);
-  const allDifs=FF.flatMap(f=>getDifs(f).filter(Boolean).filter(c=>c.dif>0).map(c=>c.dif));
-  const ahorro=allDifs.length?Math.max(...allDifs):0;
   const pendFolios=sinDecFolios;
   // Activo filter chip + budget mode label
   const af=dashFilter.activoType;
@@ -2308,7 +2354,8 @@ function renderResumen(){
         <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:var(--r);overflow:hidden">
           <button onclick="setActivoFilter('ALL')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='ALL'?'var(--acc-bg)':'transparent'};color:${af==='ALL'?'var(--acc2)':'var(--dim)'};border-right:1px solid var(--bd2)">📊 Total</button>
           <button onclick="setActivoFilter('VEHICULO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='VEHICULO'?'var(--acc-bg)':'transparent'};color:${af==='VEHICULO'?'var(--acc2)':'var(--dim)'};border-right:1px solid var(--bd2)">🚗 Vehículos</button>
-          <button onclick="setActivoFilter('EDIFICIO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='EDIFICIO'?'var(--acc-bg)':'transparent'};color:${af==='EDIFICIO'?'var(--acc2)':'var(--dim)'}">🏢 Edificios</button>
+          <button onclick="setActivoFilter('EDIFICIO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='EDIFICIO'?'var(--acc-bg)':'transparent'};color:${af==='EDIFICIO'?'var(--acc2)':'var(--dim)'};border-right:1px solid var(--bd2)">🏢 Edificios</button>
+          <button onclick="setActivoFilter('EQUIPO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='EQUIPO'?'var(--acc-bg)':'transparent'};color:${af==='EQUIPO'?'var(--acc2)':'var(--dim)'}">🛠 Equipos</button>
         </div>
         <span style="font-size:10px;color:var(--muted)">Filtrando: <strong style="color:var(--text)">${total}</strong> folios</span>
       </div>
@@ -2348,11 +2395,12 @@ function renderResumen(){
       <div class="kpi blue" style="cursor:pointer" onclick="openKpiModal('budget')" title="Ver folios autorizados en el periodo">
         <div class="kpi-label">Presupuesto Autorizado</div>
         <div class="kpi-val" style="font-size:15px">${fmt(grandTot)}</div>
+        <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:6px;overflow:hidden;margin:5px 0 3px;width:fit-content" onclick="event.stopPropagation()">
+          <button onclick="event.stopPropagation();setBudgetIVA(false)" style="padding:2px 7px;border:none;font-family:inherit;font-size:9px;font-weight:700;cursor:pointer;background:${!useIVA?'var(--blu-bg)':'transparent'};color:${!useIVA?'var(--blue)':'var(--muted)'};border-right:1px solid var(--bd2)">Sin IVA</button>
+          <button onclick="event.stopPropagation();setBudgetIVA(true)" style="padding:2px 7px;border:none;font-family:inherit;font-size:9px;font-weight:700;cursor:pointer;background:${useIVA?'var(--blu-bg)':'transparent'};color:${useIVA?'var(--blue)':'var(--muted)'}">Con IVA</button>
+        </div>
         <div class="kpi-sub" style="color:var(--blue)">📅 ${budgetLabel()}</div>
         <div style="font-size:9px;color:var(--muted);margin-top:4px">${budgetFolios.length} folio${budgetFolios.length!==1?'s':''} · ↗ desglose</div>
-      </div>
-      <div class="kpi acc">
-        <div class="kpi-label">Ahorro Máx.</div><div class="kpi-val" style="font-size:15px">${fmt(ahorro)}</div><div class="kpi-sub">Mayor diferencia detectada</div>
       </div>
     </div>
 
@@ -2446,8 +2494,8 @@ function renderFT(data){
       const st=f.decision.estatus;const gan=f.decision.ganador;
       const ganName=gan!==null?(f.prov[gan]?.rz||PLBL[gan]):'—';
       const at=getAssetType(f);
-      const assetVal=at==='EDIFICIO'?(f.general.edificio||'—'):(f.general.unidad||'—');
-      const assetIcon=at==='EDIFICIO'?'🏢':'🚗';
+      const assetVal=at==='EDIFICIO'?(f.general.edificio||'—'):at==='EQUIPO'?(f.general.equipo||'—'):(f.general.unidad||'—');
+      const assetIcon=at==='EDIFICIO'?'🏢':at==='EQUIPO'?'🛠':'🚗';
       return`<tr style="cursor:pointer" onclick="selectFolio('${f.id}')">
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);font-weight:600">${f.name}</span></td>
         <td style="padding:8px 14px;border-bottom:1px solid var(--bd);color:var(--dim);font-size:11px">${trunc(f.general.descripcion||f.desc||'—',35)}</td>
@@ -2538,18 +2586,17 @@ function renderChartProv(){
    DASHBOARD FILTERS — activo type + date range
 ══════════════════════════════════════════ */
 let dashFilter={
-  activoType:'ALL',   // ALL | VEHICULO | EDIFICIO
-  budgetMode:'MONTH', // MONTH | RANGE
-  dateFrom:'',        // YYYY-MM-DD
-  dateTo:''           // YYYY-MM-DD
+  activoType:'ALL',      // ALL | VEHICULO | EDIFICIO | EQUIPO
+  budgetMode:'MONTH',    // MONTH | RANGE
+  budgetIncludeIVA:false,// false = Sin IVA (subtotal) · true = Total con impuestos
+  dateFrom:'',           // YYYY-MM-DD
+  dateTo:''              // YYYY-MM-DD
 };
 
 // Filter folios according to dashFilter.activoType
 function getFilteredFolios(){
   if(dashFilter.activoType==='ALL')return folios;
-  if(dashFilter.activoType==='VEHICULO')return folios.filter(f=>getAssetType(f)==='VEHICULO');
-  if(dashFilter.activoType==='EDIFICIO')return folios.filter(f=>getAssetType(f)==='EDIFICIO');
-  return folios;
+  return folios.filter(f=>getAssetType(f)===dashFilter.activoType);
 }
 
 // Filter authorized folios by current budget mode + date range
@@ -2571,6 +2618,7 @@ function filterAutByBudget(autFolios){
 }
 
 function setActivoFilter(t){dashFilter.activoType=t;renderResumen();setTimeout(renderCharts,150);}
+function setBudgetIVA(v){dashFilter.budgetIncludeIVA=v;renderResumen();setTimeout(renderCharts,150);}
 function setBudgetMode(m){
   dashFilter.budgetMode=m;
   if(m==='MONTH'){dashFilter.dateFrom='';dashFilter.dateTo='';}
@@ -2704,14 +2752,15 @@ function renderChartVehiculo(){
     const af=dashFilter.activoType;
     const t=af==='VEHICULO'?'Índice de Inversión por Unidad Vehicular'
           :af==='EDIFICIO'?'Índice de Inversión por Edificio'
+          :af==='EQUIPO'?'Índice de Inversión por Equipo'
           :'Índice de Inversión por Activo';
     titleEl.innerHTML=t+' <span style="font-size:9px;color:var(--green);font-weight:600">● Montos autorizados</span>';
   }
-  // Gather authorized folios with an asset (vehicle OR building) — respects global filter
+  // Gather authorized folios with an asset (vehicle OR building OR equipment) — respects global filter
   const vMap={};
   FF.filter(f=>f.decision.estatus==='AUTORIZADO'&&f.decision.ganador!==null).forEach(f=>{
     const at=getAssetType(f);
-    const asset=at==='EDIFICIO'?(f.general.edificio||f.general.unidad):(f.general.unidad||f.general.edificio);
+    const asset=at==='EDIFICIO'?(f.general.edificio||f.general.unidad):at==='EQUIPO'?(f.general.equipo||f.general.unidad):(f.general.unidad||f.general.edificio);
     if(!asset)return;
     const depto=f.general.depto||'Sin depto';
     const key=depto+'|'+asset;
