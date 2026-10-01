@@ -509,6 +509,60 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
 #sbSearch{background:rgba(255,255,255,.65)!important;border-color:rgba(8,145,178,.22)!important;color:#0c4a6e!important;}
 #sbSearch::placeholder{color:rgba(14,74,110,.40)!important;}
 
+/* ══ v4.2 — REGISTRO FILTRABLE · SLA · NOTIFICACIONES ══ */
+.ft-head{flex-wrap:wrap;gap:10px}
+.ft-head-l{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ft-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ft-count{font-size:10px;color:#2e7a92}
+.ft-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.70);background:rgba(255,255,255,.42)}
+.ft-filters .ft-search{align-self:flex-end;height:29px;padding:0 10px}
+.ft-filters .ft-search input{padding:4px 2px!important;font-size:12px;width:150px;border:none!important;background:transparent!important;box-shadow:none!important}
+.ft-f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ft-f label{font-size:9px;font-weight:700;color:#2e7a92;text-transform:uppercase;letter-spacing:.5px}
+.ft-sel{background:rgba(255,255,255,.78);border:1px solid rgba(8,145,178,.22);color:#0c4a6e;border-radius:var(--r);padding:4px 8px;font-size:11px;font-family:inherit;width:auto;max-width:118px;outline:none;height:29px}
+input.ft-sel{width:120px;max-width:120px}
+.ft-sel:focus{border-color:#0284c7;box-shadow:0 0 0 2px rgba(2,132,199,.15)}
+.ft-sel.on{border-color:#0284c7!important;background:rgba(2,132,199,.10)!important;font-weight:700}
+.ft-scroll{overflow-x:auto}
+.ft-scroll table{min-width:960px}
+.ts{font-family:'JetBrains Mono',monospace;font-size:10.5px;white-space:nowrap}
+.sla{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.sla-ok{background:rgba(5,150,105,.12);color:#059669}
+.sla-warn{background:rgba(245,158,11,.15);color:#b45309}
+.sla-late{background:rgba(220,38,38,.10);color:#dc2626}
+.sla-pend{background:rgba(14,74,110,.07);color:#2e7a92;font-family:inherit}
+.dec-trace{grid-column:1/-1;font-size:11px;color:#2e7a92;background:rgba(2,132,199,.06);border:1px solid rgba(8,145,178,.18);border-radius:var(--r);padding:7px 10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.mail-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;flex-wrap:wrap}
+.mail-row-sub{font-size:11px;color:#2e7a92;margin-top:2px}
+/* Notificaciones */
+.ntf-bell{position:relative;font-size:14px;padding:4px 9px}
+.ntf-count{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#dc2626;color:#fff;font-size:9px;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid #fff;font-family:'Plus Jakarta Sans',sans-serif}
+.ntf-count.show{display:flex}
+.ntf-panel{position:fixed;top:60px;right:20px;width:390px;max-width:calc(100vw - 24px);max-height:72vh;display:none;flex-direction:column;z-index:250;background:rgba(255,255,255,.93);backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%);border:1px solid rgba(255,255,255,.95);border-radius:var(--rxl);box-shadow:0 14px 44px rgba(3,105,161,.24);overflow:hidden}
+.ntf-panel.open{display:flex}
+.ntf-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(8,145,178,.15)}
+.ntf-title{font-size:13px;font-weight:800;color:#0c4a6e}
+.ntf-live{font-size:10px;color:#2e7a92;display:flex;align-items:center;gap:5px;margin-top:2px}
+.ntf-live-dot{width:7px;height:7px;border-radius:50%;background:#94a3b8;flex-shrink:0}
+.ntf-live-dot.on{background:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.18)}
+.ntf-live-dot.err{background:#dc2626}
+.ntf-list{overflow-y:auto;flex:1}
+.ntf-item{display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(8,145,178,.10);cursor:pointer;border-left:3px solid transparent}
+.ntf-item:hover,.ntf-item:focus-visible{background:rgba(2,132,199,.07);outline:none}
+.ntf-item.unread{background:rgba(2,132,199,.05);border-left-color:#0284c7}
+.ntf-item.unread .ntf-txt{font-weight:700}
+.ntf-badge{flex-shrink:0;font-size:9px;font-weight:800;padding:3px 7px;border-radius:8px;height:fit-content;letter-spacing:.3px;margin-top:1px}
+.ntf-b-creado{background:rgba(8,145,178,.12);color:#0891b2}
+.ntf-b-aut{background:rgba(5,150,105,.13);color:#059669}
+.ntf-b-can{background:rgba(220,38,38,.10);color:#dc2626}
+.ntf-txt{font-size:12px;color:#0c4a6e;line-height:1.45;word-break:break-word}
+.ntf-folio{font-family:'JetBrains Mono',monospace;font-size:11px;color:#0284c7}
+.ntf-meta{font-size:10px;color:#2e7a92;margin-top:2px}
+.ntf-empty{padding:28px 16px;text-align:center;font-size:12px;color:#2e7a92;line-height:1.5}
+.ntf-foot{padding:8px 16px;font-size:10px;color:#2e7a92;border-top:1px solid rgba(8,145,178,.12);display:flex;justify-content:space-between;gap:8px}
+@media (prefers-reduced-motion:no-preference){.ntf-panel.open{animation:ntfIn .16s ease-out}}
+@keyframes ntfIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
 </style>
 </head>
 <body>
@@ -526,6 +580,10 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
         <button class="role-btn" onclick="selectRole('AUXILIAR')">
           <span class="rb-icon">📋</span>
           <div><div class="rb-name">Auxiliar Activos</div><div class="rb-desc">Captura y consulta · Sin eliminar folios</div></div>
+        </button>
+        <button class="role-btn" onclick="selectRole('AUXILIAR_CABOS')">
+          <span class="rb-icon">🌵</span>
+          <div><div class="rb-name">Auxiliar Los Cabos</div><div class="rb-desc">Captura y consulta · Exclusivo ZONA CABOS</div></div>
         </button>
         <button class="role-btn" onclick="selectRole('GERENCIA')">
           <span class="rb-icon">🏢</span>
@@ -569,11 +627,23 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
       <span class="sync-dot sync-off" id="syncDot"></span><span id="syncLabel">Sin conf.</span>
     </span>
     <span id="roleBadge" class="role-badge role-coord" style="cursor:pointer" onclick="logoutRole()">👑 Coordinador <span style="opacity:.6;font-size:9px">salir</span></span>
+    <button class="btn btn-ghost btn-sm ntf-bell" id="ntfBellBtn" onclick="toggleNotifPanel(event)" title="Actividad en tiempo real" aria-label="Notificaciones" aria-haspopup="true" aria-expanded="false">🔔<span class="ntf-count" id="ntfCount"></span></button>
     <button class="btn btn-blue btn-sm" id="hdrSyncBtn" onclick="quickSync()" title="Sincronizar con la nube">☁ Nube</button>
     <button class="btn btn-acc btn-sm" onclick="openFolioModal()">＋ Nuevo Folio</button>
-    <button class="btn btn-green btn-sm" onclick="exportExcel()">⬇ Exportar Excel</button>
   </div>
 </header>
+<!-- PANEL: NOTIFICACIONES EN TIEMPO REAL (bitácora Firebase) -->
+<div class="ntf-panel" id="ntfPanel" role="dialog" aria-label="Actividad en tiempo real">
+  <div class="ntf-head">
+    <div>
+      <div class="ntf-title">Actividad en tiempo real</div>
+      <div class="ntf-live"><span class="ntf-live-dot" id="ntfLiveDot"></span><span id="ntfLiveLbl">Conectando…</span></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="markNotifsRead()">Marcar como leídas</button>
+  </div>
+  <div class="ntf-list" id="ntfList"></div>
+  <div class="ntf-foot"><span id="ntfFootLbl">Creación, autorización y cancelación de folios</span><span>Esc para cerrar</span></div>
+</div>
 <div class="main">
   <aside>
     <div class="sb-head" style="flex-direction:column;align-items:stretch;gap:0;padding:0">
@@ -727,9 +797,9 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
         Guarda todos los datos y adjuntos en la nube y carga los cambios de otros usuarios.
       </p>
       <div style="display:flex;gap:6px;margin-top:10px;justify-content:center">
-        <button class="btn btn-ghost btn-sm" onclick="exportJSON()">📤 Exportar JSON</button>
-        <label class="btn btn-ghost btn-sm" style="cursor:pointer">📥 Importar JSON<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"/></label>
-        <button class="btn btn-ghost btn-sm" style="color:var(--muted)" onclick="resetCloudConfig()">⚙ Reconfigurar</button>
+        <button class="btn btn-ghost btn-sm" id="cloudExportJsonBtn" onclick="exportJSON()">📤 Exportar JSON</button>
+        <label class="btn btn-ghost btn-sm" id="cloudImportJsonBtn" style="cursor:pointer">📥 Importar JSON<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"/></label>
+        <button class="btn btn-ghost btn-sm" id="cloudResetBtn" style="color:var(--muted)" onclick="resetCloudConfig()">⚙ Reconfigurar</button>
       </div>
     </div>
 
@@ -816,6 +886,28 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
         <button class="btn btn-acc" id="copyMsgBtn" onclick="copyFreeMsg()">📋 Copiar al portapapeles</button>
         <button class="btn btn-ghost" style="margin-left:auto" onclick="document.getElementById('emailAuthModal').classList.remove('open')">Cerrar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GENERAR CORREO DEL COMPARATIVO -->
+<div class="overlay" id="mailGenModal">
+  <div class="modal" style="width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
+    <h3>📧 Correo del comparativo — <span id="mgFolio" style="color:var(--acc2)"></span></h3>
+    <p style="margin-bottom:10px">Revise el contenido antes de enviarlo. El destinatario es opcional; también puede capturarlo directamente en su cliente de correo.</p>
+    <div class="form-group" style="margin-bottom:10px;flex-shrink:0">
+      <label for="mgTo">Para (opcional)</label>
+      <input type="text" id="mgTo" placeholder="nombre@ies.com.mx; otro@ies.com.mx" autocomplete="off"/>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:6px;flex-shrink:0">Asunto:</div>
+    <div class="email-subject" id="mgSubject" style="flex-shrink:0"></div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:5px;flex-shrink:0">Cuerpo del mensaje:</div>
+    <div class="email-modal-body" id="mgBody" style="flex:1;min-height:0"></div>
+    <div class="email-actions" style="flex-shrink:0">
+      <button class="btn btn-acc" onclick="openMailGen()">✉ Abrir en correo</button>
+      <button class="email-copy-btn" id="mgCopySubj" onclick="copyMailGen('subject')">📋 Copiar asunto</button>
+      <button class="email-copy-btn" id="mgCopyBody" onclick="copyMailGen('body')">📋 Copiar cuerpo</button>
+      <button class="btn btn-ghost" style="margin-left:auto" onclick="closeMailGen()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -1042,8 +1134,59 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',equipo:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:''},adjuntos:[],sinComparativo:false};}
-function getActive(){ return folios.find(f=>f.id===activeId)||null; }
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),fechaCreacion:new Date().toISOString(),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',equipo:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:'',fechaAutorizacion:'',dictaminadoPor:''},adjuntos:[],sinComparativo:false};}
+function getActive(){
+  const f=folios.find(x=>x.id===activeId)||null;
+  return (f&&folioInScope(f))?f:null;
+}
+
+/* ══════════════════════════════════════════
+   SEGREGACIÓN DE DATOS POR ZONA
+   Roles con `zonaRestrict` (p. ej. AUXILIAR_CABOS) solo visualizan los folios
+   de su zona. El filtro es de PRESENTACIÓN: el arreglo global `folios` se
+   conserva completo para que la sincronización Firebase (merge / push) y el
+   consecutivo global de nomenclatura sigan operando sobre todos los folios.
+══════════════════════════════════════════ */
+const ZONA_FROM_COD={};Object.entries(ZONA_COD).forEach(([z,c])=>{ZONA_FROM_COD[c]=z;});
+function getRoleZona(){
+  if(!currentRole||!ROLES[currentRole])return null;
+  return ROLES[currentRole].zonaRestrict||null;
+}
+function normZona(z){
+  const s=String(z||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  if(!s)return'';
+  if(s.includes('CABOS'))return'CABOS';
+  if(s.includes('PLAYA')||s==='PDC')return'PDC';
+  if(s.includes('CANCUN'))return'CANCUN';
+  return s;
+}
+// Zona del folio: general.zona; si viene vacía (folio heredado), se deduce del código en el nombre
+function folioZona(f){
+  const z=normZona(f&&f.general&&f.general.zona);
+  if(z)return z;
+  const m=String((f&&f.name)||'').match(/^\d+_CT[EQ]?(CUN|CB|PC)_/);
+  return m?(ZONA_FROM_COD[m[1]]||''):'';
+}
+function folioInScope(f){
+  const zr=getRoleZona();
+  return !zr||(!!f&&folioZona(f)===zr);
+}
+function visibleFolios(){
+  const zr=getRoleZona();
+  return zr?folios.filter(f=>folioZona(f)===zr):folios;
+}
+function firstVisibleId(){
+  const v=visibleFolios();
+  return v.length?v[0].id:null;
+}
+// Bloquea el selector de Zona en Captura para perfiles con zona restringida
+function lockZonaCaptura(){
+  const zr=getRoleZona();if(!zr)return;
+  const sel=document.getElementById('g_zona');if(!sel)return;
+  if(![...sel.options].some(o=>o.value===zr))sel.add(new Option(zr,zr));
+  sel.value=zr;sel.disabled=true;
+  sel.title='Zona fija para su perfil ('+zr+')';
+}
 
 /* ══════════════════════════════════════════
    CLOUD SYNC (JSONBin.io) — SIMPLIFIED
@@ -1192,9 +1335,9 @@ async function syncCloud(){
     const syncSec=document.getElementById('cloudSyncSection');
     if(setupSec)setupSec.style.display='none';
     if(syncSec) syncSec.style.display='block';
-    if(folios.length&&!getActive())activeId=folios[0].id;
+    if(!getActive())activeId=firstVisibleId();
     renderAll();
-    notify('✓ Sincronizado — '+folios.length+' folios');
+    notify('✓ Sincronizado — '+visibleFolios().length+' folios');
   }catch(e){
     setSyncState('error','Error: '+e.message);
     notify('Error al sincronizar: '+e.message,true);
@@ -1213,11 +1356,13 @@ async function activateCloud(){
   if(!ok){notify('Error al inicializar Firebase. Verifica las credenciales.',true);return;}
   settings.fbApiKey=ak; settings.fbProjectId=pid;
   localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
+  initBitacora();
   await syncCloud();
   openCloudModal();
 }
 
 function resetCloudConfig(){
+  if(getRoleZona()){notify('Reconfiguración no disponible para perfiles con zona restringida',true);return;}
   if(!confirm('¿Reconfigurar conexión Firebase?'))return;
   settings.fbApiKey=''; settings.fbProjectId='';
   localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
@@ -1227,6 +1372,7 @@ function resetCloudConfig(){
 }
 
 function exportJSON(){
+  if(getRoleZona()){notify('Respaldo JSON no disponible para perfiles con zona restringida',true);return;}
   const data=JSON.stringify({folios,customOpts,version:'4',exported:new Date().toISOString()},null,2);
   const a=document.createElement('a');
   a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
@@ -1235,6 +1381,7 @@ function exportJSON(){
 }
 
 function importJSON(e){
+  if(getRoleZona()){e.target.value='';notify('Importación no disponible para perfiles con zona restringida',true);return;}
   const file=e.target.files[0]; if(!file)return;
   const r=new FileReader();
   r.onload=ev=>{
@@ -1278,13 +1425,20 @@ function copyCfgBin(){
 ══════════════════════════════════════════ */
 function openFolioModal(){
   // Reset modal fields
-  const nfZona=document.getElementById('nfZona');if(nfZona)nfZona.value='';
+  const zr=getRoleZona();
+  const nfZona=document.getElementById('nfZona');
+  if(nfZona){
+    // Perfil con zona restringida: zona fija y bloqueada; resto de perfiles: selección libre
+    nfZona.value=zr||'';
+    nfZona.disabled=!!zr;
+    nfZona.title=zr?'Zona fija para su perfil ('+zr+')':'';
+  }
   const nfDesc=document.getElementById('nfDesc');if(nfDesc)nfDesc.value='';
-  const prev=document.getElementById('nfPreview');if(prev)prev.textContent='Selecciona Zona y Unidad…';
+  const prev=document.getElementById('nfPreview');if(prev)prev.textContent=zr?'Selecciona el Activo…':'Selecciona Zona y Unidad…';
   // Populate unidad options from customOpts
-  populateNfUnidad('');
+  populateNfUnidad(zr||'');
   document.getElementById('folioModal').classList.add('open');
-  setTimeout(()=>document.getElementById('nfZona')?.focus(),100);
+  setTimeout(()=>document.getElementById(zr?'nfUnidad':'nfZona')?.focus(),100);
 }
 function populateNfUnidad(zona){
   const sel=document.getElementById('nfUnidad');if(!sel)return;
@@ -1309,7 +1463,7 @@ function previewFolioName(){
 }
 function closeFolioModal(){document.getElementById('folioModal').classList.remove('open');}
 function confirmFolio(){
-  const zona=document.getElementById('nfZona')?.value||'';
+  const zona=getRoleZona()||document.getElementById('nfZona')?.value||'';
   const activo=document.getElementById('nfUnidad')?.value||'';
   const desc=document.getElementById('nfDesc')?.value.trim()||'';
   if(!zona){notify('Selecciona la Zona',true);return;}
@@ -1329,10 +1483,13 @@ function confirmFolio(){
     f.general.unidad=activo;
   }
   folios.push(f);ss();setSyncState('pending');
+  logBitacora('CREADO',f); // notificación en tiempo real
   closeFolioModal();selectFolio(f.id);
   notify('Folio "'+name+'" creado'+(isEdificio?' — completa Edificio, Área y Especialidad en Captura':''));
 }
 function selectFolio(id){
+  const tgt=folios.find(x=>x.id===id);
+  if(tgt&&!folioInScope(tgt)){notify('Folio fuera de la zona asignada a su perfil',true);return;}
   activeId=id;
   document.getElementById('panel-dashboard').style.display='none';
   document.getElementById('panel-folio').style.display='flex';
@@ -1417,13 +1574,16 @@ function setFolioSort(val){
 
 function renderSidebar(){
   const list=document.getElementById('folioList');
-  if(!folios.length){list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">Sin folios. Crea uno con ＋</div>';return;}
+  // ── ALCANCE POR ZONA: perfiles con zonaRestrict solo ven su zona ──
+  const scope=visibleFolios();
+  const zrSb=getRoleZona();
+  if(!scope.length){list.innerHTML='<div style="padding:20px 14px;font-size:11px;color:var(--muted);text-align:center">'+(zrSb?'Sin folios de la zona '+zrSb+'. Crea uno con ＋':'Sin folios. Crea uno con ＋')+'</div>';return;}
 
   // ── BÚSQUEDA GLOBAL (folio, activo, palabra) ──
   const q=(document.getElementById('sbSearch')?.value||'').trim().toLowerCase();
-  let base=folios;
+  let base=scope;
   if(q){
-    base=folios.filter(f=>{
+    base=scope.filter(f=>{
       const hay=[f.name,f.desc,f.general?.unidad,f.general?.edificio,f.general?.depto,f.general?.descripcion]
         .filter(Boolean).join(' ').toLowerCase();
       return hay.includes(q);
@@ -1598,10 +1758,11 @@ function renderCapture(){
   const acc=document.getElementById('captureAccordion');const f=getActive();
   if(!f){acc.innerHTML='<div class="empty-hero"><div class="icon">📂</div><h3>Sin folio activo</h3><p>Selecciona o crea un folio.</p></div>';return;}
   const g=f.general;const gFilled=g.gestor||g.descripcion||g.cantidad;
-  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCD(f),genEP(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
+  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCorreoRow(f),genCD(f),genEP(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
     <button class="btn btn-ghost" onclick="switchTab('comp')">Ver Comparativo →</button>
     ${can('capture')?`<button class="btn btn-acc" onclick="saveAll()">💾 Guardar Todo</button>`:''}
   </div>`;
+  lockZonaCaptura();
   refreshCalcs();
 }
 function genCG(f,g,gFilled){
@@ -1745,6 +1906,7 @@ function genCD(f){
         <div class="form-group"><label>Fecha Autorización</label><input type="date" id="d_fechaAut" value="${esc(d.fechaAut)}" ${roOnchange} ${ro}/></div>
         <div class="form-group"><label>Estatus</label>${canEdit?dynSel('d_estatus','ESTATUS',d.estatus):`<input type="text" value="${esc(d.estatus)}" readonly/>`}</div>
         ${genPreAuthBlock(f,d,isCoord)}
+        ${genDecTrace(f)}
       </div>
     </div></div>
   </div>`;
@@ -2116,7 +2278,8 @@ function autoSave(){
   });
   const da=document.getElementById('d_autoriza');if(da)f.decision.autoriza=da.value;
   const dfa=document.getElementById('d_fechaAut');if(dfa)f.decision.fechaAut=dfa.value;
-  const ds=document.getElementById('d_estatus');if(ds)f.decision.estatus=ds.value;
+  const ds=document.getElementById('d_estatus');
+  if(ds){const prevSt=f.decision.estatus||'';f.decision.estatus=ds.value;if(prevSt!==ds.value)onEstatusChange(f,prevSt,ds.value);}
   const dpa=document.getElementById('d_preAuth');if(dpa)f.decision.preAutorizado=dpa.checked;
   const djp=document.getElementById('d_justPreAuth');if(djp)f.decision.justificacionPreAuth=djp.value;
   // NOTE: Do NOT stamp updatedAt here — autoSave fires on every keystroke.
@@ -2322,7 +2485,10 @@ function renderComp(){
 ══════════════════════════════════════════ */
 function renderResumen(){
   const cont=document.getElementById('dashboardContent');
-  if(!folios.length){cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos IES</h3><p>Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p><div style="margin-top:16px"><button class="btn btn-acc" onclick="openFolioModal()">＋ Crear Primer Folio</button></div></div>';return;}
+  const zrDash=getRoleZona();
+  const _ae=document.activeElement;
+  const _keepFocus=(_ae&&_ae.id&&cont.contains(_ae)&&_ae.tagName==='INPUT')?{id:_ae.id,pos:(typeof _ae.selectionStart==='number'?_ae.selectionStart:null)}:null;
+  if(!visibleFolios().length){cont.innerHTML='<div class="empty-hero"><div class="icon">📊</div><h3>Bienvenido al Sistema de Comparativos IES</h3><p>'+(zrDash?'Aún no hay folios registrados para la zona <strong>'+zrDash+'</strong>. ':'')+'Crea tu primer folio con <strong>＋ Nuevo Folio</strong>.</p><div style="margin-top:16px"><button class="btn btn-acc" onclick="openFolioModal()">＋ Crear Primer Folio</button></div></div>';return;}
   // Apply global activo type filter to ALL dashboard data
   const FF=getFilteredFolios();
   const total=FF.length;
@@ -2358,6 +2524,7 @@ function renderResumen(){
           <button onclick="setActivoFilter('EQUIPO')" style="padding:5px 12px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:${af==='EQUIPO'?'var(--acc-bg)':'transparent'};color:${af==='EQUIPO'?'var(--acc2)':'var(--dim)'}">🛠 Equipos</button>
         </div>
         <span style="font-size:10px;color:var(--muted)">Filtrando: <strong style="color:var(--text)">${total}</strong> folios</span>
+        ${zrDash?`<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--acc-bg);color:var(--acc2);border:1px solid var(--acc-d)" title="Su perfil solo visualiza esta zona">🌵 Zona ${zrDash}</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px">Presupuesto</span>
@@ -2435,7 +2602,7 @@ function renderResumen(){
               <button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}');switchTab('captura')">✏️ Captura</button>
               ${actN>=2?`<button class="btn btn-acc btn-sm" onclick="selectFolio('${f.id}');switchTab('ia')">🤖 Análisis IA</button>
               <button class="btn btn-ghost btn-sm" onclick="selectFolio('${f.id}');switchTab('comp')">📋 Comparativo</button>`:''}
-              <button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" title="Solicitar autorización" style="${(currentRole==='COORDINADOR'||currentRole==='AUXILIAR')?'':'display:none'}">✉ Autorización</button>
+              <button class="btn btn-blue btn-sm" onclick="requestAutorizacion('${f.id}')" title="Solicitar autorización" style="${canSendEmail()?'':'display:none'}">✉ Autorización</button>
             </div>
           </div>`;}).join('')}
       </div>
@@ -2463,53 +2630,74 @@ function renderResumen(){
       <div id="ch-vehiculo" style="height:260px"></div>
     </div>
 
-    <!-- FULL LIST -->
+    <!-- FULL LIST — filtros por rubro, trazabilidad y SLA -->
     <div class="full-table-wrap">
       <div class="ft-head">
-        <span class="ft-title">Registro Completo de Comparativos (${total})</span>
-        <div class="ft-search">🔍 <input type="text" id="ftSearch" placeholder="Buscar folio, descripción, proveedor..." oninput="filterFT()"/></div>
+        <div class="ft-head-l">
+          <span class="ft-title">Registro Completo de Comparativos (<span id="ftTitleN">${total}</span>)</span>
+          <span class="ft-count" id="ftCount"></span>
+        </div>
+        <div class="ft-tools">
+          <button class="btn btn-ghost btn-sm" id="ftClearBtn" onclick="clearFtFilters()" style="display:none">✕ Limpiar filtros</button>
+          <button class="btn btn-green btn-sm" onclick="exportExcel()" title="Exporta exactamente los registros visibles con los filtros aplicados">⬇ Exportar a Excel</button>
+        </div>
       </div>
-      <div id="ftBody"></div>
+      <div class="ft-filters">
+        <div class="ft-search">🔍 <input type="text" id="ftSearch" placeholder="Buscar folio, descripción, proveedor..." value="${esc(ftFilter.q)}" oninput="filterFT()"/></div>
+        <div id="ftSelects" style="display:contents">${buildFtSelectsHtml()}</div>
+      </div>
+      <div id="ftBody" class="ft-scroll"></div>
     </div>`;
-  renderFT(FF);
+  refreshRegistro(false);
+  // Restaurar foco si el usuario escribía en un campo del dashboard al llegar una actualización en tiempo real
+  if(_keepFocus){const el=document.getElementById(_keepFocus.id);if(el){el.focus();try{if(_keepFocus.pos!=null)el.setSelectionRange(_keepFocus.pos,_keepFocus.pos);}catch(e){}}}
   setTimeout(renderCharts,150);
 }
 
 function filterFT(){
-  const q=(document.getElementById('ftSearch')?.value||'').toLowerCase();
-  // Apply global activo filter FIRST, then text search on top
-  const base=getFilteredFolios();
-  const filtered=q?base.filter(f=>f.name.toLowerCase().includes(q)||f.desc.toLowerCase().includes(q)||(f.general.descripcion||'').toLowerCase().includes(q)||(f.general.depto||'').toLowerCase().includes(q)||f.prov.some(p=>p.rz.toLowerCase().includes(q))):base;
-  renderFT(filtered);
+  // Búsqueda libre (folio / descripción / proveedor) — se combina con los filtros por rubro
+  ftFilter.q=document.getElementById('ftSearch')?.value||'';
+  refreshRegistro(false);
 }
 
 function renderFT(data){
   const tb=document.getElementById('ftBody');if(!tb)return;
   const stm={AUTORIZADO:'bg',CANCELADO:'br',PENDIENTE:'by','EN PROCESO':'bb'};
+  const th=(h,al,wrap)=>`<th style="padding:8px 8px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:${wrap?'normal':'nowrap'};line-height:1.25;text-align:${al||'left'}">${h}</th>`;
+  const td='padding:7px 8px;border-bottom:1px solid var(--bd)';
+  if(!data.length){
+    tb.innerHTML='<div style="padding:26px 16px;text-align:center;font-size:12px;color:var(--muted)">Ningún folio coincide con los filtros aplicados. Ajuste los criterios o use <strong>✕ Limpiar filtros</strong>.</div>';
+    return;
+  }
   tb.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead><tr>${['Folio','Descripción','Tipo','Depto.','Activo','Provs.','Mejor Precio','Decisión','Estatus','Acciones'].map(h=>`<th style="padding:8px 14px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;text-align:${h==='Mejor Precio'?'right':'left'}">${h}</th>`).join('')}</tr></thead>
+    <thead><tr>${th('Folio')}${th('Zona')}${th('Descripción')}${th('Tipo')}${th('Depto.')}${th('Activo')}${th('Provs.','center')}${th('Mejor Precio','right',1)}${th('Decisión')}${th('Estatus')}${th('SLA')}${th('F. Creación','left',1)}${th('F. Autorización','left',1)}${th('Acciones')}</tr></thead>
     <tbody>${data.map(f=>{
       const actN=f.prov.filter(p=>p.active).length;
       const d=getDifs(f);const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
       const st=f.decision.estatus;const gan=f.decision.ganador;
       const ganName=gan!==null?(f.prov[gan]?.rz||PLBL[gan]):'—';
       const at=getAssetType(f);
-      const assetVal=at==='EDIFICIO'?(f.general.edificio||'—'):at==='EQUIPO'?(f.general.equipo||'—'):(f.general.unidad||'—');
+      const assetVal=ftAssetOf(f)||'—';
       const assetIcon=at==='EDIFICIO'?'🏢':at==='EQUIPO'?'🛠':'🚗';
+      const tr=getTraz(f);const zn=folioZona(f);
       return`<tr style="cursor:pointer" onclick="selectFolio('${f.id}')">
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);font-weight:600">${f.name}</span></td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);color:var(--dim);font-size:11px">${trunc(f.general.descripcion||f.desc||'—',35)}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd)">${f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:'—'}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--dim)">${f.general.depto||'—'}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--dim)"><span style="margin-right:4px">${assetIcon}</span>${trunc(assetVal,22)}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:center"><span class="acc-status ${actN===3?'sts-done':actN>0?'sts-partial':'sts-empty'}">${actN}/3</span></td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">${mn>0?fmt(mn):'—'}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd);font-size:11px;color:${gan!==null?'var(--acc2)':'var(--muted)'}">${gan!==null?'🏆 '+trunc(ganName,22):'Sin decisión'}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd)">${st?`<span class="badge ${stm[st]||'bx'}">${st}</span>`:'<span class="badge bx">Sin definir</span>'}</td>
-        <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px">
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectFolio('${f.id}');switchTab('comp')">📋</button>
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectFolio('${f.id}');switchTab('ia')">🤖</button>
-          ${canSendEmail()?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();requestAutorizacion('${f.id}')" title="Solicitar autorización a Gerencia" style="color:var(--blue)">✉</button>`:''}
+        <td style="${td}"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);font-weight:600;white-space:nowrap">${f.name}</span></td>
+        <td style="${td};font-size:10px;color:var(--dim);white-space:nowrap" title="${zn?esc(ZONA_LBL[zn]||zn):''}">${zn?esc(ZONA_CORTA[zn]||zn):'—'}</td>
+        <td style="${td};color:var(--dim);font-size:11px;max-width:145px" title="${esc(f.general.descripcion||f.desc||'')}">${esc(trunc(f.general.descripcion||f.desc||'—',28))}</td>
+        <td style="${td}">${f.general.tipo?`<span class="tipo-chip ${f.general.tipo==='REFACCIONES'?'tipo-ref':'tipo-srv'}">${f.general.tipo}</span>`:'—'}</td>
+        <td style="${td};font-size:11px;color:var(--dim)">${esc(f.general.depto||'—')}</td>
+        <td style="${td};font-size:11px;color:var(--dim);max-width:130px" title="${esc(assetVal)}"><span style="margin-right:4px">${assetIcon}</span>${esc(trunc(assetVal,20))}</td>
+        <td style="${td};text-align:center"><span class="acc-status ${actN===3?'sts-done':actN>0?'sts-partial':'sts-empty'}">${actN}/3</span></td>
+        <td style="${td};text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);white-space:nowrap">${mn>0?fmt(mn):'—'}</td>
+        <td style="${td};font-size:11px;color:${gan!==null?'var(--acc2)':'var(--muted)'};max-width:115px" title="${gan!==null?esc(ganName):''}">${gan!==null?'🏆 '+esc(trunc(ganName,18)):'Sin decisión'}</td>
+        <td style="${td}">${st?`<span class="badge ${stm[st]||'bx'}">${esc(st)}</span>`:'<span class="badge bx">Sin definir</span>'}</td>
+        <td style="${td}">${slaHtml(tr)}</td>
+        <td style="${td}">${fmtTrazCell(tr.c)}</td>
+        <td style="${td}">${tr.isFinal?fmtTrazCell(tr.a):'<span style="color:var(--muted);font-size:11px">—</span>'}</td>
+        <td style="${td}"><div style="display:flex;gap:3px">
+          <button class="btn btn-ghost btn-sm" style="padding:3px 6px" onclick="event.stopPropagation();selectFolio('${f.id}');switchTab('comp')" title="Comparativo">📋</button>
+          <button class="btn btn-ghost btn-sm" style="padding:3px 6px" onclick="event.stopPropagation();selectFolio('${f.id}');switchTab('ia')" title="Análisis IA">🤖</button>
+          ${canSendEmail()?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();requestAutorizacion('${f.id}')" title="Solicitar autorización a Gerencia" style="color:var(--blue);padding:3px 6px">✉</button>`:''}
         </div></td>
       </tr>`;}).join('')}
     </tbody>
@@ -2595,8 +2783,9 @@ let dashFilter={
 
 // Filter folios according to dashFilter.activoType
 function getFilteredFolios(){
-  if(dashFilter.activoType==='ALL')return folios;
-  return folios.filter(f=>getAssetType(f)===dashFilter.activoType);
+  const base=visibleFolios(); // aplica segregación por zona antes del filtro de activo
+  if(dashFilter.activoType==='ALL')return base;
+  return base.filter(f=>getAssetType(f)===dashFilter.activoType);
 }
 
 // Filter authorized folios by current budget mode + date range
@@ -2688,14 +2877,15 @@ function openKpiModal(type){
 // ── B. Proveedor detail modal ────────────────────────────────────────────────
 function openProvModal(provName){
   // Gather all folios where this prov was the winner
-  const winFolios=folios.filter(f=>{
+  const scopeF=visibleFolios();
+  const winFolios=scopeF.filter(f=>{
     const g=f.decision.ganador;
     return g!==null&&(f.prov[g]?.rz||PLBL[g])===provName;
   });
   // Score breakdown: average across all appearances
   const allScores={precio:0,entrega:0,garantia:0,condPago:0,factura:0,calificacion:0,n:0};
   const allAnalysis=[];
-  folios.forEach(f=>{
+  scopeF.forEach(f=>{
     const a=scoreAll(f);if(!a)return;
     a.forEach(x=>{if((x.prov.rz||PLBL[x.prov.idx])===provName){
       allScores.precio+=x.s.precio;allScores.entrega+=x.s.entrega;allScores.garantia+=x.s.garantia;
@@ -2810,7 +3000,7 @@ const EMAIL_GERENCIA='ana.ferrer@ies.com.mx';
 const AUTOLOGIN_PIN_GERENCIA='3690';
 let _emailData={subject:'',body:'',link:''};
 
-function canSendEmail(){return currentRole==='COORDINADOR'||currentRole==='AUXILIAR';}
+function canSendEmail(){return currentRole==='COORDINADOR'||currentRole==='AUXILIAR'||currentRole==='AUXILIAR_CABOS';}
 
 function buildAutoLoginLink(folioId){
   const token=btoa('GERENCIA:'+AUTOLOGIN_PIN_GERENCIA+':'+folioId);
@@ -2992,9 +3182,15 @@ function checkAutoLoginToken(){
 }
 
 function exportExcel(){
-  if(!folios.length){notify('Sin folios para exportar',true);return;}
+  // Exporta EXACTAMENTE lo visible en "Registro Completo": getFilteredFolios() (zona del perfil + tipo de activo)
+  // + filtros por rubro, rango de fechas y búsqueda libre (getRegistroFolios).
+  const XF=getRegistroFolios();
+  const zrX=getRoleZona();
+  if(!XF.length){notify('Sin folios para exportar con los filtros actuales',true);return;}
   const wb=XLSX.utils.book_new();
-  folios.forEach(f=>{
+  const usedSheets=new Set();
+  const sheetName=(raw)=>{let b=String(raw||'Hoja').replace(/[:\\/?*\[\]]/g,'').slice(0,31)||'Hoja';let n=b,i=2;while(usedSheets.has(n.toUpperCase())){const sf='~'+i++;n=b.slice(0,31-sf.length)+sf;}usedSheets.add(n.toUpperCase());return n;};
+  XF.forEach(f=>{
     const g=f.general;const d=getDifs(f);const act=f.prov.map((p,i)=>({...p,idx:i})).filter(p=>p.active);
     const data=[['COMPARATIVO DE PROVEEDORES — IES INTERNACIONAL'],
       ['Folio:',f.name,'Tipo:',g.tipo||'—','Fecha:',f.createdAt,'Gestor:',g.gestor||'—'],
@@ -3017,21 +3213,45 @@ function exportExcel(){
       ['Autoriza:',f.decision.autoriza||'—','Fecha:',f.decision.fechaAut||'—'],['Estatus:',f.decision.estatus||'Sin definir'],
       ['Estatus de Pago:',f.decision.pagoEstatus||'Sin definir'],
       ['Pre-Autorización:',f.decision.preAutorizado?'Sí':'No','Justificación:',f.decision.justificacionPreAuth||'—'],
+      [],['TRAZABILIDAD'],
+      ['Fecha de creación:',xlTraz(getTraz(f).c),'Fecha de autorización:',getTraz(f).isFinal?xlTraz(getTraz(f).a):'—'],
+      ['SLA:',slaText(getTraz(f)),'Horas hábiles:',getTraz(f).sla!=null?+getTraz(f).sla.toFixed(1):'—','Dictaminado por:',f.decision.dictaminadoPor||'—'],
     ];
     const analysis=scoreAll(f);
     if(analysis){data.push([],['ANÁLISIS IA'],['Proveedor','Precio(33)','Entrega(17)','Garantía(12)','Cond.(13)','Factura(10)','Calif.(15)','TOTAL(100)']);
     [...analysis].sort((a,b)=>b.total-a.total).forEach(a=>data.push([a.prov.rz||PLBL[a.prov.idx],a.s.precio,a.s.entrega,a.s.garantia,a.s.condPago,a.s.factura,a.s.calificacion,a.total]));}
     const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:28},{wch:32},{wch:32},{wch:32}];
-    XLSX.utils.book_append_sheet(wb,ws,f.name.replace(/[:\\/?*\[\]]/g,'').slice(0,31));
+    XLSX.utils.book_append_sheet(wb,ws,sheetName(f.name));
   });
-  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','PROVEEDOR GANADOR','ESTATUS','ESTATUS PAGO','AUTORIZA','FECHA'],...folios.map(f=>{
+  // RESUMEN: columnas originales + trazabilidad (se agregan al final para no alterar reportes existentes)
+  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','PROVEEDOR GANADOR','ESTATUS','ESTATUS PAGO','AUTORIZA','FECHA','ZONA','DEPTO','ACTIVO','F. CREACIÓN','F. AUTORIZACIÓN','SLA (HRS HÁBILES)','SLA'],...XF.map(f=>{
     const d=getDifs(f);const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
-    return[f.name,f.general.descripcion||f.desc||'—',f.general.tipo||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'—',f.decision.estatus||'—',f.decision.pagoEstatus||'—',f.decision.autoriza||'—',f.decision.fechaAut||'—'];
+    const tr=getTraz(f);
+    return[f.name,f.general.descripcion||f.desc||'—',f.general.tipo||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'—',f.decision.estatus||'—',f.decision.pagoEstatus||'—',f.decision.autoriza||'—',f.decision.fechaAut||'—',
+      folioZona(f)||'—',f.general.depto||'—',ftAssetOf(f)||'—',xlTraz(tr.c),tr.isFinal?xlTraz(tr.a):'—',tr.sla!=null?+tr.sla.toFixed(1):'—',slaText(tr)];
   })];
-  const wss=XLSX.utils.aoa_to_sheet(sum);wss['!cols']=[{wch:18},{wch:35},{wch:13},{wch:7},{wch:16},{wch:35},{wch:13},{wch:14},{wch:22},{wch:14}];
-  XLSX.utils.book_append_sheet(wb,wss,'RESUMEN GENERAL');
-  XLSX.writeFile(wb,'Comparativos_IES_'+new Date().toISOString().slice(0,10)+'.xlsx');
-  notify('Excel exportado correctamente');
+  const wss=XLSX.utils.aoa_to_sheet(sum);wss['!cols']=[{wch:18},{wch:35},{wch:13},{wch:7},{wch:16},{wch:35},{wch:13},{wch:14},{wch:22},{wch:14},{wch:12},{wch:16},{wch:22},{wch:18},{wch:18},{wch:12},{wch:14}];
+  wss['!autofilter']={ref:'A1:Q'+(XF.length+1)};
+  XLSX.utils.book_append_sheet(wb,wss,sheetName('RESUMEN GENERAL'));
+  // Hoja de control: criterios con los que se generó el archivo (trazabilidad del reporte)
+  const F=ftFilter;
+  const crit=[['PARÁMETROS DE EXPORTACIÓN — COMPARATIVO DE PROVEEDORES IES'],[],
+    ['Generado por:',ROLES[currentRole]?.label||currentRole||'—'],
+    ['Fecha y hora:',fmtFH(new Date())],
+    ['Zona del perfil:',zrX||'Todas (sin restricción)'],
+    ['Tipo de activo (Dashboard):',{ALL:'Total',VEHICULO:'Vehículos',EDIFICIO:'Edificios',EQUIPO:'Equipos'}[dashFilter.activoType]||dashFilter.activoType],
+    ['Tipo:',F.tipo||'Todos'],['Departamento:',F.depto||'Todos'],['Activo:',F.activo||'Todos'],
+    ['Estatus:',F.estatus==='__NONE__'?'Sin definir':(F.estatus||'Todos')],
+    ['Zona:',F.zona?(ZONA_LBL[F.zona]||F.zona):'Todas'],
+    ['Rango de fechas ('+(F.fBase==='autorizacion'?'autorización':'creación')+'):',(F.desde||F.hasta)?((F.desde||'inicio')+' a '+(F.hasta||'hoy')):'Sin rango'],
+    ['Búsqueda libre:',F.q||'—'],
+    ['Registros exportados:',XF.length],
+    [],['SLA: horas hábiles lunes a viernes, sin feriados LFT art. 74. Meta: ≤'+SLA_META_HRS.ok+' h verde, ≤'+SLA_META_HRS.warn+' h ámbar, mayor rojo.']];
+  const wsc=XLSX.utils.aoa_to_sheet(crit);wsc['!cols']=[{wch:34},{wch:48}];
+  XLSX.utils.book_append_sheet(wb,wsc,sheetName('PARÁMETROS'));
+  const filtered=ftActiveCount()>0||dashFilter.activoType!=='ALL';
+  XLSX.writeFile(wb,'Comparativos_IES_'+(zrX?zrX+'_':'')+new Date().toISOString().slice(0,10)+(filtered?'_filtrado':'')+'.xlsx');
+  notify('Excel exportado — '+XF.length+' folio'+(XF.length!==1?'s':'')+(filtered?' (filtrado)':''));
 }
 
 /* ══════════════════════════════════════════
@@ -3040,7 +3260,8 @@ function exportExcel(){
 const ROLES={
   COORDINADOR:{pin:'1358',label:'Coordinador',icon:'👑',badgeCls:'role-coord'},
   AUXILIAR:   {pin:'2479',label:'Auxiliar Activos',icon:'📋',badgeCls:'role-aux'},
-  GERENCIA:   {pin:'3690',label:'Gerencia Ops.',icon:'🏢',badgeCls:'role-ger'}
+  GERENCIA:   {pin:'3690',label:'Gerencia Ops.',icon:'🏢',badgeCls:'role-ger'},
+  AUXILIAR_CABOS: { pin: '0389', label: 'Auxiliar Cabos', icon: '🌵', badgeCls: 'role-aux', zonaRestrict: 'CABOS' }
 };
 let currentRole=localStorage.getItem('ies_role_v4')||null;
 let pinBuffer='';let pendingRole=null;
@@ -3118,6 +3339,11 @@ function applyRole(role){
   if(nfBtn)nfBtn.style.display=isGer?'none':'';
   const sbNfBtn=document.querySelector('.sb-head button[onclick="openFolioModal()"]');
   if(sbNfBtn)sbNfBtn.style.display=isGer?'none':'';
+  // Perfiles con zona restringida: sin respaldo/importación JSON global ni reconfiguración Firebase
+  const zrRole=r.zonaRestrict||null;
+  ['cloudExportJsonBtn','cloudImportJsonBtn','cloudResetBtn'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display=zrRole?'none':'';
+  });
   // Export excel available to all
   // Sync available to all
 }
@@ -3137,6 +3363,7 @@ function can(action){
   const perms={
     COORDINADOR:{deleteFolio:true,createFolio:true,capture:true,decision:true,adjuntos:true,deleteCot:true,payStatus:true},
     AUXILIAR:   {deleteFolio:false,createFolio:true,capture:true,decision:false,adjuntos:true,deleteCot:true,payStatus:true},
+    AUXILIAR_CABOS:{deleteFolio:false,createFolio:true,capture:true,decision:false,adjuntos:true,deleteCot:true,payStatus:true},
     GERENCIA:   {deleteFolio:false,createFolio:false,capture:false,decision:true,adjuntos:false,deleteCot:false,payStatus:false}
   };
   return !!(perms[currentRole]&&perms[currentRole][action]);
@@ -3177,13 +3404,416 @@ function startPolling(){
       settings.tombstones=allTombs;
       settings.lastSync=new Date().toISOString();
       localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
-      if(!getActive()&&folios.length)activeId=folios[0].id;
+      if(!getActive())activeId=firstVisibleId();
       renderAll();
       setSyncState('ok','Tiempo real · '+new Date().toLocaleTimeString('es-MX'));
       notify('↓ Actualización en tiempo real recibida');
     }catch(e){ console.warn('[IES Firebase listener]', e.message); }
   }, (err)=>{ console.warn('[IES Firebase]', err.message); });
 }
+
+/* ══════════════════════════════════════════
+   v4.2 — TRAZABILIDAD Y SLA
+   fechaCreacion (folio) y decision.fechaAutorizacion se sellan automáticamente.
+   SLA = horas hábiles (lunes a viernes, sin feriados LFT art. 74) entre creación y dictamen.
+   Folios previos a v4.2: se usan createdAt y fechaAut (fechas sin hora → SLA estimado en días).
+══════════════════════════════════════════ */
+const FINAL_ST=['AUTORIZADO','CANCELADO'];
+const SLA_META_HRS={ok:24,warn:72};          // ≤24 h hábiles verde · ≤72 h ámbar · mayor rojo (ajustable)
+const SLA_FERIADOS=['2026-01-01','2026-02-02','2026-03-16','2026-05-01','2026-09-16','2026-11-16','2026-12-25']; // LFT art. 74 (actualizar cada año)
+function _ymdLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseFechaLocal(s){
+  if(!s)return null;
+  const m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const d=m?new Date(+m[1],+m[2]-1,+m[3]):new Date(s);
+  return isNaN(d)?null:d;
+}
+function businessHoursBetween(a,b){
+  if(!a||!b||b<=a)return 0;
+  let ms=0,cur=new Date(a);
+  while(cur<b){
+    const next=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+1);
+    const end=next<b?next:b;const dow=cur.getDay();
+    if(dow!==0&&dow!==6&&!SLA_FERIADOS.includes(_ymdLocal(cur)))ms+=end-cur;
+    cur=end;
+  }
+  return ms/3600000;
+}
+// Devuelve fechas de creación/dictamen y SLA de un folio
+function getTraz(f){
+  const st=f?.decision?.estatus||'';
+  const isFinal=FINAL_ST.includes(st);
+  let c=null,a=null;
+  if(f?.fechaCreacion){const d=parseFechaLocal(f.fechaCreacion);if(d)c={d,t:true};}
+  if(!c&&f?.createdAt){const d=parseFechaLocal(f.createdAt);if(d)c={d,t:false};}
+  if(isFinal){
+    if(f.decision.fechaAutorizacion){const d=parseFechaLocal(f.decision.fechaAutorizacion);if(d)a={d,t:true};}
+    if(!a&&f.decision.fechaAut){const d=parseFechaLocal(f.decision.fechaAut);if(d)a={d,t:false};}
+  }
+  const sla=(c&&a)?businessHoursBetween(c.d,a.d):null;
+  return{st,isFinal,c,a,sla,approx:!!(c&&a&&(!c.t||!a.t))};
+}
+function fmtFH(d,withTime){
+  if(!(d instanceof Date)||isNaN(d))return'—';
+  const p=n=>String(n).padStart(2,'0');
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+(withTime===false?'':' '+p(d.getHours())+':'+p(d.getMinutes()));
+}
+function xlTraz(o){return o?fmtFH(o.d,o.t):'—';}
+function fmtTrazCell(o){
+  if(!o)return'<span style="color:var(--muted);font-size:11px">—</span>';
+  const p=n=>String(n).padStart(2,'0');
+  return`<span class="ts"${o.t?'':' title="Registro previo a v4.2: fecha sin hora"'}>${fmtFH(o.d,false)}${o.t?`<br><span style="color:var(--muted)">${p(o.d.getHours())}:${p(o.d.getMinutes())} h</span>`:''}</span>`;
+}
+function slaText(tr){
+  if(!tr.isFinal)return tr.st==='EN PROCESO'?'En proceso':'Pendiente';
+  if(tr.sla==null)return'Sin fecha';
+  const h=tr.sla;
+  if(tr.approx){const dd=Math.round(h/24);return dd===0?'Mismo día':dd+(dd===1?' día':' días');}
+  if(h<1)return'<1 hr';
+  if(h<24){const r=Math.round(h);return r+(r===1?' hr':' hrs');}
+  const dd=(h/24).toFixed(1).replace(/\.0$/,'');
+  return dd+(dd==='1'?' día':' días');
+}
+function slaHtml(tr){
+  const txt=slaText(tr);
+  if(!tr.isFinal||tr.sla==null)return`<span class="sla sla-pend"${tr.isFinal?' title="Folio dictaminado sin fecha registrada"':''}>${txt}</span>`;
+  const h=tr.sla;const cls=h<=SLA_META_HRS.ok?'sla-ok':h<=SLA_META_HRS.warn?'sla-warn':'sla-late';
+  const ttl=tr.approx?'Estimado con fechas sin hora (registro previo a v4.2)':h.toFixed(1)+' horas hábiles (lun–vie, sin feriados)';
+  return`<span class="sla ${cls}" title="${ttl}">${txt}</span>`;
+}
+// Transición de estatus: sella fecha/hora de dictamen y notifica en tiempo real
+function onEstatusChange(f,prev,next){
+  const now=new Date().toISOString();
+  if(FINAL_ST.includes(next)){
+    f.decision.fechaAutorizacion=now;
+    f.decision.dictaminadoPor=ROLES[currentRole]?.label||currentRole||'';
+    logBitacora(next,f);
+  }else if(FINAL_ST.includes(prev)){
+    f.decision.fechaAutorizacion='';f.decision.dictaminadoPor='';
+  }
+  f.updatedAt=now; // acción intencional: prevalece en el merge de la nube (last-write-wins)
+  setSyncState('pending');
+  const tEl=document.getElementById('decTrace');if(tEl)tEl.outerHTML=genDecTrace(f);
+}
+function genDecTrace(f){
+  const tr=getTraz(f);
+  const parts=[`<span>🕒 Creado: <strong class="ts">${xlTraz(tr.c)}</strong></span>`];
+  if(tr.isFinal)parts.push(`<span>${tr.st==='CANCELADO'?'⛔ Cancelado':'✅ Autorizado'}: <strong class="ts">${tr.a?xlTraz(tr.a):'sin fecha'}</strong>${f.decision.dictaminadoPor?' por '+esc(f.decision.dictaminadoPor):''}</span>`);
+  parts.push(`<span>SLA: ${slaHtml(tr)}</span>`);
+  return`<div class="dec-trace" id="decTrace">${parts.join('')}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   v4.2 — REGISTRO COMPLETO: FILTROS POR RUBRO
+   Se aplican SOBRE getFilteredFolios() (zona del perfil + tipo de activo del Dashboard).
+══════════════════════════════════════════ */
+const ZONA_LBL={CANCUN:'CANCÚN',PDC:'PLAYA DEL CARMEN',CABOS:'LOS CABOS'};
+const ZONA_CORTA={CANCUN:'Cancún',PDC:'Playa',CABOS:'Los Cabos'};
+const FT_DEFAULT={q:'',tipo:'',depto:'',activo:'',estatus:'',zona:'',fBase:'creacion',desde:'',hasta:''};
+let ftFilter={...FT_DEFAULT};
+function ftAssetOf(f){const at=getAssetType(f);return at==='EDIFICIO'?(f.general.edificio||''):at==='EQUIPO'?(f.general.equipo||''):(f.general.unidad||'');}
+function ftFechaBase(f){
+  const tr=getTraz(f);const o=ftFilter.fBase==='autorizacion'?tr.a:tr.c;
+  return o?_ymdLocal(o.d):'';
+}
+function getRegistroFolios(){
+  const F=ftFilter;const q=(F.q||'').trim().toLowerCase();
+  return getFilteredFolios().filter(f=>{
+    if(F.tipo&&(f.general.tipo||'')!==F.tipo)return false;
+    if(F.depto&&(f.general.depto||'')!==F.depto)return false;
+    if(F.activo&&ftAssetOf(f)!==F.activo)return false;
+    if(F.estatus){const st=f.decision.estatus||'';if(F.estatus==='__NONE__'?!!st:st!==F.estatus)return false;}
+    if(F.zona&&folioZona(f)!==F.zona)return false;
+    if(F.desde||F.hasta){const d=ftFechaBase(f);if(!d)return false;if(F.desde&&d<F.desde)return false;if(F.hasta&&d>F.hasta)return false;}
+    if(q){
+      const hay=[f.name,f.desc,f.general.descripcion,f.general.depto,ftAssetOf(f),...f.prov.map(p=>p.rz)].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+}
+function ftActiveCount(){return['q','tipo','depto','activo','estatus','zona','desde','hasta'].filter(k=>String(ftFilter[k]||'').trim()).length;}
+function ftSelHtml(id,key,label,opts,allLbl,lblMap,locked){
+  const cur=ftFilter[key]||'';
+  if(cur&&!opts.includes(cur))opts=[cur,...opts];
+  const L=v=>esc((lblMap&&lblMap[v])||v);
+  if(locked)return`<div class="ft-f"><label for="${id}">${label}</label><select id="${id}" class="ft-sel" disabled title="Zona fija para su perfil">${opts.map(o=>`<option>${L(o)}</option>`).join('')}</select></div>`;
+  return`<div class="ft-f"><label for="${id}">${label}</label><select id="${id}" class="ft-sel${cur?' on':''}" onchange="setFtFilter('${key}',this.value,this)"><option value="">${allLbl}</option>${opts.map(o=>`<option value="${esc(o)}"${o===cur?' selected':''}>${L(o)}</option>`).join('')}</select></div>`;
+}
+function buildFtSelectsHtml(){
+  const base=getFilteredFolios();
+  const uniq=fn=>[...new Set(base.map(fn).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es'));
+  const estOpts=[...new Set([...getOpts('ESTATUS'),...base.map(f=>f.decision.estatus).filter(Boolean)])];
+  const zr=getRoleZona();
+  const F=ftFilter;
+  return ftSelHtml('ftTipo','tipo','Tipo',uniq(f=>f.general.tipo),'Todos')
+    +ftSelHtml('ftDepto','depto','Departamento',uniq(f=>f.general.depto),'Todos')
+    +ftSelHtml('ftActivo','activo','Activo',uniq(ftAssetOf),'Todos')
+    +ftSelHtml('ftEstatus','estatus','Estatus',[...estOpts,'__NONE__'],'Todos',{__NONE__:'Sin definir'})
+    +ftSelHtml('ftZona','zona','Zona',zr?[zr]:uniq(f=>folioZona(f)),'Todas',ZONA_LBL,!!zr)
+    +`<div class="ft-f"><label for="ftFBase">Fecha de</label><select id="ftFBase" class="ft-sel" onchange="setFtFilter('fBase',this.value,this)"><option value="creacion"${F.fBase!=='autorizacion'?' selected':''}>Creación</option><option value="autorizacion"${F.fBase==='autorizacion'?' selected':''}>Autorización</option></select></div>`
+    +`<div class="ft-f"><label for="ftDesde">Desde</label><input type="date" id="ftDesde" class="ft-sel${F.desde?' on':''}" value="${esc(F.desde)}" onchange="setFtFilter('desde',this.value,this)"/></div>`
+    +`<div class="ft-f"><label for="ftHasta">Hasta</label><input type="date" id="ftHasta" class="ft-sel${F.hasta?' on':''}" value="${esc(F.hasta)}" onchange="setFtFilter('hasta',this.value,this)"/></div>`;
+}
+function setFtFilter(key,val,el){
+  ftFilter[key]=val||(key==='fBase'?'creacion':'');
+  if(el&&el.classList&&key!=='fBase')el.classList.toggle('on',!!val);
+  refreshRegistro(false);
+}
+function clearFtFilters(){
+  ftFilter={...FT_DEFAULT,fBase:ftFilter.fBase};
+  const s=document.getElementById('ftSearch');if(s)s.value='';
+  refreshRegistro(true);
+}
+function refreshRegistro(rebuild){
+  if(rebuild){const box=document.getElementById('ftSelects');if(box)box.innerHTML=buildFtSelectsHtml();}
+  const all=getFilteredFolios();const data=getRegistroFolios();
+  renderFT(data);
+  const n=document.getElementById('ftTitleN');if(n)n.textContent=data.length;
+  const c=document.getElementById('ftCount');if(c)c.textContent=data.length!==all.length?'Mostrando '+data.length+' de '+all.length:'';
+  const cb=document.getElementById('ftClearBtn');if(cb)cb.style.display=ftActiveCount()?'':'none';
+}
+
+/* ══════════════════════════════════════════
+   v4.2 — GENERAR CORREO DEL COMPARATIVO (Captura → bajo Adjuntos)
+══════════════════════════════════════════ */
+let _mailGen={subject:'',body:'',folioId:null};
+function genCorreoRow(f){
+  return`<div class="acc-card" id="acc-mail">
+    <div class="mail-row">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="font-size:16px">📧</span>
+        <div><div class="acc-title">Correo del comparativo</div><div class="mail-row-sub">Genera asunto y cuerpo con el resumen del folio, listos para enviar.</div></div>
+      </div>
+      <button class="btn btn-blue btn-sm" onclick="generarCorreoFolio()">📧 Generar Correo</button>
+    </div>
+  </div>`;
+}
+function buildCorreoFolio(f){
+  const g=f.general,dec=f.decision,isSC=!!f.sinComparativo;
+  const at=getAssetType(f);const atLbl=at==='EDIFICIO'?'Edificio':at==='EQUIPO'?'Equipo':'Vehículo';
+  const asset=ftAssetOf(f);const zn=folioZona(f);
+  const desc=String(g.descripcion||f.desc||'').trim();
+  const subject='Comparativo '+f.name+(desc?' — '+(desc.length>80?desc.slice(0,80)+'…':desc):'');
+  const d=getDifs(f);
+  const provLines=(isSC?[0]:[0,1,2]).map(i=>{
+    const p=f.prov[i];if(!p||!p.active)return null;const c=d[i];
+    const parts=['Total con IVA: '+(c&&c.tot>0?fmt(c.tot):'Sin precio')];
+    if(p.entrega)parts.push('Entrega: '+p.entrega);
+    if(p.garantia)parts.push('Garantía: '+p.garantia);
+    if(p.condiciones)parts.push('Condiciones: '+p.condiciones);
+    if(p.factura)parts.push('Factura: '+p.factura);
+    return'  '+(i+1)+'. '+(p.rz||PLBL[i])+'\n     '+parts.join(' | ');
+  }).filter(Boolean);
+  const best=d.map((c,i)=>c&&c.tot>0?{t:c.tot,i}:null).filter(Boolean).sort((a,b)=>a.t-b.t)[0];
+  let rec='';const an=scoreAll(f);
+  if(an){const s=[...an].sort((a,b)=>b.total-a.total);const W=s[0],R=s[1];const diff=W.total-(R?R.total:W.total);
+    rec=(W.prov.rz||PLBL[W.prov.idx])+' — '+W.total+'/100 pts (confianza '+(diff>=15?'alta':diff>=7?'media':'baja')+')';}
+  const tr=getTraz(f);
+  const gan=(dec.ganador!==null&&dec.ganador!==undefined)?(f.prov[dec.ganador]?.rz||PLBL[dec.ganador]):'Sin definir';
+  const L=['Comparativo de Proveedores — IES Internacional','','Folio: '+f.name];
+  if(zn)L.push('Zona: '+(ZONA_LBL[zn]||zn));
+  L.push('Activo: '+atLbl+(asset?' — '+asset:''));
+  if(g.depto)L.push('Departamento: '+g.depto);
+  if(g.tipo)L.push('Tipo: '+g.tipo);
+  if(g.cantidad)L.push('Cantidad: '+g.cantidad+(g.um?' '+g.um:''));
+  if(g.cotInterna)L.push('Cotización interna: '+g.cotInterna);
+  if(g.solped)L.push('SOLPED: '+g.solped);
+  L.push('','Descripción: '+(desc||'Sin descripción registrada'));
+  if(g.justificacion)L.push('Justificación: '+g.justificacion);
+  L.push('',isSC?'Proveedor único (sin cuadro comparativo):':'Cotizaciones recibidas:');
+  L.push(...(provLines.length?provLines:['  Sin cotizaciones capturadas']));
+  if(best&&!isSC)L.push('','Mejor precio: '+fmt(best.t)+' ('+(f.prov[best.i].rz||PLBL[best.i])+')');
+  if(rec)L.push('Recomendación del análisis: '+rec);
+  L.push('','Decisión','  Estatus: '+(dec.estatus||'Sin definir'),'  Proveedor ganador: '+gan);
+  if(dec.autoriza)L.push('  Autoriza: '+dec.autoriza);
+  L.push('  Fecha de creación: '+xlTraz(tr.c));
+  if(tr.isFinal)L.push('  Fecha de '+(tr.st==='CANCELADO'?'cancelación':'autorización')+': '+xlTraz(tr.a));
+  L.push('  SLA: '+slaText(tr));
+  const nAdj=(f.adjuntos||[]).length;
+  if(nAdj)L.push('','Adjuntos: '+nAdj+' archivo'+(nAdj!==1?'s':'')+' en el sistema (folio '+f.name+').');
+  L.push('','Atentamente,',ROLES[currentRole]?.label||'');
+  return{subject,body:L.join('\n')};
+}
+function generarCorreoFolio(){
+  const f=getActive();if(!f){notify('Seleccione un folio',true);return;}
+  if(can('capture'))autoSave(); // incluye lo último capturado en pantalla
+  const m=buildCorreoFolio(f);
+  _mailGen={...m,folioId:f.id};
+  document.getElementById('mgFolio').textContent=f.name;
+  document.getElementById('mgSubject').textContent=m.subject;
+  document.getElementById('mgBody').textContent=m.body;
+  ['mgCopySubj','mgCopyBody'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('copied');el.textContent=id==='mgCopySubj'?'📋 Copiar asunto':'📋 Copiar cuerpo';}});
+  document.getElementById('mailGenModal').classList.add('open');
+}
+function openMailGen(){
+  const to=(document.getElementById('mgTo')?.value||'').split(/[;,\s]+/).map(x=>x.replace(/[^\w.@+\-]/g,'')).filter(x=>x.includes('@')).join(',');
+  const mailto='mailto:'+to+'?subject='+encodeURIComponent(_mailGen.subject)+'&body='+encodeURIComponent(_mailGen.body);
+  if(mailto.length>8000){copyMailGen('body');notify('Correo extenso — cuerpo copiado; péguelo manualmente',true);return;}
+  window.open(mailto,'_self');notify('Cliente de correo abierto');
+}
+function copyMailGen(part){
+  const text=part==='subject'?_mailGen.subject:_mailGen.body;if(!text)return;
+  const btnId=part==='subject'?'mgCopySubj':'mgCopyBody';
+  navigator.clipboard?.writeText(text).then(()=>{
+    const b=document.getElementById(btnId);
+    if(b){b.classList.add('copied');b.textContent='✓ Copiado';setTimeout(()=>{b.classList.remove('copied');b.textContent=part==='subject'?'📋 Copiar asunto':'📋 Copiar cuerpo';},2000);}
+    notify('Copiado al portapapeles ✓');
+  }).catch(()=>notify('Error al copiar',true));
+}
+function closeMailGen(){document.getElementById('mailGenModal')?.classList.remove('open');}
+
+/* ══════════════════════════════════════════
+   v4.2 — NOTIFICACIONES EN TIEMPO REAL (bitácora)
+   Nodo HERMANO de v4: ies-comparativos/bitacora — no se toca la estructura
+   ies-comparativos/v4 (que se reescribe completa en cada sync con set()).
+   Cada entrada lleva su zona: los perfiles con zonaRestrict solo ven su zona.
+══════════════════════════════════════════ */
+const BITACORA_PATH='ies-comparativos/bitacora';
+const NTF_MAX=100;
+const NTF_SID=genId(); // identifica esta sesión/pestaña
+let _bitRef=null,_bitQuery=null,_ntfItems=[],_ntfReady=false,_ntfState='connecting',_ntfSeenAtOpen=null;
+function ntfSeenTs(){return parseInt(localStorage.getItem('ies_ntf_seen_v4')||'0',10)||0;}
+function ntfTs(it){return typeof it.ts==='number'?it.ts:(Date.parse(it.tsCliente||'')||0);}
+function ntfVisible(it){const zr=getRoleZona();return!zr||it.zona===zr;}
+function initBitacora(){
+  if(_bitQuery){try{_bitQuery.off();}catch(e){}}
+  _bitQuery=null;_bitRef=null;_ntfItems=[];_ntfReady=false;
+  if(!_fbDb){_ntfState='off';renderNotifs();return;}
+  _ntfState='connecting';
+  try{
+    _bitRef=_fbDb.ref(BITACORA_PATH);
+    _bitQuery=_bitRef.limitToLast(NTF_MAX);
+    _bitQuery.on('child_added',snap=>{
+      const v=snap.val();if(!v||typeof v!=='object')return;
+      const it={...v,_k:snap.key};
+      _ntfItems.push(it);if(_ntfItems.length>NTF_MAX)_ntfItems.shift();
+      if(_ntfReady&&it.sid!==NTF_SID&&ntfVisible(it))notifyInfo('🔔 '+ntfText(it,true));
+      renderNotifs();
+    },err=>{_ntfState='error';console.warn('[IES Bitácora]',err&&err.message);renderNotifs();});
+    _bitQuery.once('value',()=>{_ntfReady=true;_ntfState='on';renderNotifs();},()=>{});
+  }catch(e){_ntfState='error';console.warn('[IES Bitácora]',e.message);renderNotifs();}
+  renderNotifs();
+}
+function logBitacora(tipo,f){
+  if(!_bitRef||!f)return;
+  const r=ROLES[currentRole]||{};
+  const SV=(window.firebase&&firebase.database&&firebase.database.ServerValue)?firebase.database.ServerValue.TIMESTAMP:Date.now();
+  const entry={tipo,folioId:f.id,folio:f.name,zona:folioZona(f)||'',rol:currentRole||'',rolLabel:r.label||currentRole||'',
+    autoriza:tipo==='CREADO'?'':(f.decision.autoriza||''),ts:SV,tsCliente:new Date().toISOString(),sid:NTF_SID};
+  try{Promise.resolve(_bitRef.push(entry)).catch(e=>{console.warn('[IES Bitácora] push',e&&e.message);});}
+  catch(e){console.warn('[IES Bitácora] push',e.message);}
+}
+function ntfText(it,plain){
+  const E=v=>plain?String(v||''):esc(v);
+  const folio=plain?String(it.folio||''):`<span class="ntf-folio">${esc(it.folio)}</span>`;
+  const who=E((it.tipo==='CREADO'?it.rolLabel:(it.autoriza||it.rolLabel))||'Usuario');
+  if(it.tipo==='CREADO')return who+' creó el folio '+folio;
+  if(it.tipo==='AUTORIZADO')return who+' AUTORIZÓ el folio '+folio;
+  if(it.tipo==='CANCELADO')return who+' CANCELÓ el folio '+folio;
+  return who+' actualizó el folio '+folio;
+}
+function ntfBadge(t){
+  return t==='AUTORIZADO'?{cls:'ntf-b-aut',lbl:'AUTORIZADO'}:t==='CANCELADO'?{cls:'ntf-b-can',lbl:'CANCELADO'}:{cls:'ntf-b-creado',lbl:'CREADO'};
+}
+function renderNotifs(){
+  const vis=_ntfItems.filter(ntfVisible);
+  const seen=ntfSeenTs();
+  const unread=vis.filter(it=>it.sid!==NTF_SID&&ntfTs(it)>seen).length;
+  const cnt=document.getElementById('ntfCount');
+  if(cnt){cnt.textContent=unread>99?'99+':String(unread);cnt.classList.toggle('show',unread>0);}
+  const bell=document.getElementById('ntfBellBtn');if(bell)bell.title=unread?unread+' notificación'+(unread!==1?'es':'')+' sin leer':'Actividad en tiempo real';
+  const dot=document.getElementById('ntfLiveDot');const lbl=document.getElementById('ntfLiveLbl');
+  if(dot)dot.className='ntf-live-dot'+(_ntfState==='on'?' on':_ntfState==='error'?' err':'');
+  if(lbl)lbl.textContent=_ntfState==='on'?'En vivo — Firebase':_ntfState==='error'?'Bitácora no disponible (revise reglas de Firebase)':_ntfState==='off'?'Sin conexión a Firebase':'Conectando…';
+  const panel=document.getElementById('ntfPanel');if(!panel||!panel.classList.contains('open'))return;
+  const list=document.getElementById('ntfList');if(!list)return;
+  const zr=getRoleZona();
+  if(!vis.length){list.innerHTML=`<div class="ntf-empty">Sin actividad registrada${zr?' para la zona '+esc(ZONA_LBL[zr]||zr):''}.<br>Aquí aparecerán los folios creados, autorizados o cancelados.</div>`;return;}
+  const hl=_ntfSeenAtOpen!=null?_ntfSeenAtOpen:seen;
+  list.innerHTML=[...vis].reverse().map(it=>{
+    const b=ntfBadge(it.tipo);const unr=it.sid!==NTF_SID&&ntfTs(it)>hl;
+    const fid=String(it.folioId||'').replace(/[^\w-]/g,'');
+    return`<div class="ntf-item${unr?' unread':''}" role="button" tabindex="0" onclick="goNotif('${fid}')" onkeydown="if(event.key==='Enter')goNotif('${fid}')">
+      <span class="ntf-badge ${b.cls}">${b.lbl}</span>
+      <div style="min-width:0"><div class="ntf-txt">${ntfText(it,false)}</div>
+      <div class="ntf-meta">${esc(it.rolLabel||'')}${it.zona?' | '+esc(ZONA_LBL[it.zona]||it.zona):''} | ${fmtFH(new Date(ntfTs(it)))}</div></div>
+    </div>`;}).join('');
+}
+function ntfMaxTs(){return _ntfItems.filter(ntfVisible).reduce((m,it)=>Math.max(m,ntfTs(it)),0);}
+function openNotifPanel(){
+  _ntfSeenAtOpen=ntfSeenTs();
+  document.getElementById('ntfPanel')?.classList.add('open');
+  document.getElementById('ntfBellBtn')?.setAttribute('aria-expanded','true');
+  const mx=ntfMaxTs();if(mx>_ntfSeenAtOpen)localStorage.setItem('ies_ntf_seen_v4',String(mx));
+  renderNotifs();
+}
+function closeNotifPanel(){
+  document.getElementById('ntfPanel')?.classList.remove('open');
+  document.getElementById('ntfBellBtn')?.setAttribute('aria-expanded','false');
+  _ntfSeenAtOpen=null;renderNotifs();
+}
+function toggleNotifPanel(ev){
+  if(ev)ev.stopPropagation();
+  if(document.getElementById('ntfPanel')?.classList.contains('open'))closeNotifPanel();else openNotifPanel();
+}
+function markNotifsRead(){
+  const mx=Math.max(ntfMaxTs(),ntfSeenTs());
+  localStorage.setItem('ies_ntf_seen_v4',String(mx));_ntfSeenAtOpen=mx;renderNotifs();
+}
+function goNotif(folioId){
+  closeNotifPanel();
+  const f=folios.find(x=>x.id===folioId);
+  if(!f){notify('El folio aún no está disponible en este equipo — sincronice con ☁ Nube',true);return;}
+  if(!folioInScope(f)){notify('Folio fuera de la zona asignada a su perfil',true);return;}
+  selectFolio(f.id);
+}
+function notifyInfo(msg){
+  const el=document.getElementById('notif');if(!el)return;
+  el.textContent=msg;el.className='notif show';
+  clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),4500);
+}
+
+/* ══════════════════════════════════════════
+   v4.2 — TECLA Esc: cierre global
+   1. Cierra modales y panel de notificaciones abiertos.
+   2. Cierra filas "Agregar nuevo" de catálogos.
+   3. Si el foco está en un campo, lo libera (dispara el guardado onchange).
+   4. Si está abierto un folio, regresa al Dashboard principal.
+══════════════════════════════════════════ */
+function closeAllModals(){
+  let n=0;
+  const closers={folioModal:closeFolioModal,adminModal:closeAdminModal,delCotModal:closeDelCotModal,cloudModal:closeCloudModal,previewModal:closePreview,mailGenModal:closeMailGen};
+  document.querySelectorAll('.overlay.open').forEach(o=>{
+    const fn=closers[o.id];
+    try{if(typeof fn==='function')fn();else o.classList.remove('open');}catch(e){o.classList.remove('open');}
+    n++;
+  });
+  if(document.getElementById('ntfPanel')?.classList.contains('open')){closeNotifPanel();n++;}
+  return n;
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'&&e.key!=='Esc')return;
+  const login=document.getElementById('loginScreen');
+  if(login&&getComputedStyle(login).display!=='none'){
+    if(document.getElementById('pinScreen')?.classList.contains('show')){backToRoles();e.preventDefault();}
+    return;
+  }
+  if(closeAllModals()){e.preventDefault();return;}
+  const nw=document.querySelector('.add-new-row.show');
+  if(nw){nw.classList.remove('show');e.preventDefault();return;}
+  const ae=document.activeElement;
+  if(ae&&ae!==document.body&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ae.blur();e.preventDefault();return;}
+  const pf=document.getElementById('panel-folio');
+  if(pf&&getComputedStyle(pf).display!=='none'){openDashboard();e.preventDefault();}
+});
+// Clic fuera del panel de notificaciones lo cierra
+document.addEventListener('click',e=>{
+  const p=document.getElementById('ntfPanel');
+  if(!p||!p.classList.contains('open'))return;
+  if(p.contains(e.target)||e.target.closest('#ntfBellBtn'))return;
+  closeNotifPanel();
+});
 
 /* ══════════════════════════════════════════
    HELPERS & INIT
@@ -3225,8 +3855,9 @@ async function appStart(){
     setSyncState('pending','Sin configurar — abra ☁ Nube → Configurar Firebase');
   }
   if(!folios.length){ ss(); }
-  activeId = folios.length ? folios[0].id : null;
+  activeId = firstVisibleId(); // respeta la segregación por zona del perfil activo
   startPolling(); // Activa el listener de tiempo real de Firebase
+  initBitacora(); // Notificaciones en tiempo real (nodo hermano: ies-comparativos/bitacora)
   renderSidebar();
   openDashboard();
   window.dispatchEvent(new Event('_appReady'));
