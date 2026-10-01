@@ -509,6 +509,11 @@ table tr:hover td{background:rgba(255,255,255,.55)!important;}
 #sbSearch{background:rgba(255,255,255,.65)!important;border-color:rgba(8,145,178,.22)!important;color:#0c4a6e!important;}
 #sbSearch::placeholder{color:rgba(14,74,110,.40)!important;}
 
+/* ══ v4.3 — Buscadores type=search sin estilos nativos del navegador ══ */
+#sbSearch,#ftSearch{-webkit-appearance:none;appearance:none}
+#sbSearch::-webkit-search-decoration,#ftSearch::-webkit-search-decoration{-webkit-appearance:none}
+#sbSearch::-webkit-search-cancel-button,#ftSearch::-webkit-search-cancel-button{cursor:pointer;opacity:.55}
+
 /* ══ v4.2 — REGISTRO FILTRABLE · SLA · NOTIFICACIONES ══ */
 .ft-head{flex-wrap:wrap;gap:10px}
 .ft-head-l{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -663,7 +668,7 @@ input.ft-sel{width:120px;max-width:120px}
         </select>
       </div>
       <div style="padding:6px 8px;border-bottom:1px solid var(--bd);background:var(--surf2)">
-        <input type="text" id="sbSearch" placeholder="🔍 Buscar folio, activo, palabra..." oninput="renderSidebar()" style="width:100%;font-size:11px;padding:6px 10px;"/>
+        <input type="search" id="sbSearch" name="ies-sb-buscar" aria-label="Buscar folios" placeholder="🔍 Buscar folio, activo, palabra..." oninput="renderSidebar()" onsearch="renderSidebar()" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="width:100%;font-size:11px;padding:6px 10px;"/>
       </div>
     </div>
     <div class="folio-list" id="folioList"></div>
@@ -734,7 +739,11 @@ input.ft-sel{width:120px;max-width:120px}
   <div class="modal">
     <h3>🔒 Acceso de Administrador</h3>
     <p>Esta acción requiere autenticación. Ingrese la contraseña de administrador.</p>
-    <div class="form-group" style="margin-bottom:4px"><label>Contraseña</label><input type="password" id="adminPass" placeholder="••••••••••" onkeydown="if(event.key==='Enter')confirmAdmin()"/></div>
+    <!-- Formulario propio: el gestor de contraseñas solo asocia credenciales a este campo, no a los buscadores -->
+    <form id="adminPassForm" autocomplete="on" onsubmit="return false">
+      <input type="text" name="username" autocomplete="username" value="administrador-comparativo" hidden readonly tabindex="-1" aria-hidden="true"/>
+      <div class="form-group" style="margin-bottom:4px"><label for="adminPass">Contraseña</label><input type="password" id="adminPass" name="password" autocomplete="current-password" placeholder="••••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmAdmin();}"/></div>
+    </form>
     <div id="adminError" style="font-size:11px;color:var(--red);min-height:16px;margin-top:4px"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeAdminModal()">Cancelar</button>
@@ -1499,7 +1508,7 @@ function selectFolio(id){
   renderCapture();renderComp();renderIA();switchTab('captura');
 }
 function deleteFolioRequest(id){if(!can('deleteFolio')){notify('Sin permiso para eliminar folios',true);return;}pendingDel=id;document.getElementById('adminPass').value='';document.getElementById('adminError').textContent='';document.getElementById('adminModal').classList.add('open');setTimeout(()=>document.getElementById('adminPass').focus(),100);}
-function closeAdminModal(){document.getElementById('adminModal').classList.remove('open');pendingDel=null;}
+function closeAdminModal(){document.getElementById('adminModal').classList.remove('open');pendingDel=null;const ap=document.getElementById('adminPass');if(ap)ap.value='';}
 function confirmAdmin(){
   if(document.getElementById('adminPass').value!==ADMIN_PASS){document.getElementById('adminError').textContent='Contraseña incorrecta';return;}
   if(!pendingDel){closeAdminModal();return;}
@@ -1673,6 +1682,7 @@ function renderFolioBar(){
    TABS
 ══════════════════════════════════════════ */
 function openDashboard(){
+  if(resetSearchBoxes())renderSidebar(); // cambio de vista: búsquedas en blanco
   document.getElementById('panel-dashboard').style.display='block';
   document.getElementById('panel-folio').style.display='none';
   document.getElementById('folioBar')?.setAttribute('style','display:none');
@@ -2643,7 +2653,7 @@ function renderResumen(){
         </div>
       </div>
       <div class="ft-filters">
-        <div class="ft-search">🔍 <input type="text" id="ftSearch" placeholder="Buscar folio, descripción, proveedor..." value="${esc(ftFilter.q)}" oninput="filterFT()"/></div>
+        <div class="ft-search">🔍 <input type="search" id="ftSearch" name="ies-ft-buscar" aria-label="Buscar en el registro" placeholder="Buscar folio, descripción, proveedor..." value="${esc(ftFilter.q)}" oninput="filterFT()" onsearch="filterFT()" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"/></div>
         <div id="ftSelects" style="display:contents">${buildFtSelectsHtml()}</div>
       </div>
       <div id="ftBody" class="ft-scroll"></div>
@@ -3351,6 +3361,7 @@ function applyRole(role){
 function logoutRole(){
   if(!confirm('¿Cerrar sesión y cambiar de usuario?'))return;
   currentRole=null;localStorage.removeItem('ies_role_v4');
+  resetSearchBoxes();
   pinBuffer='';pendingRole=null;
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('pinScreen').classList.remove('show');
@@ -3803,6 +3814,7 @@ document.addEventListener('keydown',e=>{
   const nw=document.querySelector('.add-new-row.show');
   if(nw){nw.classList.remove('show');e.preventDefault();return;}
   const ae=document.activeElement;
+  if(ae&&(ae.id==='sbSearch'||ae.id==='ftSearch')&&ae.value){ae.value='';ae.dispatchEvent(new Event('input',{bubbles:true}));e.preventDefault();return;}
   if(ae&&ae!==document.body&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ae.blur();e.preventDefault();return;}
   const pf=document.getElementById('panel-folio');
   if(pf&&getComputedStyle(pf).display!=='none'){openDashboard();e.preventDefault();}
@@ -3816,6 +3828,33 @@ document.addEventListener('click',e=>{
 });
 
 /* ══════════════════════════════════════════
+   v4.3 — BUSCADORES: LIMPIEZA Y GUARDIA ANTI-AUTOCOMPLETADO
+══════════════════════════════════════════ */
+const SEARCH_BOX_IDS=['sbSearch','ftSearch'];
+const _userTypedSearch=new Set(); // buscadores donde el usuario escribió o pegó (el autocompletado no genera teclas)
+['keydown','paste','drop'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&SEARCH_BOX_IDS.includes(e.target.id))_userTypedSearch.add(e.target.id);},true));
+// Deja en blanco los buscadores; devuelve true si alguno tenía texto
+function resetSearchBoxes(){
+  let changed=false;
+  _userTypedSearch.clear();
+  SEARCH_BOX_IDS.forEach(id=>{const el=document.getElementById(id);if(el&&el.value){el.value='';changed=true;}});
+  if(ftFilter.q){ftFilter.q='';changed=true;}
+  return changed;
+}
+// Algunos navegadores autocompletan unos instantes después de cargar: si un buscador
+// tiene texto sin que el usuario lo haya enfocado, se limpia y se re-renderiza.
+function guardSearchAutofill(){
+  const check=()=>{
+    let dirty=false;
+    SEARCH_BOX_IDS.forEach(id=>{const el=document.getElementById(id);if(el&&el.value&&!_userTypedSearch.has(id)){el.value='';dirty=true;}});
+    if(dirty){ftFilter.q='';renderSidebar();refreshRegistro(false);}
+  };
+  [400,1200,2500].forEach(ms=>setTimeout(check,ms));
+}
+// Regreso con botón "Atrás" (bfcache): el navegador restaura valores de formularios
+window.addEventListener('pageshow',e=>{if(e.persisted&&resetSearchBoxes()){renderSidebar();refreshRegistro(false);}});
+
+/* ══════════════════════════════════════════
    HELPERS & INIT
 ══════════════════════════════════════════ */
 function renderAll(){
@@ -3827,6 +3866,7 @@ function renderAll(){
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
 async function appStart(){
+  resetSearchBoxes(); // inicio de sesión/app: búsquedas siempre en blanco
   // Firebase: si hay credenciales, cargar datos desde Realtime DB.
   // Si no hay credenciales, mostrar tablero limpio sin ninguna petición.
   if(_fbRef){
@@ -3860,6 +3900,7 @@ async function appStart(){
   initBitacora(); // Notificaciones en tiempo real (nodo hermano: ies-comparativos/bitacora)
   renderSidebar();
   openDashboard();
+  guardSearchAutofill();
   window.dispatchEvent(new Event('_appReady'));
 }
 (function init(){initAuth();})();
