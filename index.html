@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Comparativo de Proveedores v4 — IES Internacional</title>
+<title>Comparativo de Proveedores v4.4 — IES Internacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 <!-- Firebase SDK v10 compat -->
@@ -568,6 +568,109 @@ input.ft-sel{width:120px;max-width:120px}
 @media (prefers-reduced-motion:no-preference){.ntf-panel.open{animation:ntfIn .16s ease-out}}
 @keyframes ntfIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
+/* ══════════════════════════════════════════
+   v4.4 — SOLPED · SOLICITUD DE TRANSFERENCIA PARA PAGO (FO-FIN-003)
+   Vista dividida: panel de captura (izq.) + hoja A4 editable (der.)
+══════════════════════════════════════════ */
+body.sp-open{overflow:hidden}
+.sp-view{position:fixed;inset:0;z-index:420;display:none;flex-direction:column;background:#dfe8ee}
+.sp-view.open{display:flex}
+.sp-top{flex:0 0 auto;min-height:56px;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:8px 18px;background:rgba(255,255,255,.94);border-bottom:1px solid rgba(8,145,178,.18);box-shadow:0 2px 14px rgba(3,105,161,.08)}
+.sp-top-t{font-size:14px;font-weight:800;color:#0c4a6e;line-height:1.2}
+.sp-top-s{font-size:11px;color:#2e7a92;margin-top:1px}
+.sp-folio{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;color:#0369a1;background:rgba(2,132,199,.08);border:1px solid rgba(2,132,199,.25);border-radius:8px;padding:3px 9px;white-space:nowrap}
+.sp-top-r{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp-body{flex:1;min-height:0;display:grid;grid-template-columns:352px minmax(0,1fr)}
+.sp-left{overflow-y:auto;background:rgba(255,255,255,.86);border-right:1px solid rgba(8,145,178,.16);padding:16px 16px 32px;display:flex;flex-direction:column;gap:14px}
+.sp-stage{overflow:auto;padding:26px 22px 64px;display:flex;justify-content:center;align-items:flex-start}
+.sp-scaler{position:relative;flex:0 0 auto}
+
+/* Panel izquierdo */
+.sp-sum{border:1px solid rgba(8,145,178,.22);border-radius:14px;padding:12px 14px;background:linear-gradient(180deg,rgba(2,132,199,.07),rgba(2,132,199,.02))}
+.sp-sum-k{font-size:10px;font-weight:700;color:#2e7a92;letter-spacing:.3px}
+.sp-sum-v{font-size:13px;font-weight:700;color:#0c4a6e;margin-top:2px;line-height:1.3}
+.sp-sum-amt{font-size:22px;font-weight:800;color:#0369a1;margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.sp-sum-amt span{font-size:11px;font-weight:700;color:#2e7a92;margin-left:4px;letter-spacing:0}
+.sp-sum-l{font-size:10.5px;color:#155e75;margin-top:3px;line-height:1.35}
+.sp-warn{font-size:11px;line-height:1.4;padding:7px 10px;border-radius:10px;background:rgba(217,119,6,.09);border:1px solid rgba(217,119,6,.28);color:#92400e}
+.sp-warn+.sp-warn{margin-top:6px}
+.sp-ovbar{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;line-height:1.35;padding:7px 10px;border-radius:10px;background:rgba(217,119,6,.07);border:1px dashed rgba(217,119,6,.45);color:#92400e}
+.sp-ovbar button{flex:0 0 auto}
+.sp-sec{display:flex;flex-direction:column;gap:9px}
+.sp-sec-t{font-size:11px;font-weight:800;color:#0c4a6e;display:flex;align-items:center;gap:7px;padding-bottom:5px;border-bottom:1px solid rgba(8,145,178,.15)}
+.sp-sec-t::before{content:'';width:3px;height:11px;border-radius:2px;background:#1e9ba2}
+.sp-sec .fg{grid-template-columns:1fr 1fr;gap:9px}
+.sp-sec .form-group label{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sp-lock{font-size:9px;font-weight:700;letter-spacing:0;text-transform:none;color:#7c3aed;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.22);border-radius:8px;padding:1px 6px}
+.sp-hint{font-size:10.5px;color:#2e7a92;line-height:1.35}
+.sp-hint:empty{display:none}
+.sp-hint.ok{color:#059669}.sp-hint.bad{color:#dc2626}
+.sp-legend{font-size:10.5px;color:#2e7a92;line-height:1.45;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.7);border:1px solid rgba(8,145,178,.14)}
+
+/* Hoja A4 */
+.sp-sheet{position:absolute;top:0;left:0;transform-origin:0 0;width:210mm;min-height:297mm;padding:12mm 10mm 10mm;background:#fff;color:#000;
+  font-family:Calibri,Carlito,'Segoe UI','Helvetica Neue',Arial,sans-serif;font-size:9pt;line-height:1.2;
+  box-shadow:0 1px 2px rgba(12,74,110,.10),0 16px 40px rgba(12,74,110,.24);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sp-grid{display:grid;grid-template-columns:32.2mm 43.7mm 20.3mm 31mm 24.7mm 38.1mm;border-top:1.6px solid #000;border-left:1.6px solid #000;border-right:.6px solid #000;border-bottom:.6px solid #000}
+.sp-c{border-right:1px solid #000;border-bottom:1px solid #000;padding:.8mm 1.6mm;display:flex;align-items:center;min-height:6mm;min-width:0;overflow-wrap:anywhere;color:#000}
+.sp-c.l{background:#1e9ba2;color:#fff;font-weight:700;font-size:8pt;line-height:1.12}
+.sp-c.b{background:#002060;color:#fff;font-weight:700;justify-content:center;text-align:center;font-size:9pt}
+.sp-c.ctr{justify-content:center;text-align:center}
+.sp-c.col{flex-direction:column;justify-content:center}
+.sp-c b{font-weight:700}
+.sp-logo{max-width:24mm;max-height:19mm;display:block;margin:auto}
+.sp-e{display:block;width:100%;min-height:1.2em;outline:none;border-radius:1.5px;white-space:pre-wrap;word-break:break-word}
+.sp-c.ctr .sp-e{text-align:center}
+.sp-pair{display:inline-flex;align-items:baseline;gap:1.4mm;min-width:0}
+.sp-pair .sp-e{display:inline-block;width:auto;min-width:0}
+.sp-pair .sp-e:empty{min-width:22mm}
+.sp-opt{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3mm;padding:2mm 1.4mm 3mm;text-align:center;font-weight:700;font-size:8.5pt}
+.sp-chk{width:3.6mm;height:3.6mm;border:1.3px solid #000;display:inline-flex;align-items:center;justify-content:center;font-size:8.5pt;font-weight:800;line-height:1;background:#fff}
+.sp-chk.on::after{content:'X'}
+.sp-mot{font-size:9pt}
+.sp-mot.s1{font-size:8pt}.sp-mot.s2{font-size:7pt}
+
+/* Interacción (solo pantalla) */
+.sp-view [contenteditable="true"]{cursor:text}
+.sp-view [contenteditable="true"]:hover{background:rgba(2,132,199,.07)}
+.sp-view [contenteditable="true"]:focus{background:rgba(2,132,199,.05);box-shadow:0 0 0 1.5px #0284c7}
+.sp-view .sp-c.l [contenteditable="true"]:hover,.sp-view .sp-c.l [contenteditable="true"]:focus{background:rgba(255,255,255,.18)}
+.sp-view .sp-e:empty::before{content:attr(data-ph);color:#9db4c3;font-style:italic;font-weight:400}
+.sp-view .sp-e.ov{box-shadow:inset 2px 0 0 #d97706}
+.sp-view .sp-e.ov:focus{box-shadow:0 0 0 1.5px #0284c7}
+.sp-view .sp-opt{cursor:pointer;transition:background .12s}
+.sp-view .sp-opt:hover{background:rgba(30,155,162,.08)}
+.sp-view .sp-opt:focus-visible{outline:2px solid #0284c7;outline-offset:-2px}
+
+/* Bitácora de SOLPED (Dashboard) */
+.sp-bit-pend{font-size:9px;font-weight:700;color:#d97706;margin-left:4px}
+.sp-bit-rep{font-size:9px;font-weight:700;color:#2e7a92;background:rgba(14,74,110,.07);border-radius:8px;padding:1px 6px;margin-left:5px}
+.ntf-b-sol{background:rgba(30,155,162,.14);color:#0f766e}
+
+@media(max-width:900px){
+  .sp-body{display:block;overflow-y:auto}
+  .sp-left{overflow:visible;border-right:none;border-bottom:1px solid rgba(8,145,178,.16)}
+  .sp-stage{overflow-x:auto;padding:18px 10px 48px}
+}
+@media (prefers-reduced-motion:no-preference){.sp-view.open .sp-sheet{animation:spIn .22s ease-out}}
+@keyframes spIn{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+
+/* Impresión: solo la hoja A4, a una página */
+@page{size:A4 portrait;margin:0}
+@media print{
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+  body.sp-open>*:not(#solpedView){display:none!important}
+  body.sp-open #solpedView{position:static!important;display:block!important;background:#fff!important;inset:auto!important}
+  body.sp-open .sp-top,body.sp-open .sp-left{display:none!important}
+  body.sp-open .sp-body{display:block!important}
+  body.sp-open .sp-stage{display:block!important;overflow:visible!important;padding:0!important;background:none!important}
+  body.sp-open .sp-scaler{width:auto!important;height:auto!important}
+  body.sp-open .sp-sheet{position:static!important;transform:none!important;animation:none!important;box-shadow:none!important;margin:0!important;width:210mm!important;height:296mm!important;min-height:0!important;overflow:hidden!important;page-break-after:avoid;break-after:avoid}
+  body.sp-open .sp-e:empty::before{content:none!important}
+  body.sp-open .sp-e,body.sp-open .sp-opt{background:none!important;box-shadow:none!important}
+  body.sp-open .sp-pair.vac{visibility:hidden}
+}
+
 </style>
 </head>
 <body>
@@ -647,7 +750,7 @@ input.ft-sel{width:120px;max-width:120px}
     <button class="btn btn-ghost btn-sm" onclick="markNotifsRead()">Marcar como leídas</button>
   </div>
   <div class="ntf-list" id="ntfList"></div>
-  <div class="ntf-foot"><span id="ntfFootLbl">Creación, autorización y cancelación de folios</span><span>Esc para cerrar</span></div>
+  <div class="ntf-foot"><span id="ntfFootLbl">Folios creados, autorizados, cancelados y SOLPED emitidas</span><span>Esc para cerrar</span></div>
 </div>
 <div class="main">
   <aside>
@@ -680,6 +783,7 @@ input.ft-sel{width:120px;max-width:120px}
         <div style="font-size:11px;color:var(--dim)" id="fbDesc"></div>
       </div>
       <div class="prov-pills" id="fbPills"></div>
+      <button class="btn btn-acc btn-sm" id="fbSolpedBtn" onclick="openSolped()" style="display:none;margin-left:auto" title="Solicitud de transferencia para pago (FO-FIN-003)">🧾 Generar SOLPED</button>
     </div>
     <!-- DASHBOARD panel (full-width, replaces Vista Dirección) -->
     <div id="panel-dashboard" style="display:none;padding:14px 18px;overflow-y:auto;flex:1;min-height:0"><div id="dashboardContent"></div></div>
@@ -921,6 +1025,26 @@ input.ft-sel{width:120px;max-width:120px}
   </div>
 </div>
 
+<!-- v4.4 — VISTA: GENERAR SOLPED (FO-FIN-003) -->
+<div class="sp-view" id="solpedView" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+  <div class="sp-top">
+    <div>
+      <div class="sp-top-t" id="spTitle">Solicitud de transferencia para pago</div>
+      <div class="sp-top-s">Formato FO-FIN-003, revisión 1. Prellenado con el folio; corrija directo sobre la hoja.</div>
+    </div>
+    <span class="sp-folio" id="spFolioChip">—</span>
+    <div class="sp-top-r">
+      <button class="btn btn-ghost btn-sm" onclick="spRestablecer()" title="Quita las correcciones hechas a mano sobre la hoja">↺ Restablecer hoja</button>
+      <button class="btn btn-acc btn-sm" onclick="spImprimir()" title="Abre la impresión; elija «Guardar como PDF» para descargarla">🖨 Imprimir / PDF</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeSolped()" title="Cerrar (Esc)">✕ Cerrar</button>
+    </div>
+  </div>
+  <div class="sp-body">
+    <div class="sp-left" id="spLeft"></div>
+    <div class="sp-stage" id="spStage"><div class="sp-scaler" id="spScaler"><div class="sp-sheet" id="spSheet"></div></div></div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -1143,7 +1267,7 @@ function ls(){ return JSON.parse(localStorage.getItem('ies_comp_v4')||'[]'); }
 function ss(){ localStorage.setItem('ies_comp_v4',JSON.stringify(folios)); }
 function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function mkProv(){return{active:false,numCot:'',rz:'',marca:'',pu:'',garantia:'',condiciones:'',entrega:'',factura:'',observaciones:'',rating:{global:0,precio:0,calidad:0,cumplimiento:0,comunicacion:0,obs:''}};}
-function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),fechaCreacion:new Date().toISOString(),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',equipo:'',area:'',especialidad:'',depto:'',tipo:'',cotInterna:'',solped:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:'',fechaAutorizacion:'',dictaminadoPor:''},adjuntos:[],sinComparativo:false};}
+function mkFolio(name,desc){return{id:genId(),name,desc:desc||'',createdAt:new Date().toISOString().slice(0,10),fechaCreacion:new Date().toISOString(),updatedAt:new Date().toISOString(),general:{gestor:'',fecha:'',zona:'',activoTipo:'VEHICULO',unidad:'',edificio:'',equipo:'',area:'',especialidad:'',depto:'',tipo:'',ceco:'',placa:'',taller:'',justificacion:'',descripcion:'',cantidad:'',um:'',gerenciaComentarios:''},prov:[mkProv(),mkProv(),mkProv()],decision:{ganador:null,autoriza:'',fechaAut:'',estatus:'',pagoEstatus:'',preAutorizado:false,justificacionPreAuth:'',fechaAutorizacion:'',dictaminadoPor:''},adjuntos:[],sinComparativo:false,solpedCfg:{}};}
 function getActive(){
   const f=folios.find(x=>x.id===activeId)||null;
   return (f&&folioInScope(f))?f:null;
@@ -1366,6 +1490,7 @@ async function activateCloud(){
   settings.fbApiKey=ak; settings.fbProjectId=pid;
   localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
   initBitacora();
+  initSolpedLog();
   await syncCloud();
   openCloudModal();
 }
@@ -1676,6 +1801,7 @@ function renderFolioBar(){
   document.getElementById('fbName').innerHTML=`${f.name} ${tc} <span class="fbadge">${f.createdAt}</span>`;
   document.getElementById('fbDesc').textContent=f.desc||'';
   document.getElementById('fbPills').innerHTML=f.prov.map((p,i)=>`<span class="prov-pill ${PCLS[i]}${p.active?'':' empty'}">${p.active?'●':'○'} ${p.active?trunc(p.rz||PLBL[i],14):PLBL[i]}</span>`).join('');
+  const sb=document.getElementById('fbSolpedBtn');if(sb)sb.style.display=can('capture')?'':'none';
 }
 
 /* ══════════════════════════════════════════
@@ -1714,8 +1840,8 @@ function setActivoTipo(t){
   if(!can('capture')){notify('Sin permiso para modificar',true);return;}
   f.general.activoTipo=t;
   // Limpiar campos que no correspondan al tipo seleccionado
-  if(t==='EDIFICIO'){f.general.unidad='';f.general.equipo='';}
-  else if(t==='EQUIPO'){f.general.unidad='';f.general.edificio='';f.general.area='';f.general.especialidad='';}
+  if(t==='EDIFICIO'){f.general.unidad='';f.general.equipo='';f.general.placa='';}
+  else if(t==='EQUIPO'){f.general.unidad='';f.general.edificio='';f.general.area='';f.general.especialidad='';f.general.placa='';}
   else{f.general.edificio='';f.general.area='';f.general.especialidad='';f.general.equipo='';}
   f.updatedAt=new Date().toISOString();
   ss();setSyncState('pending');
@@ -1768,7 +1894,7 @@ function renderCapture(){
   const acc=document.getElementById('captureAccordion');const f=getActive();
   if(!f){acc.innerHTML='<div class="empty-hero"><div class="icon">📂</div><h3>Sin folio activo</h3><p>Selecciona o crea un folio.</p></div>';return;}
   const g=f.general;const gFilled=g.gestor||g.descripcion||g.cantidad;
-  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCorreoRow(f),genCD(f),genEP(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
+  acc.innerHTML=[genCG(f,g,gFilled),genCP(f,0),genCP(f,1),genCP(f,2),genAdjuntos(f),genCorreoRow(f),genSolpedRow(f),genCD(f),genEP(f)].join('')+`<div style="display:flex;justify-content:flex-end;margin-top:6px;gap:8px">
     <button class="btn btn-ghost" onclick="switchTab('comp')">Ver Comparativo →</button>
     ${can('capture')?`<button class="btn btn-acc" onclick="saveAll()">💾 Guardar Todo</button>`:''}
   </div>`;
@@ -1777,7 +1903,10 @@ function renderCapture(){
 }
 function genCG(f,g,gFilled){
   const st=gFilled?'<span class="acc-status sts-done">Completado</span>':'<span class="acc-status sts-empty">Pendiente</span>';
-  const genRO=!can('capture');return`<div class="acc-card open" id="acc-gen">
+  const genRO=!can('capture');
+  const placaVal=g.placa||placaDeUnidad(g.unidad,f.id);const placaSug=!g.placa&&!!placaVal;
+  const dlOpts=arr=>arr.map(v=>`<option value="${esc(v)}">`).join('');
+  return`<div class="acc-card open" id="acc-gen">
     <div class="acc-head" onclick="toggleAcc('acc-gen')"><span>📋</span><span class="acc-title">Información General</span>${st}<span class="acc-arrow">▼</span></div>
     <div class="acc-body"><div class="acc-inner"><div class="fg">
       <div class="form-group full" style="border:1px solid var(--bd2);border-radius:var(--r);padding:8px 12px;background:var(--surf2);margin-bottom:6px">
@@ -1799,6 +1928,7 @@ function genCG(f,g,gFilled){
       <div class="form-group"><label>Zona</label>${dynSel('g_zona','ZONA',g.zona,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
       ${(g.activoTipo||'VEHICULO')==='VEHICULO'?`
       <div class="form-group"><label>Unidad</label>${dynSel('g_unidad','UNIDAD',g.unidad,'— Seleccionar —',true,'autoSave();updateFolioNomenclature()')}</div>
+      <div class="form-group"><label>Placa</label><input type="text" id="g_placa" value="${esc(placaVal)}" placeholder="Ej. UUE-499P" maxlength="15" autocomplete="off" spellcheck="false" style="text-transform:uppercase" onchange="autoSave()"/>${placaSug?'<span class="calc-badge">Tomada de otro folio de la misma unidad</span>':''}</div>
       `:g.activoTipo==='EQUIPO'?`
       <div class="form-group"><label>Equipo</label>${dynSel('g_equipo','EQUIPO',g.equipo,'— Seleccionar Equipo —',true,'autoSave();updateFolioNomenclature()')}</div>
       `:`
@@ -1808,17 +1938,21 @@ function genCG(f,g,gFilled){
       `}
       <div class="form-group"><label>Departamento</label>${dynSel('g_depto','DEPTO',g.depto)}</div>
       <div class="form-group"><label>Tipo de Solicitud</label>${dynSel('g_tipo','TIPO',g.tipo,'— Seleccionar tipo —',false)}</div>
-      <div class="form-group"><label># COT Interna</label><input type="text" id="g_cotInterna" value="${esc(g.cotInterna)}" placeholder="COT-001" onchange="autoSave()"/></div>
-      <div class="form-group"><label># SOLPED</label><input type="text" id="g_solped" value="${esc(g.solped)}" placeholder="Texto libre" onchange="autoSave()"/></div>
+      <div class="form-group"><label>Centro de Costos (CECO)</label><input type="text" id="g_ceco" list="dlCeco" value="${esc(g.ceco||'')}" placeholder="Texto libre" maxlength="40" autocomplete="off" onchange="autoSave()"/></div>
+      <div class="form-group"><label>Nombre del Taller</label><input type="text" id="g_taller" list="dlTalleres" value="${esc(g.taller||'')}" placeholder="Texto libre" maxlength="80" autocomplete="off" onchange="autoSave()"/></div>
       <div class="form-group"><label>Cantidad</label><input type="number" id="g_cantidad" value="${esc(g.cantidad)}" placeholder="0" step="any" oninput="autoSave();refreshCalcs()"/></div>
       <div class="form-group"><label>Unidad de Medida</label>${dynSel('g_um','UM',g.um)}</div>
       <div class="form-group full"><label>Descripción del Artículo / Servicio</label><textarea id="g_descripcion" rows="2" placeholder="Descripción detallada" onchange="autoSave()">${esc(g.descripcion)}</textarea></div>
       <div class="form-group full"><label>Justificación</label><textarea id="g_justificacion" rows="2" placeholder="Motivo de la compra" onchange="autoSave()">${esc(g.justificacion)}</textarea></div>
+      <div class="form-group full"><label>Importe en letra <span style="text-transform:none;letter-spacing:0;font-weight:500">(total con IVA del proveedor ganador)</span></label><input type="text" id="g_importeLetra" value="${esc(spLetraFolio(f))}" readonly tabindex="-1"/></div>
       <div class="form-group full" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:2px">
         <label style="color:var(--blue);display:flex;align-items:center;gap:6px">🏢 Comentarios de Gerencia Operativa ${g.gerenciaComentarios?'<span style="font-size:9px;background:var(--blu-bg);color:var(--blue);border:1px solid var(--p1bd);border-radius:8px;padding:1px 7px;font-weight:700">Registrado</span>':''}</label>
         <textarea id="g_gerenciaComentarios" rows="2" placeholder="Anotaciones de Gerencia antes de revisión macro..." onchange="saveDecision()" ${(currentRole!=='COORDINADOR'&&currentRole!=='GERENCIA')?'readonly style="opacity:.5;cursor:default"':''}>${esc(g.gerenciaComentarios||'')}</textarea>
       </div>
-    </div></div></div>
+    </div>
+    <datalist id="dlTalleres">${dlOpts(spUniq(x=>x.general&&x.general.taller))}</datalist>
+    <datalist id="dlCeco">${dlOpts(spUniq(x=>x.general&&x.general.ceco))}</datalist>
+    </div></div>
   </div>`;
 }
 function genCP(f,i){
@@ -2269,8 +2403,15 @@ function restoreStars(pi,dim,cid){const f=getActive();if(!f)return;const val=(f.
 ══════════════════════════════════════════ */
 function autoSave(){
   const f=getActive();if(!f)return;
-  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',edificio:'g_edificio',equipo:'g_equipo',area:'g_area',especialidad:'g_especialidad',depto:'g_depto',tipo:'g_tipo',cotInterna:'g_cotInterna',solped:'g_solped',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
+  const gm={gestor:'g_gestor',fecha:'g_fecha',zona:'g_zona',unidad:'g_unidad',edificio:'g_edificio',equipo:'g_equipo',area:'g_area',especialidad:'g_especialidad',depto:'g_depto',tipo:'g_tipo',ceco:'g_ceco',placa:'g_placa',taller:'g_taller',justificacion:'g_justificacion',descripcion:'g_descripcion',cantidad:'g_cantidad',um:'g_um',gerenciaComentarios:'g_gerenciaComentarios'};
+  const prevUnidad=f.general.unidad||'';
   Object.entries(gm).forEach(([k,id])=>{const el=document.getElementById(id);if(el)f.general[k]=el.value;});
+  // v4.4 — Placa vinculada a la unidad: al cambiar de unidad toma la placa registrada en sus otros folios
+  if(typeof f.general.placa==='string')f.general.placa=f.general.placa.toUpperCase().trim();
+  if((f.general.unidad||'')!==prevUnidad&&getAssetType(f)==='VEHICULO'){
+    const sugNew=placaDeUnidad(f.general.unidad,f.id),sugOld=placaDeUnidad(prevUnidad,f.id);
+    if(!f.general.placa||f.general.placa===sugOld){f.general.placa=sugNew;const pe=document.getElementById('g_placa');if(pe)pe.value=sugNew;}
+  }
   [0,1,2].forEach(i=>{
     const pm={numCot:'numCot',rz:'rz',marca:'marca',pu:'pu',garantia:'garantia',condiciones:'condiciones',entrega:'entrega',factura:'factura',observaciones:'obs'};
     const prevRz=f.prov[i].rz;  // Remember before any DOM read
@@ -2319,6 +2460,8 @@ function refreshCalcs(){
     const iv=document.getElementById('p'+i+'_iva');if(iv)iv.value=fmt(c.iva);
     const t=document.getElementById('p'+i+'_tot');if(t)t.value=fmt(c.tot);
   });
+  const il=document.getElementById('g_importeLetra');
+  if(il){const gi=spGanadorIdx(f);const pu=gi!==null?document.getElementById('p'+gi+'_pu')?.value:undefined;il.value=spLetraFolio(f,qty,pu);}
 }
 function saveAll(){
   autoSave();
@@ -2657,8 +2800,10 @@ function renderResumen(){
         <div id="ftSelects" style="display:contents">${buildFtSelectsHtml()}</div>
       </div>
       <div id="ftBody" class="ft-scroll"></div>
-    </div>`;
+    </div>
+    ${spBitCardHtml()}`;
   refreshRegistro(false);
+  spRenderBit();
   // Restaurar foco si el usuario escribía en un campo del dashboard al llegar una actualización en tiempo real
   if(_keepFocus){const el=document.getElementById(_keepFocus.id);if(el){el.focus();try{if(_keepFocus.pos!=null)el.setSelectionRange(_keepFocus.pos,_keepFocus.pos);}catch(e){}}}
   setTimeout(renderCharts,150);
@@ -3205,7 +3350,8 @@ function exportExcel(){
     const data=[['COMPARATIVO DE PROVEEDORES — IES INTERNACIONAL'],
       ['Folio:',f.name,'Tipo:',g.tipo||'—','Fecha:',f.createdAt,'Gestor:',g.gestor||'—'],
       ['Descripción:',g.descripcion||'—'],['Justificación:',g.justificacion||'—'],
-      ['Zona:',g.zona,'Unidad:',g.unidad,'Depto:',g.depto,'Cantidad:',g.cantidad,'U.M:',g.um],[],
+      ['Zona:',g.zona,'Unidad:',g.unidad,'Depto:',g.depto,'Cantidad:',g.cantidad,'U.M:',g.um],
+      ['CECO:',g.ceco||'—','Placa:',g.placa||'—','Taller:',g.taller||'—'],[],
       ['CAMPO',...act.map(p=>p.rz||PLBL[p.idx])],
       ['# Cot.',...act.map(p=>p.numCot||'—')],['Marca',...act.map(p=>p.marca||'—')],
       ['P.U. ($)',...act.map(p=>parseFloat(p.pu)||0)],
@@ -3234,14 +3380,14 @@ function exportExcel(){
     XLSX.utils.book_append_sheet(wb,ws,sheetName(f.name));
   });
   // RESUMEN: columnas originales + trazabilidad (se agregan al final para no alterar reportes existentes)
-  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','PROVEEDOR GANADOR','ESTATUS','ESTATUS PAGO','AUTORIZA','FECHA','ZONA','DEPTO','ACTIVO','F. CREACIÓN','F. AUTORIZACIÓN','SLA (HRS HÁBILES)','SLA'],...XF.map(f=>{
+  const sum=[['FOLIO','DESCRIPCIÓN','TIPO','PROVS','MEJOR PRECIO','PROVEEDOR GANADOR','ESTATUS','ESTATUS PAGO','AUTORIZA','FECHA','ZONA','DEPTO','ACTIVO','F. CREACIÓN','F. AUTORIZACIÓN','SLA (HRS HÁBILES)','SLA','CECO','PLACA','TALLER'],...XF.map(f=>{
     const d=getDifs(f);const mn=Math.min(...d.filter(Boolean).filter(c=>c.tot>0).map(c=>c.tot)||[0]);
     const tr=getTraz(f);
     return[f.name,f.general.descripcion||f.desc||'—',f.general.tipo||'—',f.prov.filter(p=>p.active).length,mn||'—',f.decision.ganador!==null?(f.prov[f.decision.ganador]?.rz||PLBL[f.decision.ganador]):'—',f.decision.estatus||'—',f.decision.pagoEstatus||'—',f.decision.autoriza||'—',f.decision.fechaAut||'—',
-      folioZona(f)||'—',f.general.depto||'—',ftAssetOf(f)||'—',xlTraz(tr.c),tr.isFinal?xlTraz(tr.a):'—',tr.sla!=null?+tr.sla.toFixed(1):'—',slaText(tr)];
+      folioZona(f)||'—',f.general.depto||'—',ftAssetOf(f)||'—',xlTraz(tr.c),tr.isFinal?xlTraz(tr.a):'—',tr.sla!=null?+tr.sla.toFixed(1):'—',slaText(tr),f.general.ceco||'—',f.general.placa||'—',f.general.taller||'—'];
   })];
-  const wss=XLSX.utils.aoa_to_sheet(sum);wss['!cols']=[{wch:18},{wch:35},{wch:13},{wch:7},{wch:16},{wch:35},{wch:13},{wch:14},{wch:22},{wch:14},{wch:12},{wch:16},{wch:22},{wch:18},{wch:18},{wch:12},{wch:14}];
-  wss['!autofilter']={ref:'A1:Q'+(XF.length+1)};
+  const wss=XLSX.utils.aoa_to_sheet(sum);wss['!cols']=[{wch:18},{wch:35},{wch:13},{wch:7},{wch:16},{wch:35},{wch:13},{wch:14},{wch:22},{wch:14},{wch:12},{wch:16},{wch:22},{wch:18},{wch:18},{wch:12},{wch:14},{wch:14},{wch:12},{wch:26}];
+  wss['!autofilter']={ref:'A1:T'+(XF.length+1)};
   XLSX.utils.book_append_sheet(wb,wss,sheetName('RESUMEN GENERAL'));
   // Hoja de control: criterios con los que se generó el archivo (trazabilidad del reporte)
   const F=ftFilter;
@@ -3360,6 +3506,8 @@ function applyRole(role){
 
 function logoutRole(){
   if(!confirm('¿Cerrar sesión y cambiar de usuario?'))return;
+  if(SP.open)closeSolped();
+  SP_VOL={}; // datos bancarios y facturas: se descartan al cerrar sesión
   currentRole=null;localStorage.removeItem('ies_role_v4');
   resetSearchBoxes();
   pinBuffer='';pendingRole=null;
@@ -3628,8 +3776,9 @@ function buildCorreoFolio(f){
   if(g.depto)L.push('Departamento: '+g.depto);
   if(g.tipo)L.push('Tipo: '+g.tipo);
   if(g.cantidad)L.push('Cantidad: '+g.cantidad+(g.um?' '+g.um:''));
-  if(g.cotInterna)L.push('Cotización interna: '+g.cotInterna);
-  if(g.solped)L.push('SOLPED: '+g.solped);
+  if(g.placa&&at==='VEHICULO')L.push('Placa: '+g.placa);
+  if(g.ceco)L.push('Centro de costos: '+g.ceco);
+  if(g.taller)L.push('Taller: '+g.taller);
   L.push('','Descripción: '+(desc||'Sin descripción registrada'));
   if(g.justificacion)L.push('Justificación: '+g.justificacion);
   L.push('',isSC?'Proveedor único (sin cuadro comparativo):':'Cotizaciones recibidas:');
@@ -3711,7 +3860,7 @@ function logBitacora(tipo,f){
   const r=ROLES[currentRole]||{};
   const SV=(window.firebase&&firebase.database&&firebase.database.ServerValue)?firebase.database.ServerValue.TIMESTAMP:Date.now();
   const entry={tipo,folioId:f.id,folio:f.name,zona:folioZona(f)||'',rol:currentRole||'',rolLabel:r.label||currentRole||'',
-    autoriza:tipo==='CREADO'?'':(f.decision.autoriza||''),ts:SV,tsCliente:new Date().toISOString(),sid:NTF_SID};
+    autoriza:(tipo==='CREADO'||tipo==='SOLPED')?'':(f.decision.autoriza||''),ts:SV,tsCliente:new Date().toISOString(),sid:NTF_SID};
   try{Promise.resolve(_bitRef.push(entry)).catch(e=>{console.warn('[IES Bitácora] push',e&&e.message);});}
   catch(e){console.warn('[IES Bitácora] push',e.message);}
 }
@@ -3722,9 +3871,11 @@ function ntfText(it,plain){
   if(it.tipo==='CREADO')return who+' creó el folio '+folio;
   if(it.tipo==='AUTORIZADO')return who+' AUTORIZÓ el folio '+folio;
   if(it.tipo==='CANCELADO')return who+' CANCELÓ el folio '+folio;
+  if(it.tipo==='SOLPED')return who+' generó la SOLPED del folio '+folio;
   return who+' actualizó el folio '+folio;
 }
 function ntfBadge(t){
+  if(t==='SOLPED')return{cls:'ntf-b-sol',lbl:'SOLPED'};
   return t==='AUTORIZADO'?{cls:'ntf-b-aut',lbl:'AUTORIZADO'}:t==='CANCELADO'?{cls:'ntf-b-can',lbl:'CANCELADO'}:{cls:'ntf-b-creado',lbl:'CREADO'};
 }
 function renderNotifs(){
@@ -3740,7 +3891,7 @@ function renderNotifs(){
   const panel=document.getElementById('ntfPanel');if(!panel||!panel.classList.contains('open'))return;
   const list=document.getElementById('ntfList');if(!list)return;
   const zr=getRoleZona();
-  if(!vis.length){list.innerHTML=`<div class="ntf-empty">Sin actividad registrada${zr?' para la zona '+esc(ZONA_LBL[zr]||zr):''}.<br>Aquí aparecerán los folios creados, autorizados o cancelados.</div>`;return;}
+  if(!vis.length){list.innerHTML=`<div class="ntf-empty">Sin actividad registrada${zr?' para la zona '+esc(ZONA_LBL[zr]||zr):''}.<br>Aquí aparecerán los folios creados, autorizados o cancelados y las SOLPED emitidas.</div>`;return;}
   const hl=_ntfSeenAtOpen!=null?_ntfSeenAtOpen:seen;
   list.innerHTML=[...vis].reverse().map(it=>{
     const b=ntfBadge(it.tipo);const unr=it.sid!==NTF_SID&&ntfTs(it)>hl;
@@ -3794,6 +3945,7 @@ function notifyInfo(msg){
 ══════════════════════════════════════════ */
 function closeAllModals(){
   let n=0;
+  if(SP.open){closeSolped();n++;}
   const closers={folioModal:closeFolioModal,adminModal:closeAdminModal,delCotModal:closeDelCotModal,cloudModal:closeCloudModal,previewModal:closePreview,mailGenModal:closeMailGen};
   document.querySelectorAll('.overlay.open').forEach(o=>{
     const fn=closers[o.id];
@@ -3810,11 +3962,13 @@ document.addEventListener('keydown',e=>{
     if(document.getElementById('pinScreen')?.classList.contains('show')){backToRoles();e.preventDefault();}
     return;
   }
+  const aeS=document.activeElement;
+  if(SP.open&&aeS&&aeS!==document.body&&document.getElementById('solpedView')?.contains(aeS)&&(aeS.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(aeS.tagName))){aeS.blur();e.preventDefault();return;}
   if(closeAllModals()){e.preventDefault();return;}
   const nw=document.querySelector('.add-new-row.show');
   if(nw){nw.classList.remove('show');e.preventDefault();return;}
   const ae=document.activeElement;
-  if(ae&&(ae.id==='sbSearch'||ae.id==='ftSearch')&&ae.value){ae.value='';ae.dispatchEvent(new Event('input',{bubbles:true}));e.preventDefault();return;}
+  if(ae&&(ae.id==='sbSearch'||ae.id==='ftSearch'||ae.id==='spBitQ')&&ae.value){ae.value='';ae.dispatchEvent(new Event('input',{bubbles:true}));e.preventDefault();return;}
   if(ae&&ae!==document.body&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ae.blur();e.preventDefault();return;}
   const pf=document.getElementById('panel-folio');
   if(pf&&getComputedStyle(pf).display!=='none'){openDashboard();e.preventDefault();}
@@ -3839,6 +3993,7 @@ function resetSearchBoxes(){
   _userTypedSearch.clear();
   SEARCH_BOX_IDS.forEach(id=>{const el=document.getElementById(id);if(el&&el.value){el.value='';changed=true;}});
   if(ftFilter.q){ftFilter.q='';changed=true;}
+  if(spBitF.q){spBitF.q='';changed=true;}
   return changed;
 }
 // Algunos navegadores autocompletan unos instantes después de cargar: si un buscador
@@ -3854,6 +4009,674 @@ function guardSearchAutofill(){
 // Regreso con botón "Atrás" (bfcache): el navegador restaura valores de formularios
 window.addEventListener('pageshow',e=>{if(e.persisted&&resetSearchBoxes()){renderSidebar();refreshRegistro(false);}});
 
+
+/* ══════════════════════════════════════════
+   v4.4 — SOLPED · SOLICITUD DE TRANSFERENCIA PARA PAGO (FO-FIN-003)
+   · El formato se prellena con el folio y el proveedor ganador; la hoja A4 se
+     actualiza en tiempo real y admite corrección directa antes de imprimir.
+   · SE GUARDAN en el folio (f.solpedCfg → Firebase vía sync): # de proveedor,
+     tipo de solicitud, moneda, banco, orden de compra, proyecto y fecha de autorización.
+   · NO SE GUARDAN (memoria de la sesión, SP_VOL): número de cuenta, CLABE y facturas.
+     Nunca van a localStorage, a Firebase, a la bitácora ni al Excel.
+   · Bitácora: nodo hermano ies-comparativos/solped (no lo toca el set() de v4).
+     Se registra al imprimir / guardar PDF; las reimpresiones actualizan el mismo registro.
+══════════════════════════════════════════ */
+const SOLPED_PATH='ies-comparativos/solped';
+const SP_PEND_KEY='ies_solped_pend_v4';
+const SP_LOGO='data:image/png;base64,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';
+const SP_TIPOS=[{k:'SERVICIO_TERCEROS',l:'SERVICIO DE TERCEROS'},{k:'REFACCIONES',l:'REFACCIONES Y/O PRODUCTOS'},{k:'FLETES',l:'FLETES'},{k:'MTTO_VEHICULOS',l:'MTTO VEHICULOS'}];
+const SP_MONEDAS={MXN:'MXN (PESO MEXICANO)',USD:'USD (DÓLAR ESTADOUNIDENSE)'};
+const SP_LUGAR={CANCUN:'Cancún, Quintana Roo',PDC:'Playa del Carmen, Quintana Roo',CABOS:'Los Cabos, Baja California Sur'};
+const SP_FIRMAS={firmaRecibe:'Lic. Marina Ramirez Pech',firmaGerente:'Lic. Alejandra Pardo Cantu',firmaAutoriza:'Ing. Ana Ferrer Lugo'};
+const SP_PERSIST=['numProveedor','tipoPago','moneda','banco','ordenCompra','proyecto','fechaAutorizacion'];
+const SP_VOLATIL=['cuenta','clabe','facturas'];
+const SP_OV_LBL={lugar:'lugar',fecha:'fecha',hora:'hora',persona:'persona que solicita',depto:'depto.',razon:'razón social',concepto:'concepto',importeNum:'importe en número',importeLetra:'importe en letra',requisicion:'requisición',motivo:'motivo',firmaRecibe:'firma de recibe',firmaGerente:'firma de gerente',firmaAutoriza:'firma de autorización',fechaAut:'fecha de autorización'};
+const SP_BANCOS_CLABE={'002':'BANAMEX','012':'BBVA MÉXICO','014':'SANTANDER','021':'HSBC','030':'BANBAJÍO','036':'INBURSA','042':'MIFEL','044':'SCOTIABANK','058':'BANREGIO','059':'INVEX','062':'AFIRME','072':'BANORTE','127':'BANCO AZTECA','130':'COMPARTAMOS','137':'BANCOPPEL','646':'STP'};
+const SP_BANCOS=['BBVA MÉXICO','BANAMEX','SANTANDER','BANORTE','HSBC','SCOTIABANK','INBURSA','BANBAJÍO','BANREGIO','AFIRME','BANCO AZTECA','BANCOPPEL'];
+let SP={open:false};
+let SP_VOL={}; // {folioId:{cuenta,clabe,facturas}} — solo en memoria; se borra al cerrar sesión o recargar
+
+/* ── Utilidades del folio ─────────────────────────── */
+function spCfg(f){if(!f.solpedCfg||typeof f.solpedCfg!=='object')f.solpedCfg={};return f.solpedCfg;}
+function spVol(id){return SP_VOL[id]||(SP_VOL[id]={cuenta:'',clabe:'',facturas:''});}
+function spFolio(){return SP.open?(folios.find(x=>x.id===SP.folioId)||null):null;}
+// Proveedor autorizado: el ganador; en modo proveedor único, el Proveedor 1
+function spGanadorIdx(f){
+  if(!f||!Array.isArray(f.prov))return null;
+  const g=f.decision?f.decision.ganador:null;
+  if(g!==null&&g!==undefined&&f.prov[g])return g;
+  if(f.sinComparativo&&f.prov[0]&&f.prov[0].active)return 0;
+  return null;
+}
+function spTotalFolio(f,qty,pu){
+  const gi=spGanadorIdx(f);if(gi===null)return null;
+  const p=f.prov[gi];
+  return Math.round(calcProv(pu!==undefined?pu:p.pu,qty!==undefined?qty:(f.general||{}).cantidad).tot*100)/100;
+}
+function spLetraFolio(f,qty,pu){
+  const t=spTotalFolio(f,qty,pu);
+  if(t===null)return'Sin proveedor ganador definido';
+  return importeEnLetra(t,(f.solpedCfg&&f.solpedCfg.moneda)||'MXN');
+}
+// Placa vinculada a la unidad: la más reciente capturada en cualquier folio de la misma unidad
+function placaDeUnidad(unidad,exceptId){
+  if(!unidad)return'';let best=null;
+  folios.forEach(x=>{
+    if(!x||x.id===exceptId)return;const g=x.general||{};
+    if(g.unidad===unidad&&g.placa){const t=Date.parse(x.updatedAt||x.createdAt||0)||0;if(!best||t>best.t)best={t,p:g.placa};}
+  });
+  return best?best.p:'';
+}
+function spPlaca(f){const g=f.general||{};if(getAssetType(f)!=='VEHICULO')return'';return g.placa||placaDeUnidad(g.unidad,f.id);}
+// Último dato capturado para el mismo proveedor en otro folio (# de proveedor, banco)
+function spHistProv(rz,key,exceptId){
+  if(!rz)return'';let best=null;
+  folios.forEach(x=>{
+    if(!x||x.id===exceptId||!x.solpedCfg||!x.solpedCfg[key])return;
+    const gi=spGanadorIdx(x);if(gi===null||x.prov[gi].rz!==rz)return;
+    const t=Date.parse(x.updatedAt||x.createdAt||0)||0;if(!best||t>best.t)best={t,v:x.solpedCfg[key]};
+  });
+  return best?best.v:'';
+}
+function spUniq(fn){return[...new Set(folios.map(x=>{try{return fn(x);}catch(e){return'';}}).filter(v=>v&&String(v).trim()))].sort((a,b)=>String(a).localeCompare(String(b),'es'));}
+function spTipoDefault(f){
+  const t=String((f.general||{}).tipo||'').toUpperCase();const veh=getAssetType(f)==='VEHICULO';
+  if(['REFACCIONES','ARTICULOS','MATERIALES'].includes(t))return'REFACCIONES';
+  if(t.includes('SERVICIO'))return veh?'MTTO_VEHICULOS':'SERVICIO_TERCEROS';
+  return veh?'MTTO_VEHICULOS':'';
+}
+// MOTIVO = [Unidad] - [Zona] - [Placa] - [Departamento] - [Justificación]
+function spMotivo(f){
+  const g=f.general||{};const z=folioZona(f);
+  return[getAssetName(f),z?(ZONA_LBL[z]||z):(g.zona||''),spPlaca(f),g.depto,String(g.justificacion||'').replace(/\s+/g,' ').trim()].filter(Boolean).join(' - ');
+}
+
+/* ── Fechas ───────────────────────────────────────── */
+function spP2(n){return String(n).padStart(2,'0');}
+function spDMY(d){return spP2(d.getDate())+'/'+spP2(d.getMonth()+1)+'/'+d.getFullYear();}
+function spHora(d){return spP2(d.getHours())+':'+spP2(d.getMinutes())+' hrs';}
+function spISOtoDMY(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:'';}
+function spDMYtoISO(s){
+  const m=String(s||'').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);if(!m)return null;
+  const d=+m[1],mo=+m[2],y=+m[3];const dt=new Date(y,mo-1,d);
+  if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d)return null;
+  return y+'-'+spP2(mo)+'-'+spP2(d);
+}
+
+/* ── Importe en letra (español de México) ─────────── */
+const NL_U=['','UNO','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE','DIEZ','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE','VEINTE','VEINTIUNO','VEINTIDÓS','VEINTITRÉS','VEINTICUATRO','VEINTICINCO','VEINTISÉIS','VEINTISIETE','VEINTIOCHO','VEINTINUEVE'];
+const NL_D=['','','','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'];
+const NL_C=['','CIENTO','DOSCIENTOS','TRESCIENTOS','CUATROCIENTOS','QUINIENTOS','SEISCIENTOS','SETECIENTOS','OCHOCIENTOS','NOVECIENTOS'];
+function nl999(n){
+  if(!n)return'';if(n===100)return'CIEN';
+  const c=Math.floor(n/100),r=n%100;
+  const t=r<30?NL_U[r]:NL_D[Math.floor(r/10)]+(r%10?' Y '+NL_U[r%10]:'');
+  return[NL_C[c],t].filter(Boolean).join(' ');
+}
+function nlApocope(s){return s.replace(/VEINTIUNO$/,'VEINTIÚN').replace(/UNO$/,'UN');}
+function nlMiles(n){const m=Math.floor(n/1000),r=n%1000,o=[];if(m)o.push(m===1?'MIL':nlApocope(nl999(m))+' MIL');if(r)o.push(nl999(r));return o.join(' ');}
+function nlEntero(n){
+  if(!n)return'CERO';
+  const mi=Math.floor(n/1e6),r=n%1e6,o=[];
+  if(mi)o.push(mi===1?'UN MILLÓN':nlApocope(nlEntero(mi))+' MILLONES');
+  if(r)o.push(nlMiles(r));
+  return o.join(' ');
+}
+function importeEnLetra(monto,moneda){
+  const v=Math.round(Math.abs(Number(monto)||0)*100);
+  const ent=Math.floor(v/100),cen=v%100,usd=moneda==='USD';
+  const noun=usd?(ent===1?'DÓLAR':'DÓLARES'):(ent===1?'PESO':'PESOS');
+  const de=(ent>=1e6&&ent%1e6===0)?' DE':'';
+  return nlApocope(nlEntero(ent))+de+' '+noun+' '+spP2(cen)+'/100 '+(usd?'USD':'M.N.');
+}
+
+/* ── CLABE: 18 dígitos con dígito verificador (pesos 3-7-1) ── */
+function spClabeCheck(c){
+  const s=String(c||'').replace(/\D/g,'');if(!s)return{st:'',msg:''};
+  if(s.length!==18)return{st:'bad',msg:'La CLABE lleva 18 dígitos; tiene '+s.length+'.'};
+  const w=[3,7,1];let sum=0;for(let i=0;i<17;i++)sum+=(+s[i]*w[i%3])%10;
+  if((10-(sum%10))%10!==+s[17])return{st:'bad',msg:'El dígito verificador no coincide: revise la CLABE.'};
+  const b=SP_BANCOS_CLABE[s.slice(0,3)]||'';
+  return{st:'ok',msg:'CLABE válida'+(b?' · '+b:'')+'.',banco:b};
+}
+
+/* ── Valores que alimentan la hoja ────────────────── */
+function spVals(f){
+  const g=f.general||{},cfg=spCfg(f),vol=spVol(f.id),ov=SP.ov||{};
+  const has=k=>Object.prototype.hasOwnProperty.call(ov,k);
+  const gi=spGanadorIdx(f),p=gi!==null?f.prov[gi]:null;
+  const moneda=cfg.moneda||'MXN';
+  const importe=(has('importeNum')&&isFinite(ov.importeNum))?ov.importeNum:(spTotalFolio(f)||0);
+  const z=folioZona(f);
+  const d={
+    lugar:has('lugar')?ov.lugar:(SP_LUGAR[z]||g.zona||''),
+    fecha:has('fecha')?ov.fecha:spDMY(SP.ts),
+    hora:has('hora')?ov.hora:spHora(SP.ts),
+    persona:has('persona')?ov.persona:(g.gestor||''),
+    depto:has('depto')?ov.depto:'ACTIVOS FIJOS',
+    numProveedor:cfg.numProveedor||'',
+    razon:has('razon')?ov.razon:(p?(p.rz||''):''),
+    concepto:has('concepto')?ov.concepto:String(g.descripcion||f.desc||'').trim(),
+    importeNum:fmt(importe),
+    importeLetra:has('importeLetra')?ov.importeLetra:importeEnLetra(importe,moneda),
+    moneda:SP_MONEDAS[moneda]||moneda,
+    cuenta:vol.cuenta||'',clabe:vol.clabe||'',facturas:vol.facturas||'',
+    banco:cfg.banco||'',ordenCompra:cfg.ordenCompra||'',proyecto:cfg.proyecto||'',
+    requisicion:has('requisicion')?ov.requisicion:(f.name||''),
+    motivo:has('motivo')?ov.motivo:spMotivo(f),
+    firmaRecibe:has('firmaRecibe')?ov.firmaRecibe:SP_FIRMAS.firmaRecibe,
+    firmaGerente:has('firmaGerente')?ov.firmaGerente:SP_FIRMAS.firmaGerente,
+    firmaAutoriza:has('firmaAutoriza')?ov.firmaAutoriza:SP_FIRMAS.firmaAutoriza,
+    fechaAut:has('fechaAut')?ov.fechaAut:spISOtoDMY(cfg.fechaAutorizacion)
+  };
+  const raw={numProveedor:cfg.numProveedor||'',tipoPago:cfg.tipoPago||'',moneda,banco:cfg.banco||'',
+    ordenCompra:cfg.ordenCompra||'',proyecto:cfg.proyecto||'',fechaAutorizacion:cfg.fechaAutorizacion||'',
+    cuenta:vol.cuenta||'',clabe:vol.clabe||'',facturas:vol.facturas||''};
+  return{d,raw,importe,moneda,tipoPago:cfg.tipoPago||'',gi,p};
+}
+
+/* ── Plantillas ───────────────────────────────────── */
+function spE(k,ph,ml,blank){return`<span class="sp-e" data-k="${k}" contenteditable="true" spellcheck="false" role="textbox" aria-label="${esc(SP_OV_LBL[k]||k)}" data-ph="${esc(ph||'')}"${ml?' data-ml="1"':''}${blank?` data-blank="${blank}"`:''}></span>`;}
+function spSheetHtml(){
+  const C=(cls,span,h,inner,extra)=>`<div class="sp-c ${cls||''}" style="grid-column:span ${span};${h?'min-height:'+h+'mm;':''}${extra||''}">${inner}</div>`;
+  const opt=(t,span)=>`<div class="sp-c sp-opt" style="grid-column:span ${span};min-height:22mm" data-tp="${t.k}" role="radio" aria-checked="false" tabindex="0" title="Marcar ${esc(t.l)}" onclick="spSetTipo('${t.k}')" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();spSetTipo('${t.k}')}"><span class="sp-chk"></span><span>${t.l.replace(' Y/O ',' Y/O<br>')}</span></div>`;
+  const nf=(k,ph)=>spE(k,ph)+'<span>NOMBRE Y FIRMA</span>';
+  return`<div class="sp-grid">
+  <div class="sp-c ctr" style="grid-column:span 1;grid-row:span 2"><img class="sp-logo" src="${SP_LOGO}" alt="IES"></div>
+  ${C('ctr',3,9,'<b style="font-size:8.5pt">INGENIERIA, EQUIPOS Y SERVICIOS EN OSMOSIS INVERSA</b>')}
+  ${C('ctr',2,9,'<span style="font-size:8.5pt"><b>Código</b>: FO-FIN-003</span>')}
+  ${C('ctr',3,13.4,'<b style="font-size:12pt">SOLICITUD TRANSFERENCIA PARA PAGO</b>')}
+  ${C('',1,13.4,'<span style="font-size:8.5pt"><b>Revisión</b>: 1</span>')}
+  ${C('',1,13.4,'<span style="font-size:8.5pt"><b>Pagina:</b> 1 de 1</span>')}
+  ${C('b',6,5.9,'')}
+  ${C('l ctr',3,6.3,'LUGAR')}${C('l ctr',2,6.3,'FECHA')}${C('l ctr',1,6.3,'HORA')}
+  ${C('ctr',3,5.9,spE('lugar','Lugar'))}${C('ctr',2,5.9,spE('fecha','dd/mm/aaaa'))}${C('ctr',1,5.9,spE('hora','hh:mm'))}
+  ${C('l',1,10.7,'PERSONA QUE SOLICITA')}${C('',1,10.7,spE('persona','Nombre'))}${C('l ctr',2,10.7,'DEPTO')}${C('ctr',2,10.7,'<b style="width:100%">'+spE('depto','Departamento')+'</b>')}
+  ${C('b',6,6.8,'Datos para pago')}
+  ${C('l',1,12.7,'NUM PROVEEDOR MPROO')}${C('',1,12.7,spE('numProveedor','Capturar'))}${C('l ctr',2,12.7,'NOMBRE Y/O RAZON SOCIAL')}${C('',2,12.7,spE('razon','Razón social'))}
+  <div class="sp-c l" style="grid-column:span 1;grid-row:span 2">PAGO DE</div>
+  ${opt(SP_TIPOS[0],1)}${opt(SP_TIPOS[1],2)}${opt(SP_TIPOS[2],1)}${opt(SP_TIPOS[3],1)}
+  ${C('',5,7,'<b style="margin-right:1.6mm;white-space:nowrap">Concepto:</b>'+spE('concepto','Descripción del artículo o servicio',1))}
+  <div class="sp-c l" style="grid-column:span 1;grid-row:span 2">IMPORTE</div>
+  ${C('l ctr',2,6.1,'En numero')}${C('l ctr',3,6.1,'En letra')}
+  ${C('ctr',2,12.9,'<b style="width:100%;font-size:11pt">'+spE('importeNum','$0.00')+'</b>')}${C('',3,12.9,spE('importeLetra','Importe en letra',1))}
+  ${C('l',1,12,'MONEDA')}${C('',5,12,'<span class="sp-e" data-k="moneda" title="Cambie la moneda en el panel izquierdo"></span>')}
+  ${C('b',6,7,'En caso de ser proveedor nuevo y/o modificacion de cuenta bancaria')}
+  ${C('l',1,11,'NUM. DE CTA/ CUENTA CLABE')}${C('',5,11,'<div style="display:flex;flex-wrap:wrap;gap:1mm 8mm;width:100%"><span class="sp-pair"><b>No. de cuenta:</b>'+spE('cuenta','Capturar')+'</span><span class="sp-pair"><b>CLABE:</b>'+spE('clabe','18 dígitos')+'</span></div>')}
+  ${C('l',1,6.1,'BANCO')}${C('',5,6.1,spE('banco','Banco'))}
+  ${C('b',6,6.8,'Referencia para pago')}
+  ${C('l',1,11,'ORDEN DE COMPRA')}${C('',1,11,spE('ordenCompra','Capturar'))}${C('l ctr',2,11,'REQUISICION')}${C('',2,11,spE('requisicion','Folio'))}
+  ${C('l',1,6.1,'PROYECTO')}${C('',1,6.1,spE('proyecto','Capturar'))}${C('l ctr',2,6.1,'FACTURA(S)')}${C('',2,6.1,spE('facturas','Capturar'))}
+  ${C('l ctr',1,18.6,'MOTIVO')}${C('',5,18.6,spE('motivo','Motivo',1))}
+  ${C('b',6,6.8,'F I R M A S')}
+  ${C('l ctr',2,12,'<span style="font-size:9.5pt">Recibe Solicitud</span>')}${C('l ctr',2,12,'<span style="font-size:9.5pt">Gerente o Jefe departamental</span>')}${C('l ctr',2,12,'<span style="font-size:9.5pt">Autorizacion administracion y/o contraloria</span>')}
+  ${C('',2,10.7,'')}${C('',2,10.7,'')}${C('',2,10.7,'')}
+  ${C('ctr col',2,11.2,nf('firmaRecibe','Nombre'),'font-size:8.5pt')}${C('ctr col',2,11.2,nf('firmaGerente','Nombre'),'font-size:8.5pt')}${C('ctr col',2,11.2,nf('firmaAutoriza','Nombre')+'<span class="sp-pair" style="margin-top:.6mm"><span>Fecha de autorización:</span>'+spE('fechaAut','dd/mm/aaaa',0,'____/____/______')+'</span>','font-size:8.5pt')}
+  </div>`;
+}
+function spLeftHtml(){
+  const dl=(id,arr)=>`<datalist id="${id}">${arr.map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
+  const inp=(id,k,lbl,ex,full,lock)=>`<div class="form-group${full?' full':''}"><label for="${id}">${lbl}${lock?' <span class="sp-lock">🔒 No se guarda</span>':''}</label><input type="text" id="${id}" data-sp="${k}" autocomplete="off" spellcheck="false" oninput="spFromLeft(this)" ${ex||''}/><div class="sp-hint" id="${id}Hint"></div></div>`;
+  return`<div id="spSum"></div>
+  <div id="spWarns"></div>
+  <div id="spOvBar" class="sp-ovbar" style="display:none"></div>
+  <div class="sp-sec">
+    <div class="sp-sec-t">Datos para pago</div>
+    <div class="fg">
+      ${inp('spNumProv','numProveedor','Núm. de proveedor','maxlength="30" placeholder="MPROO"')}
+      <div class="form-group"><label for="spTipo">Tipo de solicitud</label><select id="spTipo" data-sp="tipoPago" onchange="spFromLeft(this)"><option value="">— Seleccionar —</option>${SP_TIPOS.map(t=>`<option value="${t.k}">${esc(t.l)}</option>`).join('')}</select></div>
+      <div class="form-group"><label for="spMoneda">Moneda</label><select id="spMoneda" data-sp="moneda" onchange="spFromLeft(this)"><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
+      ${inp('spBanco','banco','Banco','maxlength="60" list="dlSpBancos" placeholder="Ej. BBVA MÉXICO"')}
+    </div>
+  </div>
+  <div class="sp-sec">
+    <div class="sp-sec-t">Cuenta bancaria <span style="font-weight:500;color:#2e7a92;font-size:10px">(proveedor nuevo o cambio de cuenta)</span></div>
+    <div class="fg">
+      ${inp('spCuenta','cuenta','Número de cuenta','inputmode="numeric" maxlength="20" placeholder="Solo dígitos"',1,1)}
+      ${inp('spClabe','clabe','Cuenta CLABE','inputmode="numeric" maxlength="24" placeholder="18 dígitos"',1,1)}
+    </div>
+  </div>
+  <div class="sp-sec">
+    <div class="sp-sec-t">Referencia para pago</div>
+    <div class="fg">
+      ${inp('spOC','ordenCompra','Orden de compra','maxlength="40"')}
+      ${inp('spProyecto','proyecto','Proyecto','maxlength="60" list="dlSpProyectos"')}
+      ${inp('spFacturas','facturas','Factura(s)','maxlength="80" placeholder="Ej. A-1234, A-1235"',1,1)}
+    </div>
+  </div>
+  <div class="sp-sec">
+    <div class="sp-sec-t">Autorización</div>
+    <div class="fg">
+      <div class="form-group full"><label for="spFechaAut">Fecha de autorización</label><input type="date" id="spFechaAut" data-sp="fechaAutorizacion" onchange="spFromLeft(this)"/><div class="sp-hint">Aparece bajo la firma de autorización. Si la deja vacía, se imprime una línea para llenarla a mano.</div></div>
+    </div>
+  </div>
+  <div class="sp-legend">Lo que capture en este panel se guarda en el folio y viaja a la nube, salvo los campos con 🔒: viven solo en esta sesión y nunca se envían a Firebase ni a la bitácora.<br><br>Los datos que vienen del folio (lugar, proveedor, importe, concepto, motivo y firmas) se corrigen directamente sobre la hoja; esas correcciones valen solo para esta impresión.</div>
+  ${dl('dlSpBancos',[...new Set([...spUniq(x=>x.solpedCfg&&x.solpedCfg.banco),...SP_BANCOS])])}
+  ${dl('dlSpProyectos',spUniq(x=>x.solpedCfg&&x.solpedCfg.proyecto))}`;
+}
+
+/* ── Abrir / cerrar ───────────────────────────────── */
+function openSolped(id){
+  if(!can('capture')){notify('Su perfil no puede generar solicitudes de pago',true);return;}
+  const f=id?folios.find(x=>x.id===id):getActive();
+  if(!f||!folioInScope(f)){notify('Seleccione un folio',true);return;}
+  if(f.id===activeId)autoSave(); // toma lo último capturado en pantalla
+  const gi=spGanadorIdx(f);
+  if(gi===null){notify('Defina el proveedor ganador en «Decisión y Autorización» antes de generar la SOLPED',true);return;}
+  if(SP.open)closeSolped();
+  const cfg=spCfg(f),rz=f.prov[gi].rz;
+  SP={open:true,folioId:f.id,ts:new Date(),ov:{},key:null,impresiones:0,dirty:false,hist:[],_t:null,_title:null};
+  ['numProveedor','banco'].forEach(k=>{if(!cfg[k]){const h=spHistProv(rz,k,f.id);if(h){cfg[k]=h;SP.hist.push(k);SP.dirty=true;}}});
+  if(!cfg.tipoPago){const t=spTipoDefault(f);if(t){cfg.tipoPago=t;SP.dirty=true;}}
+  if(!cfg.moneda){cfg.moneda='MXN';SP.dirty=true;}
+  if(SP.dirty){f.updatedAt=new Date().toISOString();ss();setSyncState('pending');}
+  document.getElementById('spFolioChip').textContent=f.name;
+  document.getElementById('spLeft').innerHTML=spLeftHtml();
+  document.getElementById('spSheet').innerHTML=spSheetHtml();
+  document.body.classList.add('sp-open');
+  document.getElementById('solpedView').classList.add('open');
+  ['spStage','spLeft'].forEach(id=>{const el=document.getElementById(id);if(el)el.scrollTop=0;});
+  const bd=document.querySelector('#solpedView .sp-body');if(bd)bd.scrollTop=0;
+  spPaint();
+  requestAnimationFrame(spFit);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(SP.open)spFit();});
+}
+function closeSolped(){
+  if(!SP.open)return;
+  const f=spFolio(),sync=SP.dirty;
+  spPersistNow();
+  if(SP._title){document.title=SP._title;SP._title=null;}
+  SP={open:false};
+  document.getElementById('solpedView').classList.remove('open');
+  document.body.classList.remove('sp-open');
+  // Vacía el DOM: los datos bancarios no quedan en la página
+  document.getElementById('spSheet').innerHTML='';
+  document.getElementById('spLeft').innerHTML='';
+  if(f&&f.id===activeId){renderFolioBar();renderCapture();}
+  if(sync&&_fbRef)syncCloud();
+}
+
+/* ── Captura (panel y hoja) ───────────────────────── */
+function spPersistSoon(){clearTimeout(SP._t);SP._t=setTimeout(()=>{ss();setSyncState('pending');},350);}
+function spPersistNow(){clearTimeout(SP._t);if(SP.dirty){ss();setSyncState('pending');}}
+function spSet(k,val){
+  const f=spFolio();if(!f)return;
+  val=val==null?'':String(val);
+  if(SP_PERSIST.includes(k)){
+    const cfg=spCfg(f);
+    if((cfg[k]||'')!==val){cfg[k]=val;f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistSoon();}
+  }else if(SP_VOLATIL.includes(k)){
+    spVol(f.id)[k]=val;
+    if(k==='clabe'){ // banco sugerido por la CLABE si aún no se capturó
+      const r=spClabeCheck(val),cfg=spCfg(f);
+      if(r.banco&&!cfg.banco){cfg.banco=r.banco;f.updatedAt=new Date().toISOString();SP.dirty=true;SP.bancoAuto=true;spPersistSoon();}
+    }
+  }else{
+    SP.ov[k]=val;
+  }
+  spPaint();
+}
+function spFromLeft(el){
+  const k=el.dataset.sp;let v=el.value;
+  if(k==='cuenta'||k==='clabe'){const c=v.replace(/\D/g,'');if(c!==v){el.value=c;v=c;}}
+  if(k==='banco')SP.bancoAuto=false;
+  spSet(k,v);
+}
+function spSetTipo(k){const f=spFolio();if(!f)return;spSet('tipoPago',spCfg(f).tipoPago===k?'':k);}
+function spFromSheet(el){
+  const f=spFolio();if(!f||!el)return;
+  const k=el.dataset.k;if(!k||k==='moneda')return;
+  let t=(el.innerText||'').replace(/\u00a0/g,' ');
+  if(!el.dataset.ml)t=t.replace(/\s*\n\s*/g,' ');
+  t=t.trim();
+  if(k==='importeNum'){
+    const n=parseFloat(t.replace(/[^\d.\-]/g,''));
+    if(t==='')delete SP.ov.importeNum;
+    else if(isFinite(n)){
+      const base=spTotalFolio(f)||0,r=Math.round(n*100)/100;
+      if(r===base)delete SP.ov.importeNum;else SP.ov.importeNum=r;
+    }
+    delete SP.ov.importeLetra; // la letra sigue al número
+    spPaint();return;
+  }
+  if(k==='fechaAut'){
+    const iso=spDMYtoISO(t);
+    if(iso||t===''){delete SP.ov.fechaAut;spSet('fechaAutorizacion',iso||'');}
+    else{SP.ov.fechaAut=t;spPaint();}
+    return;
+  }
+  if(SP_PERSIST.includes(k)||SP_VOLATIL.includes(k)){
+    spSet(k,(k==='cuenta'||k==='clabe')?t.replace(/\D/g,''):t);return;
+  }
+  delete SP.ov[k];
+  if(t!==spVals(f).d[k])SP.ov[k]=t;
+  spPaint();
+}
+function spRestablecer(){
+  if(!SP.open)return;
+  if(!Object.keys(SP.ov).length){notify('La hoja ya muestra los datos del folio');return;}
+  SP.ov={};spPaint();notify('Hoja restablecida con los datos del folio');
+}
+
+/* ── Pintado ──────────────────────────────────────── */
+function spPaint(){
+  if(!SP.open)return;
+  const f=spFolio();if(!f){closeSolped();return;}
+  const v=spVals(f),ae=document.activeElement;
+  const sheet=document.getElementById('spSheet');if(!sheet)return;
+  sheet.querySelectorAll('[data-k]').forEach(el=>{
+    const k=el.dataset.k;
+    el.classList.toggle('ov',Object.prototype.hasOwnProperty.call(SP.ov,k));
+    const pair=el.closest('.sp-pair');
+    if(el===ae){if(pair)pair.classList.toggle('vac',!(el.textContent||'').trim()&&!el.dataset.blank);return;}
+    const txt=v.d[k]!=null?String(v.d[k]):'';
+    if(el.textContent!==txt)el.textContent=txt;
+    if(pair)pair.classList.toggle('vac',!txt&&!el.dataset.blank);
+  });
+  sheet.querySelectorAll('[data-tp]').forEach(b=>{
+    const on=b.dataset.tp===v.tipoPago;
+    b.querySelector('.sp-chk')?.classList.toggle('on',on);
+    b.setAttribute('aria-checked',on?'true':'false');
+  });
+  const mot=sheet.querySelector('[data-k="motivo"]');
+  if(mot){const n=(mot.textContent||'').length;mot.classList.add('sp-mot');mot.classList.toggle('s1',n>260&&n<=420);mot.classList.toggle('s2',n>420);}
+  document.querySelectorAll('#spLeft [data-sp]').forEach(el=>{
+    if(el===ae)return;const val=v.raw[el.dataset.sp]!=null?String(v.raw[el.dataset.sp]):'';
+    if(el.value!==val)el.value=val;
+  });
+  spRenderInfo(f,v);
+  spFit();
+}
+function spRenderInfo(f,v){
+  const sum=document.getElementById('spSum');
+  if(sum){
+    const unico=f.decision&&(f.decision.ganador===null||f.decision.ganador===undefined);
+    sum.innerHTML=`<div class="sp-sum"><div class="sp-sum-k">Proveedor autorizado${unico?' (proveedor único)':''}</div>
+      <div class="sp-sum-v">${esc(v.d.razon||'—')}</div>
+      <div class="sp-sum-amt">${fmt(v.importe)}<span>${esc(v.moneda)} con IVA</span></div>
+      <div class="sp-sum-l">${esc(v.d.importeLetra)}</div></div>`;
+  }
+  const W=[];const st=(f.decision&&f.decision.estatus)||'';
+  if(st!=='AUTORIZADO')W.push(st?`El folio está en estatus <b>${esc(st)}</b>. Verifique la autorización antes de tramitar el pago.`:'El folio aún no tiene estatus de autorización.');
+  if(!(spTotalFolio(f)>0))W.push('El proveedor ganador no tiene precio capturado: el importe sale en $0.00.');
+  if(getAssetType(f)==='VEHICULO'&&!spPlaca(f))W.push('La unidad no tiene placa: el motivo sale sin ella. Captúrela en Información General.');
+  if(!String((f.general||{}).justificacion||'').trim())W.push('El folio no tiene justificación: el motivo sale incompleto.');
+  if(!(f.general||{}).gestor)W.push('El folio no tiene gestor: «Persona que solicita» sale vacía.');
+  if(SP.overflow)W.push('El contenido rebasa una página: acorte el motivo o el concepto sobre la hoja.');
+  const wr=document.getElementById('spWarns');if(wr)wr.innerHTML=W.map(w=>`<div class="sp-warn">${w}</div>`).join('');
+  const bar=document.getElementById('spOvBar');
+  if(bar){
+    const ks=Object.keys(SP.ov||{});
+    bar.style.display=ks.length?'flex':'none';
+    if(ks.length)bar.innerHTML=`<span>Corregido a mano en la hoja: ${ks.map(k=>esc(SP_OV_LBL[k]||k)).join(', ')}.</span><button class="btn btn-ghost btn-sm" onclick="spRestablecer()">Restablecer</button>`;
+  }
+  const hint=(id,txt,cls)=>{const el=document.getElementById(id);if(el){el.textContent=txt||'';el.className='sp-hint'+(cls?' '+cls:'');}};
+  const cfg=spCfg(f),gi=spGanadorIdx(f),rz=gi!==null?f.prov[gi].rz:'';
+  hint('spNumProvHint',SP.hist.includes('numProveedor')&&cfg.numProveedor&&cfg.numProveedor===spHistProv(rz,'numProveedor',f.id)?'Tomado de la última SOLPED de este proveedor.':'');
+  hint('spBancoHint',SP.bancoAuto&&cfg.banco?'Completado según la CLABE.':(SP.hist.includes('banco')&&cfg.banco&&cfg.banco===spHistProv(rz,'banco',f.id)?'Tomado de la última SOLPED de este proveedor.':''));
+  const cl=spClabeCheck(v.raw.clabe);hint('spClabeHint',cl.msg,cl.st);
+  const cu=v.raw.cuenta;hint('spCuentaHint',cu&&(cu.length<10||cu.length>12)?'Verifique: una cuenta suele tener entre 10 y 12 dígitos.':'');
+}
+function spFit(){
+  if(!SP.open)return;
+  const st=document.getElementById('spStage'),sc=document.getElementById('spScaler'),sh=document.getElementById('spSheet');
+  if(!st||!sc||!sh)return;
+  const W=sh.offsetWidth,H=sh.offsetHeight;if(!W)return;
+  const pageH=297*96/25.4;
+  const over=H>pageH+2;
+  if(over!==!!SP.overflow){SP.overflow=over;const f=spFolio();if(f)spRenderInfo(f,spVals(f));}
+  const s=Math.max(.3,Math.min(1,(st.clientWidth-44)/W));
+  sh.style.transform='scale('+s+')';
+  sc.style.width=(W*s)+'px';sc.style.height=(H*s)+'px';
+}
+window.addEventListener('resize',()=>{if(SP.open)spFit();});
+
+/* ── Eventos de la hoja (edición directa) ─────────── */
+(function spBindSheet(){
+  const bind=()=>{
+    const sheet=document.getElementById('spSheet');if(!sheet||sheet._spBound)return;sheet._spBound=true;
+    sheet.addEventListener('input',e=>{const el=e.target.closest&&e.target.closest('[data-k]');if(el)spFromSheet(el);});
+    sheet.addEventListener('focusout',e=>{const el=e.target.closest&&e.target.closest('[data-k]');if(el){spFromSheet(el);setTimeout(spPaint,0);}});
+    sheet.addEventListener('keydown',e=>{
+      const el=e.target.closest&&e.target.closest('[data-k]');if(!el)return;
+      if(e.key==='Enter'&&!(el.dataset.ml&&e.shiftKey)){e.preventDefault();el.blur();}
+    });
+    sheet.addEventListener('paste',e=>{
+      const el=e.target.closest&&e.target.closest('[data-k]');if(!el)return;
+      e.preventDefault();
+      let t=((e.clipboardData||window.clipboardData).getData('text/plain')||'');
+      if(!el.dataset.ml)t=t.replace(/\s*\n\s*/g,' ');
+      document.execCommand('insertText',false,t);
+    });
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+})();
+
+/* ── Imprimir / PDF y registro en bitácora ────────── */
+function spImprimir(){
+  const f=spFolio();if(!f)return;
+  const ae=document.activeElement;
+  if(ae&&document.getElementById('solpedView').contains(ae)&&ae.blur)ae.blur();
+  spPaint();
+  spRegistrar(f);
+  if(!SP._title)SP._title=document.title;
+  document.title='SOLPED_'+String(f.name||'folio').replace(/[^\w\-]/g,'_')+'_'+_ymdLocal(SP.ts).replace(/-/g,'');
+  window.print();
+}
+window.addEventListener('afterprint',()=>{
+  if(SP.open&&SP._title){document.title=SP._title;SP._title=null;}
+  if(SP.open&&SP.dirty&&_fbRef){SP.dirty=false;syncCloud();}
+});
+function spRegistrar(f){
+  const v=spVals(f),cfg=spCfg(f),r=ROLES[currentRole]||{};
+  const first=!SP.key;
+  if(first){let k=null;try{k=_spRef?_spRef.push().key:null;}catch(e){}SP.key=k||('L'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));}
+  SP.impresiones=(SP.impresiones||0)+1;
+  const tipo=SP_TIPOS.find(t=>t.k===v.tipoPago);
+  const e={folioId:f.id,folio:f.name||'',zona:folioZona(f)||'',fechaGen:SP.ts.toISOString(),
+    proveedor:v.d.razon||'',numProveedor:cfg.numProveedor||'',taller:String((f.general||{}).taller||'').trim(),
+    importe:v.importe,moneda:v.moneda,tipoPago:tipo?tipo.l:'',concepto:String(v.d.concepto||'').slice(0,300),
+    autoriza:v.d.firmaAutoriza||'',fechaAutorizacion:cfg.fechaAutorizacion||'',
+    activo:getAssetName(f)||'',placa:spPlaca(f)||'',ceco:String((f.general||{}).ceco||'').trim(),depto:(f.general||{}).depto||'',
+    ordenCompra:cfg.ordenCompra||'',proyecto:cfg.proyecto||'',
+    rol:currentRole||'',rolLabel:r.label||currentRole||'',impresiones:SP.impresiones,actualizado:new Date().toISOString(),sid:NTF_SID};
+  if(first){
+    e.ts=(window.firebase&&firebase.database&&firebase.database.ServerValue)?firebase.database.ServerValue.TIMESTAMP:Date.now();
+    e.tsCliente=new Date().toISOString();
+  }
+  const prev=_spItems.get(SP.key)||{};
+  _spItems.set(SP.key,{...prev,...e,ts:typeof prev.ts==='number'?prev.ts:Date.now(),_k:SP.key});
+  spEnqueue(SP.key,e,!first);
+  spFlush();
+  cfg.ultima={id:SP.key,fecha:SP.ts.toISOString(),impresiones:SP.impresiones};
+  f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistNow();
+  if(first)logBitacora('SOLPED',f);
+  spRenderBit();
+  notify(first?'SOLPED registrada en la bitácora':'Reimpresión registrada en la bitácora ('+SP.impresiones+')');
+}
+
+/* ── Cola local + Firebase (ies-comparativos/solped) ── */
+let _spRef=null,_spQ=null,_spItems=new Map(),_spState='connecting',_spFlushing=false;
+function spPendLoad(){try{const a=JSON.parse(localStorage.getItem(SP_PEND_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
+function spPendSave(a){try{localStorage.setItem(SP_PEND_KEY,JSON.stringify(a));}catch(e){}}
+function spEnqueue(k,e,upd){
+  const a=spPendLoad(),i=a.findIndex(x=>x.k===k);
+  if(i>=0){a[i].e={...a[i].e,...e};a[i].v=(a[i].v||1)+1;}else a.push({k,e,upd:!!upd,v:1});
+  spPendSave(a);
+}
+async function spFlush(){
+  if(_spFlushing||!_spRef)return;
+  _spFlushing=true;let again=false;
+  try{
+    for(const it of spPendLoad()){
+      try{
+        const ref=_spRef.child(it.k);
+        if(it.upd)await ref.update(it.e);else await ref.set(it.e);
+        const a=spPendLoad(),j=a.findIndex(x=>x.k===it.k);
+        if(j>=0){if((a[j].v||1)===(it.v||1))a.splice(j,1);else{a[j].upd=true;again=true;}spPendSave(a);}
+      }catch(err){console.warn('[IES SOLPED] envío',err&&err.message);break;}
+    }
+  }finally{_spFlushing=false;}
+  spRenderBitSoon();
+  if(again)setTimeout(spFlush,300);
+}
+function initSolpedLog(){
+  if(_spQ){try{_spQ.off();}catch(e){}}
+  _spQ=null;_spRef=null;_spItems=new Map();
+  if(!_fbDb){_spState='off';spRenderBit();return;}
+  _spState='connecting';
+  try{
+    _spRef=_fbDb.ref(SOLPED_PATH);
+    _spQ=_spRef.limitToLast(1000);
+    const put=s=>{const v=s.val();if(v&&typeof v==='object'){_spItems.set(s.key,{...v,_k:s.key});spRenderBitSoon();}};
+    _spQ.on('child_added',put,err=>{_spState='error';console.warn('[IES SOLPED]',err&&err.message);spRenderBit();});
+    _spQ.on('child_changed',put,()=>{});
+    _spQ.on('child_removed',s=>{_spItems.delete(s.key);spRenderBitSoon();},()=>{});
+    _spQ.once('value',()=>{_spState='on';spRenderBit();spFlush();},()=>{});
+  }catch(e){_spState='error';console.warn('[IES SOLPED]',e.message);}
+  spRenderBit();
+}
+
+/* ── Bitácora de SOLPED (Dashboard) ───────────────── */
+let spBitF={q:'',moneda:'',desde:'',hasta:''};
+function spBitItems(){
+  const pend=spPendLoad(),pk=new Set(pend.map(x=>x.k));
+  const m=new Map(_spItems);
+  pend.forEach(it=>{if(!m.has(it.k))m.set(it.k,{...it.e,_k:it.k});});
+  const zr=getRoleZona();
+  return[...m.values()].filter(e=>e&&(!zr||e.zona===zr)).map(e=>({...e,_pend:pk.has(e._k)}))
+    .sort((a,b)=>String(b.fechaGen||'').localeCompare(String(a.fechaGen||'')));
+}
+function spBitFiltered(all){
+  const F=spBitF,q=String(F.q||'').trim().toLowerCase();
+  return all.filter(e=>{
+    if(F.moneda&&e.moneda!==F.moneda)return false;
+    if(F.desde||F.hasta){const dt=new Date(e.fechaGen);if(isNaN(dt))return false;const d=_ymdLocal(dt);if(F.desde&&d<F.desde)return false;if(F.hasta&&d>F.hasta)return false;}
+    if(q){const hay=[e.folio,e.proveedor,e.taller,e.autoriza,e.numProveedor,e.ordenCompra,e.proyecto,e.activo,e.placa,e.ceco].filter(Boolean).join(' ').toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
+}
+function spBitCardHtml(){
+  const F=spBitF;
+  return`<div class="full-table-wrap" id="spBitWrap">
+      <div class="ft-head">
+        <div class="ft-head-l">
+          <span class="ft-title">Bitácora de SOLPED (<span id="spBitN">0</span>)</span>
+          <span class="ft-count" id="spBitCount"></span>
+        </div>
+        <div class="ft-tools">
+          <button class="btn btn-ghost btn-sm" id="spBitClear" onclick="spBitClear()" style="display:none">✕ Limpiar filtros</button>
+          <button class="btn btn-green btn-sm" onclick="spBitExport()" title="Exporta las solicitudes visibles con los filtros aplicados">⬇ Exportar a Excel</button>
+        </div>
+      </div>
+      <div class="ft-filters">
+        <div class="ft-search">🔍 <input type="search" id="spBitQ" name="ies-sp-buscar" aria-label="Buscar en la bitácora de SOLPED" placeholder="Folio, proveedor, taller..." value="${esc(F.q)}" oninput="spBitSet('q',this.value)" onsearch="spBitSet('q',this.value)" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"/></div>
+        <div class="ft-f"><label for="spBitMon">Moneda</label><select id="spBitMon" class="ft-sel${F.moneda?' on':''}" onchange="spBitSet('moneda',this.value,this)"><option value="">Todas</option><option value="MXN"${F.moneda==='MXN'?' selected':''}>MXN</option><option value="USD"${F.moneda==='USD'?' selected':''}>USD</option></select></div>
+        <div class="ft-f"><label for="spBitDesde">Desde</label><input type="date" id="spBitDesde" class="ft-sel${F.desde?' on':''}" value="${esc(F.desde)}" onchange="spBitSet('desde',this.value,this)"/></div>
+        <div class="ft-f"><label for="spBitHasta">Hasta</label><input type="date" id="spBitHasta" class="ft-sel${F.hasta?' on':''}" value="${esc(F.hasta)}" onchange="spBitSet('hasta',this.value,this)"/></div>
+      </div>
+      <div id="spBitBody" class="ft-scroll"></div>
+    </div>`;
+}
+function spRenderBitSoon(){clearTimeout(spRenderBitSoon._t);spRenderBitSoon._t=setTimeout(spRenderBit,80);}
+function spRenderBit(){
+  const body=document.getElementById('spBitBody');if(!body)return;
+  const all=spBitItems(),rows=spBitFiltered(all);
+  const n=document.getElementById('spBitN');if(n)n.textContent=rows.length;
+  const c=document.getElementById('spBitCount');if(c)c.textContent=rows.length!==all.length?'Mostrando '+rows.length+' de '+all.length:'';
+  const act=['q','moneda','desde','hasta'].some(k=>String(spBitF[k]||'').trim());
+  const cb=document.getElementById('spBitClear');if(cb)cb.style.display=act?'':'none';
+  const empty=msg=>`<div style="padding:24px 16px;text-align:center;font-size:12px;color:var(--muted)">${msg}</div>`;
+  if(!all.length){
+    body.innerHTML=empty(_spState==='error'
+      ?'La bitácora no está disponible: revise que las reglas de Firebase permitan lectura y escritura en <strong>ies-comparativos/solped</strong>.'
+      :'Aún no hay solicitudes registradas. Se registran al imprimir o guardar en PDF desde <strong>🧾 Generar SOLPED</strong> en un folio.');
+    return;
+  }
+  if(!rows.length){body.innerHTML=empty('Ninguna solicitud coincide con los filtros. Ajuste los criterios o use <strong>✕ Limpiar filtros</strong>.');return;}
+  const th=(h,al)=>`<th style="padding:8px 8px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;text-align:${al||'left'}">${h}</th>`;
+  const td='padding:7px 8px;border-bottom:1px solid var(--bd)';
+  const tot={};rows.forEach(e=>{const m=e.moneda||'MXN';tot[m]=(tot[m]||0)+(Number(e.importe)||0);});
+  body.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr>${th('Folio')}${th('Fecha')}${th('Proveedor')}${th('Taller')}${th('Importe','right')}${th('Moneda')}${th('Autoriza')}</tr></thead>
+    <tbody>${rows.map(e=>{
+      const fid=String(e.folioId||'').replace(/[^\w-]/g,'');
+      return`<tr style="cursor:pointer" onclick="spAbrirFolio('${fid}')" title="Abrir el folio">
+        <td style="${td};white-space:nowrap"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);font-weight:600">${esc(e.folio||'—')}</span>${(e.impresiones||1)>1?`<span class="sp-bit-rep" title="Veces impresa">×${e.impresiones}</span>`:''}</td>
+        <td style="${td};white-space:nowrap;font-size:11px">${fmtFH(new Date(e.fechaGen))}${e._pend?'<span class="sp-bit-pend" title="Pendiente de enviar a la nube">⏳</span>':''}</td>
+        <td style="${td};font-size:11px;max-width:230px" title="${esc(e.proveedor||'')}">${esc(trunc(e.proveedor||'—',40))}</td>
+        <td style="${td};font-size:11px;color:var(--dim)">${esc(e.taller||'—')}</td>
+        <td style="${td};text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap">${fmt(Number(e.importe)||0)}</td>
+        <td style="${td};font-size:11px">${esc(e.moneda||'—')}</td>
+        <td style="${td};font-size:11px;color:var(--dim)">${esc(e.autoriza||'—')}</td>
+      </tr>`;}).join('')}</tbody>
+    <tfoot><tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase">Total de la vista</td>
+      <td colspan="3" style="padding:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--acc2)">${Object.keys(tot).sort().map(m=>fmt(tot[m])+' '+esc(m)).join(' &nbsp;|&nbsp; ')}</td></tr></tfoot>
+  </table>`;
+}
+function spBitSet(key,val,el){
+  spBitF[key]=val||'';
+  if(el&&el.classList&&el.classList.contains('ft-sel'))el.classList.toggle('on',!!val);
+  spRenderBit();
+}
+function spBitClear(){
+  spBitF={q:'',moneda:'',desde:'',hasta:''};
+  [['spBitQ',''],['spBitMon',''],['spBitDesde',''],['spBitHasta','']].forEach(([id,v])=>{const el=document.getElementById(id);if(el){el.value=v;el.classList.remove('on');}});
+  spRenderBit();
+}
+function spAbrirFolio(id){
+  const f=folios.find(x=>x.id===id);
+  if(!f){notify('El folio no está disponible en este equipo — sincronice con ☁ Nube',true);return;}
+  if(!folioInScope(f)){notify('Folio fuera de la zona asignada a su perfil',true);return;}
+  selectFolio(id);
+}
+function spBitExport(){
+  const rows=spBitFiltered(spBitItems());
+  if(!rows.length){notify('Sin solicitudes para exportar con los filtros actuales',true);return;}
+  const H=['FOLIO','FECHA','HORA','PROVEEDOR','NUM. PROVEEDOR','TALLER','IMPORTE','MONEDA','TIPO DE SOLICITUD','AUTORIZA','FECHA AUTORIZACIÓN','ZONA','ACTIVO','PLACA','CECO','DEPARTAMENTO','ORDEN DE COMPRA','PROYECTO','IMPRESIONES','GENERADO POR','ESTADO EN NUBE'];
+  const data=[H,...rows.map(e=>{const d=new Date(e.fechaGen);const ok=!isNaN(d);return[
+    e.folio||'',ok?fmtFH(d,false):'',ok?spP2(d.getHours())+':'+spP2(d.getMinutes()):'',e.proveedor||'',e.numProveedor||'',e.taller||'',
+    Number(e.importe)||0,e.moneda||'',e.tipoPago||'',e.autoriza||'',spISOtoDMY(e.fechaAutorizacion),ZONA_LBL[e.zona]||e.zona||'',
+    e.activo||'',e.placa||'',e.ceco||'',e.depto||'',e.ordenCompra||'',e.proyecto||'',e.impresiones||1,e.rolLabel||e.rol||'',e._pend?'Pendiente':'Sincronizado'];})];
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  for(let r=1;r<=rows.length;r++){const cell=ws[XLSX.utils.encode_cell({r,c:6})];if(cell)cell.z='#,##0.00';}
+  ws['!cols']=[{wch:24},{wch:11},{wch:7},{wch:40},{wch:14},{wch:26},{wch:14},{wch:8},{wch:24},{wch:22},{wch:14},{wch:16},{wch:20},{wch:12},{wch:14},{wch:16},{wch:16},{wch:18},{wch:11},{wch:16},{wch:14}];
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:H.length-1}})};
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'BITACORA SOLPED');
+  const F=spBitF,zr=getRoleZona();
+  const tot={};rows.forEach(e=>{const m=e.moneda||'MXN';tot[m]=(tot[m]||0)+(Number(e.importe)||0);});
+  const crit=[['BITÁCORA DE SOLPED — COMPARATIVO DE PROVEEDORES IES'],[],
+    ['Generado por:',ROLES[currentRole]?.label||currentRole||'—'],['Fecha y hora:',fmtFH(new Date())],
+    ['Zona del perfil:',zr||'Todas (sin restricción)'],['Moneda:',F.moneda||'Todas'],
+    ['Rango de fechas (emisión):',(F.desde||F.hasta)?((F.desde||'inicio')+' a '+(F.hasta||'hoy')):'Sin rango'],
+    ['Búsqueda libre:',F.q||'—'],['Registros exportados:',rows.length],
+    ...Object.keys(tot).sort().map(m=>['Importe total '+m+':',Math.round(tot[m]*100)/100]),
+    [],['Número de cuenta, CLABE y facturas no se guardan ni se exportan.']];
+  const wsc=XLSX.utils.aoa_to_sheet(crit);wsc['!cols']=[{wch:30},{wch:44}];
+  XLSX.utils.book_append_sheet(wb,wsc,'PARÁMETROS');
+  XLSX.writeFile(wb,'Bitacora_SOLPED_'+(zr?zr+'_':'')+_ymdLocal(new Date())+'.xlsx');
+  notify('Excel exportado — '+rows.length+' solicitud'+(rows.length!==1?'es':''));
+}
+
+/* ── Fila en Captura ──────────────────────────────── */
+function genSolpedRow(f){
+  if(!can('capture'))return'';
+  const u=(f.solpedCfg||{}).ultima;
+  const sinGan=spGanadorIdx(f)===null;
+  const sub=u&&u.fecha?'Última emisión: '+fmtFH(new Date(u.fecha))+((u.impresiones||1)>1?' ('+u.impresiones+' impresiones)':'')
+    :'Formato FO-FIN-003 prellenado con el proveedor ganador, listo para imprimir o guardar en PDF.';
+  return`<div class="acc-card" id="acc-solped">
+    <div class="mail-row">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="font-size:16px">🧾</span>
+        <div><div class="acc-title">Solicitud de transferencia para pago</div><div class="mail-row-sub">${esc(sub)}</div></div>
+      </div>
+      <button class="btn btn-acc btn-sm" onclick="openSolped()"${sinGan?' title="Defina primero el proveedor ganador"':''}>🧾 Generar SOLPED</button>
+    </div>
+  </div>`;
+}
+
 /* ══════════════════════════════════════════
    HELPERS & INIT
 ══════════════════════════════════════════ */
@@ -3862,6 +4685,7 @@ function renderAll(){
   // Refresh dashboard if currently visible
   const db=document.getElementById('panel-dashboard');
   if(db&&db.style.display!=='none')renderResumen();
+  if(SP.open)spPaint(); // la hoja SOLPED refleja cambios recibidos en tiempo real
 }
 let nt;function notify(msg,err=false){const el=document.getElementById('notif');el.textContent=(err?'⚠ ':'✓ ')+msg;el.className='notif show'+(err?' err':'');clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3200);}
 
@@ -3898,6 +4722,7 @@ async function appStart(){
   activeId = firstVisibleId(); // respeta la segregación por zona del perfil activo
   startPolling(); // Activa el listener de tiempo real de Firebase
   initBitacora(); // Notificaciones en tiempo real (nodo hermano: ies-comparativos/bitacora)
+  initSolpedLog(); // Bitácora de SOLPED (nodo hermano: ies-comparativos/solped)
   renderSidebar();
   openDashboard();
   guardSearchAutofill();
