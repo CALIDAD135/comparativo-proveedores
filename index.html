@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Comparativo de Proveedores v4.4 — IES Internacional</title>
+<title>Comparativo de Proveedores v4.6 — IES Internacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 <!-- Firebase SDK v10 compat -->
@@ -671,6 +671,30 @@ body.sp-open{overflow:hidden}
   body.sp-open .sp-pair.vac{visibility:hidden}
 }
 
+/* ══════════════════════════════════════════
+   v4.6 — CATÁLOGO DE PROVEEDORES · buscador con sugerencias
+══════════════════════════════════════════ */
+.ta-list{position:fixed;z-index:700;display:none;max-height:310px;overflow-y:auto;background:rgba(255,255,255,.98);border:1px solid rgba(8,145,178,.28);border-radius:12px;box-shadow:0 14px 34px rgba(3,105,161,.20);padding:4px}
+.ta-list.open{display:block}
+.ta-opt{display:flex;align-items:flex-start;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:12px;color:#0c4a6e;line-height:1.3}
+.ta-opt.on,.ta-opt:hover{background:rgba(2,132,199,.10)}
+.ta-name{font-weight:600;overflow-wrap:anywhere}
+.ta-name b{color:#0369a1;background:rgba(2,132,199,.12);border-radius:3px}
+.ta-sub{font-size:10.5px;color:#2e7a92;margin-top:1px}
+.ta-new{border-top:1px solid rgba(8,145,178,.14);margin-top:3px;color:#047857;font-weight:700}
+.ta-empty{padding:9px 10px;font-size:11px;color:#2e7a92}
+.ta-num{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;color:#0369a1;background:rgba(2,132,199,.08);border:1px solid rgba(2,132,199,.24);border-radius:6px;padding:1px 6px;min-width:42px;text-align:center;flex:0 0 auto}
+.ta-num.nn{color:#6ea8be;background:transparent;border-style:dashed;font-weight:500}
+.sp-prov-act{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11px;line-height:1.35;color:#2e7a92;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.7);border:1px solid rgba(8,145,178,.14)}
+.sp-prov-act:empty{display:none}
+.sp-prov-act.dirty{background:rgba(2,132,199,.07);border-color:rgba(2,132,199,.38);color:#0c4a6e}
+.sp-prov-act .ok{color:#047857}
+#spNumProv{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.5px;opacity:1!important;color:#0369a1!important}
+.sp-upd{margin-top:1mm;font:700 10px/1.1 'Plus Jakarta Sans',sans-serif;color:#0369a1;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:7px;padding:3px 7px;cursor:pointer}
+.sp-upd:hover{background:#bae6fd}
+.sp-upd[hidden]{display:none}
+@media print{body.sp-open .sp-upd{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -1021,6 +1045,28 @@ body.sp-open{overflow:hidden}
       <button class="email-copy-btn" id="mgCopySubj" onclick="copyMailGen('subject')">📋 Copiar asunto</button>
       <button class="email-copy-btn" id="mgCopyBody" onclick="copyMailGen('body')">📋 Copiar cuerpo</button>
       <button class="btn btn-ghost" style="margin-left:auto" onclick="closeMailGen()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- v4.6 — VENTANA: PROVEEDOR DEL CATÁLOGO -->
+<div class="overlay" id="provCatModal">
+  <div class="modal" style="width:520px">
+    <h3 id="pcTitle">Proveedor</h3>
+    <p id="pcSub"></p>
+    <div class="fg" style="grid-template-columns:130px 1fr">
+      <div class="form-group"><label for="pcNum">Núm.</label><input type="text" id="pcNum" readonly tabindex="-1" style="font-family:'JetBrains Mono',monospace;font-weight:700"/></div>
+      <div class="form-group"><label for="pcRz">Razón social</label><input type="text" id="pcRz" maxlength="120" autocomplete="off" spellcheck="false"/></div>
+      <div class="form-group full"><label for="pcNC">Nombre comercial o taller</label><input type="text" id="pcNC" maxlength="80" autocomplete="off"/></div>
+      <div class="form-group"><label for="pcMon">Moneda</label><select id="pcMon"><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
+      <div class="form-group"><label for="pcBanco">Banco</label><input type="text" id="pcBanco" list="dlPcBancos" maxlength="60" autocomplete="off"/><datalist id="dlPcBancos"></datalist></div>
+    </div>
+    <div id="pcAlias" style="font-size:11px;color:#2e7a92;margin-top:8px"></div>
+    <div style="font-size:11px;color:#2e7a92;margin-top:6px">Número de cuenta y CLABE no se guardan en el catálogo; se capturan en cada SOLPED.</div>
+    <div id="pcMsg" style="font-size:11px;color:var(--red);min-height:16px;margin-top:6px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="pcCancel" onclick="closeProvCat()">Cancelar</button>
+      <button class="btn btn-acc" id="pcSave" onclick="provCatGuardar()">↻ Actualizar proveedor</button>
     </div>
   </div>
 </div>
@@ -1491,6 +1537,7 @@ async function activateCloud(){
   localStorage.setItem('ies_settings_v4',JSON.stringify(settings));
   initBitacora();
   initSolpedLog();
+  initProvCat();
   await syncCloud();
   openCloudModal();
 }
@@ -1973,7 +2020,7 @@ function genCP(f,i){
     </div>
     <div class="acc-body"><div class="acc-inner"><div class="fg">
       <div class="form-group"><label># Cot. Proveedor</label><input type="text" id="p${i}_numCot" value="${esc(p.numCot)}" placeholder="Texto libre" onchange="autoSave()"/></div>
-      <div class="form-group half"><label>Proveedor (Razón Social)</label>${dynSel('p'+i+'_rz','PROV_RZ',p.rz,'— Seleccionar proveedor —')}</div>
+      <div class="form-group half"><label for="p${i}_rz">Proveedor (Razón Social)</label><input type="text" id="p${i}_rz" data-ta="cap:${i}" value="${esc(p.rz)}" placeholder="Escriba el nombre o el número del proveedor" maxlength="120" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="taList" data-lpignore="true" data-1p-ignore="true" data-form-type="other" ${can('capture')?'':'readonly'}/><span class="calc-badge" id="p${i}_rzNum">${capProvBadgeTxt(f,i)}</span></div>
       <div class="form-group"><label>Marca</label><input type="text" id="p${i}_marca" value="${esc(p.marca)}" placeholder="Texto libre" onchange="autoSave()"/></div>
       <div class="form-group"><label>P.U. ($)</label><input type="number" id="p${i}_pu" value="${esc(p.pu)}" placeholder="0.00" step="0.01" oninput="autoSave();refreshCalcs()"/></div>
       <div class="form-group"><label>Subtotal ($)</label><input type="text" id="p${i}_sub" value="${c?fmt(c.sub):'$0.00'}" readonly/><span class="calc-badge">= P.U. × Cantidad</span></div>
@@ -2801,9 +2848,11 @@ function renderResumen(){
       </div>
       <div id="ftBody" class="ft-scroll"></div>
     </div>
+    ${provCardHtml()}
     ${spBitCardHtml()}`;
   refreshRegistro(false);
   spRenderBit();
+  provRenderCat();
   // Restaurar foco si el usuario escribía en un campo del dashboard al llegar una actualización en tiempo real
   if(_keepFocus){const el=document.getElementById(_keepFocus.id);if(el){el.focus();try{if(_keepFocus.pos!=null)el.setSelectionRange(_keepFocus.pos,_keepFocus.pos);}catch(e){}}}
   setTimeout(renderCharts,150);
@@ -3353,6 +3402,7 @@ function exportExcel(){
       ['Zona:',g.zona,'Unidad:',g.unidad,'Depto:',g.depto,'Cantidad:',g.cantidad,'U.M:',g.um],
       ['CECO:',g.ceco||'—','Placa:',g.placa||'—','Taller:',g.taller||'—'],[],
       ['CAMPO',...act.map(p=>p.rz||PLBL[p.idx])],
+      ['Núm. proveedor',...act.map(p=>{const r=provDeNombreONum(p.rz,p.numProv);return r?r.num:'—';})],
       ['# Cot.',...act.map(p=>p.numCot||'—')],['Marca',...act.map(p=>p.marca||'—')],
       ['P.U. ($)',...act.map(p=>parseFloat(p.pu)||0)],
       ['Subtotal ($)',...act.map(p=>d[p.idx]?.sub||0)],['IVA 16% ($)',...act.map(p=>d[p.idx]?.iva||0)],
@@ -3507,6 +3557,7 @@ function applyRole(role){
 function logoutRole(){
   if(!confirm('¿Cerrar sesión y cambiar de usuario?'))return;
   if(SP.open)closeSolped();
+  taClose();
   SP_VOL={}; // datos bancarios y facturas: se descartan al cerrar sesión
   currentRole=null;localStorage.removeItem('ies_role_v4');
   resetSearchBoxes();
@@ -3946,7 +3997,7 @@ function notifyInfo(msg){
 function closeAllModals(){
   let n=0;
   if(SP.open){closeSolped();n++;}
-  const closers={folioModal:closeFolioModal,adminModal:closeAdminModal,delCotModal:closeDelCotModal,cloudModal:closeCloudModal,previewModal:closePreview,mailGenModal:closeMailGen};
+  const closers={provCatModal:closeProvCat,folioModal:closeFolioModal,adminModal:closeAdminModal,delCotModal:closeDelCotModal,cloudModal:closeCloudModal,previewModal:closePreview,mailGenModal:closeMailGen};
   document.querySelectorAll('.overlay.open').forEach(o=>{
     const fn=closers[o.id];
     try{if(typeof fn==='function')fn();else o.classList.remove('open');}catch(e){o.classList.remove('open');}
@@ -3968,7 +4019,7 @@ document.addEventListener('keydown',e=>{
   const nw=document.querySelector('.add-new-row.show');
   if(nw){nw.classList.remove('show');e.preventDefault();return;}
   const ae=document.activeElement;
-  if(ae&&(ae.id==='sbSearch'||ae.id==='ftSearch'||ae.id==='spBitQ')&&ae.value){ae.value='';ae.dispatchEvent(new Event('input',{bubbles:true}));e.preventDefault();return;}
+  if(ae&&(ae.id==='sbSearch'||ae.id==='ftSearch'||ae.id==='spBitQ'||ae.id==='provCatQ')&&ae.value){ae.value='';ae.dispatchEvent(new Event('input',{bubbles:true}));e.preventDefault();return;}
   if(ae&&ae!==document.body&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ae.blur();e.preventDefault();return;}
   const pf=document.getElementById('panel-folio');
   if(pf&&getComputedStyle(pf).display!=='none'){openDashboard();e.preventDefault();}
@@ -3994,6 +4045,7 @@ function resetSearchBoxes(){
   SEARCH_BOX_IDS.forEach(id=>{const el=document.getElementById(id);if(el&&el.value){el.value='';changed=true;}});
   if(ftFilter.q){ftFilter.q='';changed=true;}
   if(spBitF.q){spBitF.q='';changed=true;}
+  if(provCatF.q){provCatF.q='';changed=true;}
   return changed;
 }
 // Algunos navegadores autocompletan unos instantes después de cargar: si un buscador
@@ -4011,11 +4063,414 @@ window.addEventListener('pageshow',e=>{if(e.persisted&&resetSearchBoxes()){rende
 
 
 /* ══════════════════════════════════════════
+   v4.6 — CATÁLOGO DE PROVEEDORES
+   · Se forma solo: cada proveedor que se captura (Captura o SOLPED) entra al catálogo
+     con el siguiente número consecutivo (0001, 0002, …). El número lo asigna el sistema
+     con una transacción en Firebase: dos usuarios no pueden recibir el mismo número ni
+     dar de alta dos veces el mismo proveedor.
+   · Nodo propio: ies-comparativos/proveedores { seq, items:{P0001:{…}} }
+     (claves con prefijo P para que Firebase no convierta el catálogo en arreglo).
+   · Datos del proveedor: núm., razón social, nombre comercial/taller, banco, moneda,
+     último tipo de solicitud y uso en SOLPED. Cuenta y CLABE NO se guardan (regla v4.4).
+   · Búsqueda mientras se escribe: por número o por nombre, sin acentos ni puntuación
+     y tolerante a errores de captura.
+══════════════════════════════════════════ */
+const PROV_PATH='ies-comparativos/proveedores';
+const PROV_CACHE_KEY='ies_prov_cat_v4';
+const PROV_PEND_KEY='ies_prov_pend_v4';
+let _provRef=null,_provCat={},_provState='connecting',_provInflight={},_provReady=false;
+try{_provCat=JSON.parse(localStorage.getItem(PROV_CACHE_KEY)||'{}')||{};}catch(e){_provCat={};}
+
+/* ── Normalización y consultas ────────────────────── */
+function provKey(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[.,'"´`]/g,'').replace(/[^A-Z0-9&]+/g,' ').trim();}
+function provNombre(s){return String(s||'').replace(/\s+/g,' ').trim().toUpperCase();}
+function provItems(){return Object.values(_provCat||{}).filter(x=>x&&x.num&&x.razonSocial).sort((a,b)=>String(a.num).localeCompare(String(b.num)));}
+function provPorNum(n){if(!n)return null;const x=(_provCat||{})['P'+String(n).replace(/\D/g,'').padStart(4,'0')];return x&&x.num?x:null;}
+function provPorNombre(name){
+  const k=provKey(name);if(!k)return null;
+  return provItems().find(x=>provKey(x.razonSocial)===k||(Array.isArray(x.alias)&&x.alias.some(a=>provKey(a)===k)))||null;
+}
+function provDeNombreONum(name,num){return (num&&provPorNum(num))||provPorNombre(name);}
+function provPendLoad(){try{const a=JSON.parse(localStorage.getItem(PROV_PEND_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
+function provPendSave(a){try{localStorage.setItem(PROV_PEND_KEY,JSON.stringify(a));}catch(e){}}
+function provEstado(name){ // 'asignando' | 'pendiente' | ''
+  const k=provKey(name);if(!k)return'';
+  if(_provInflight[k])return'asignando';
+  return provPendLoad().some(x=>provKey(x.name)===k)?'pendiente':'';
+}
+function provLev(a,b){
+  if(a===b)return 0;const m=a.length,n=b.length;if(!m)return n;if(!n)return m;
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur;}
+  return prev[n];
+}
+// Universo de búsqueda: catálogo (con número) + catálogo histórico de la app + proveedores usados en folios
+function provCandidatos(){
+  const m=new Map();
+  provItems().forEach(x=>{
+    m.set(provKey(x.razonSocial),{name:x.razonSocial,num:x.num,rec:x});
+    (Array.isArray(x.alias)?x.alias:[]).forEach(a=>{const k=provKey(a);if(k&&!m.has(k))m.set(k,{name:x.razonSocial,num:x.num,rec:x,alias:a});});
+  });
+  const otros=[...((DD_BASE&&DD_BASE.PROV_RZ)||[]),...((customOpts&&customOpts.PROV_RZ)||[])];
+  folios.forEach(f=>(f.prov||[]).forEach(p=>{if(p&&p.rz)otros.push(p.rz);}));
+  provPendLoad().forEach(x=>otros.push(x.name));
+  otros.forEach(n=>{const k=provKey(n);if(k&&!m.has(k))m.set(k,{name:String(n).replace(/\s+/g,' ').trim(),num:'',rec:null});});
+  return[...m.entries()].map(([k,v])=>({...v,key:k}));
+}
+function provBuscar(q,lim){
+  lim=lim||8;const qn=provKey(q);const C=provCandidatos();
+  if(!qn){ // sin texto: los más usados y recientes del catálogo
+    return C.filter(c=>c.num&&!c.alias).sort((a,b)=>(Number(b.rec.solpeds)||0)-(Number(a.rec.solpeds)||0)||String(b.rec.actualizado||'').localeCompare(String(a.rec.actualizado||''))).slice(0,lim);
+  }
+  const toks=qn.split(' ').filter(Boolean),digits=/^\d+$/.test(qn),res=[];
+  C.forEach(c=>{
+    let s=0;
+    if(digits&&c.num){if(Number(c.num)===Number(qn))s+=20;else if(c.num.includes(qn))s+=8;}
+    const words=c.key.split(' ');let ok=true,ns=0;
+    for(const t of toks){
+      const i=c.key.indexOf(t);
+      if(i===0)ns+=4;else if(i>0&&c.key[i-1]===' ')ns+=3;else if(i>0)ns+=1.5;
+      else{
+        let best=99;if(t.length>=4)for(const w of words)best=Math.min(best,provLev(w.slice(0,t.length),t));
+        if(t.length>=4&&best<=(t.length>=7?2:1))ns+=.7;else{ok=false;break;}
+      }
+    }
+    if(ok)s+=ns;
+    if(s<=0)return;
+    if(c.num)s+=.5;if(c.alias)s-=.3;
+    res.push({...c,score:s});
+  });
+  const seen=new Set(),out=[];
+  res.sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,'es')).forEach(r=>{const id=r.num||r.key;if(seen.has(id))return;seen.add(id);out.push(r);});
+  return out.slice(0,lim);
+}
+// Posible duplicado: nombre muy parecido a uno existente (errores de dedo, S.A./SA, etc.)
+function provParecido(name){
+  const k=provKey(name);if(k.length<5)return null;let best=null;
+  provCandidatos().forEach(c=>{
+    if(c.key===k)return;
+    const sim=1-provLev(c.key,k)/Math.max(c.key.length,k.length);
+    const cont=(c.key.includes(k)||k.includes(c.key))&&Math.min(c.key.length,k.length)>=6;
+    const s=cont?Math.max(sim,.9):sim;
+    if(s>=.85&&(!best||s>best.s))best={...c,s};
+  });
+  return best;
+}
+
+/* ── Alta con número consecutivo (transacción) ────── */
+function provAsegurar(name,datos){
+  const rz=provNombre(name),k=provKey(rz);
+  if(!k)return Promise.resolve(null);
+  const ex=provPorNombre(rz);if(ex)return Promise.resolve(ex.num);
+  if(_provInflight[k])return _provInflight[k];
+  if(!can('capture'))return Promise.resolve(null);
+  const r=ROLES[currentRole]||{},now=new Date().toISOString();
+  const limpio={};Object.entries(datos||{}).forEach(([a,b])=>{if(b!==undefined&&b!==null&&b!=='')limpio[a]=b;});
+  const quitarPend=()=>provPendSave(provPendLoad().filter(x=>provKey(x.name)!==k));
+  const pend=()=>{const a=provPendLoad();if(!a.some(x=>provKey(x.name)===k)){a.push({name:rz,datos:limpio,t:now});provPendSave(a);}};
+  if(!_provRef){pend();provOnChange();return Promise.resolve(null);}
+  const p=_provRef.transaction(cur=>{
+    cur=cur&&typeof cur==='object'?cur:{};
+    const items=(cur.items&&typeof cur.items==='object')?cur.items:{};
+    for(const id in items){const it=items[id];if(it&&(provKey(it.razonSocial)===k||(Array.isArray(it.alias)&&it.alias.some(a=>provKey(a)===k))))return; } // ya existe: aborta
+    const seq=(Number(cur.seq)||0)+1,num=String(seq).padStart(4,'0');
+    items['P'+num]={...limpio,num,razonSocial:rz,alta:now,altaPor:r.label||currentRole||'',actualizado:now,actualizadoPor:r.label||currentRole||'',solpeds:Number(limpio.solpeds)||0};
+    cur.items=items;cur.seq=seq;return cur;
+  }).then(res=>{
+    const v=(res&&res.snapshot&&res.snapshot.val())||{};
+    if(v.items&&typeof v.items==='object'){_provCat=v.items;provCacheSave();}
+    quitarPend();
+    const rec=provPorNombre(rz);
+    if(rec&&res&&res.committed&&rec.razonSocial===rz)notify('Proveedor nuevo en el catálogo: núm. '+rec.num+' — '+trunc(rz,40));
+    return rec?rec.num:null;
+  }).catch(e=>{
+    console.warn('[IES Proveedores] alta',e&&e.message);pend();
+    notify('Sin conexión con el catálogo: «'+trunc(rz,30)+'» recibirá su número al reconectar',true);
+    return null;
+  }).finally(()=>{delete _provInflight[k];provOnChange();});
+  _provInflight[k]=p;provOnChange();
+  return p;
+}
+async function provGuardar(num,cambios){
+  const key='P'+String(num).padStart(4,'0');
+  if(!can('capture')||!(_provCat||{})[key])return false;
+  const r=ROLES[currentRole]||{};
+  const up={...cambios,actualizado:new Date().toISOString(),actualizadoPor:r.label||currentRole||''};
+  _provCat[key]={..._provCat[key],...up};provCacheSave();provOnChange();
+  if(!_provRef)return false;
+  try{await _provRef.child('items/'+key).update(up);return true;}
+  catch(e){notify('No se pudo actualizar el proveedor '+num+': '+e.message,true);return false;}
+}
+function provCacheSave(){try{localStorage.setItem(PROV_CACHE_KEY,JSON.stringify(_provCat||{}));}catch(e){}}
+function initProvCat(){
+  if(_provRef){try{_provRef.off();}catch(e){}}
+  _provRef=null;_provReady=false;
+  if(!_fbDb){_provState='off';provOnChange();return;}
+  _provState='connecting';
+  try{
+    _provRef=_fbDb.ref(PROV_PATH);
+    _provRef.on('value',snap=>{
+      const v=snap.val()||{};
+      _provCat=(v.items&&typeof v.items==='object'&&!Array.isArray(v.items))?v.items:{};
+      provCacheSave();_provState='on';
+      if(!_provReady){_provReady=true;provPendLoad().forEach(x=>provAsegurar(x.name,x.datos));}
+      provOnChange();
+    },err=>{_provState='error';console.warn('[IES Proveedores]',err&&err.message);provOnChange();});
+  }catch(e){_provState='error';console.warn('[IES Proveedores]',e.message);}
+}
+// Refresca lo que depende del catálogo sin re-dibujar formularios en edición
+function provOnChange(){
+  clearTimeout(provOnChange._t);
+  provOnChange._t=setTimeout(()=>{
+    [0,1,2].forEach(capProvBadge);
+    if(typeof SP!=='undefined'&&SP.open)spPaint();
+    provRenderCat();
+    if(TA.el&&document.activeElement===TA.el)taOpen(TA.el);
+  },60);
+}
+
+/* ── Buscador con sugerencias (combobox) ──────────── */
+let TA={el:null,items:[],idx:-1,q:''};
+function taListEl(){let el=document.getElementById('taList');if(!el){el=document.createElement('div');el.id='taList';el.className='ta-list';el.setAttribute('role','listbox');document.body.appendChild(el);}return el;}
+function taHi(name,q){
+  let h=esc(name);const toks=provNombre(q).split(' ').filter(t=>t.length>=2).sort((a,b)=>b.length-a.length);
+  toks.forEach(t=>{const i=h.toUpperCase().indexOf(esc(t));if(i>=0)h=h.slice(0,i)+'<b>'+h.slice(i,i+esc(t).length)+'</b>'+h.slice(i+esc(t).length);});
+  return h;
+}
+function taOpen(el){
+  if(!el||el.readOnly||el.disabled)return;
+  TA.el=el;TA.q=el.value;
+  const items=provBuscar(el.value,8),qk=provKey(el.value);
+  const exacto=!!provPorNombre(el.value)||items.some(x=>x.key===qk);
+  TA.items=items.map(x=>({t:'p',...x}));
+  if(qk&&!exacto&&can('capture'))TA.items.push({t:'new',name:provNombre(el.value)});
+  TA.idx=-1;
+  el.setAttribute('aria-expanded','true');
+  taRender();
+}
+function taRender(){
+  const L=taListEl(),el=TA.el;if(!el)return;
+  if(!TA.items.length){
+    L.innerHTML=`<div class="ta-empty">${provKey(TA.q)?'Sin coincidencias en el catálogo.':(provItems().length?'Escriba el nombre o el número del proveedor.':'El catálogo está vacío: escriba el nombre del primer proveedor.')}</div>`;
+  }else{
+    L.innerHTML=TA.items.map((x,i)=>{
+      if(x.t==='new')return`<div class="ta-opt ta-new${i===TA.idx?' on':''}" role="option" id="ta-o${i}" data-i="${i}">＋ Agregar «${esc(x.name)}» como proveedor nuevo</div>`;
+      const est=!x.num?provEstado(x.name):'';
+      const sub=x.rec?[x.rec.nombreComercial,x.rec.banco].filter(Boolean).join(', ')+(x.alias?(x.rec.nombreComercial||x.rec.banco?'; ':'')+'antes «'+x.alias+'»':'')
+        :(est==='asignando'?'Asignando número…':est==='pendiente'?'Número pendiente (sin conexión)':'Sin número: se asigna al elegirlo');
+      return`<div class="ta-opt${i===TA.idx?' on':''}" role="option" id="ta-o${i}" data-i="${i}" aria-selected="${i===TA.idx}"><span class="ta-num${x.num?'':' nn'}">${x.num||'s/n'}</span><div style="min-width:0"><div class="ta-name">${taHi(x.name,TA.q)}</div>${sub?`<div class="ta-sub">${esc(sub)}</div>`:''}</div></div>`;
+    }).join('');
+  }
+  const r=el.getBoundingClientRect();
+  L.style.left=Math.max(6,Math.min(r.left,window.innerWidth-Math.max(r.width,300)-6))+'px';
+  L.style.width=Math.max(r.width,300)+'px';
+  L.classList.add('open');
+  const h=L.offsetHeight;
+  L.style.top=(r.bottom+4+h>window.innerHeight&&r.top-h-4>0?r.top-h-4:r.bottom+4)+'px';
+  if(TA.idx>=0){el.setAttribute('aria-activedescendant','ta-o'+TA.idx);document.getElementById('ta-o'+TA.idx)?.scrollIntoView({block:'nearest'});}
+  else el.removeAttribute('aria-activedescendant');
+}
+function taClose(){
+  const L=document.getElementById('taList');if(L)L.classList.remove('open');
+  if(TA.el){TA.el.setAttribute('aria-expanded','false');TA.el.removeAttribute('aria-activedescendant');}
+  TA.el=null;TA.items=[];TA.idx=-1;
+}
+function taPick(i){
+  const x=TA.items[i],el=TA.el;if(!x||!el)return;
+  taClose();
+  taCommit(el,{name:x.name,num:x.t==='new'?'':(x.num||''),nuevo:x.t==='new'});
+}
+function taCommitText(el){
+  if(!el||el.readOnly)return;
+  if(el.dataset.done===el.value)return;
+  const v=provNombre(el.value);
+  if(v===provNombre(el.dataset.v0||'')){el.dataset.done=el.value;return;}
+  if(!v){taCommit(el,{name:'',num:''});return;}
+  if(/^\d+$/.test(v)){ // solo dígitos: se interpreta como número de proveedor, nunca como alta
+    const rn=provPorNum(v);
+    if(rn){taCommit(el,{name:rn.razonSocial,num:rn.num});return;}
+    taRestaurar(el);notify('No hay proveedor con el número '+v+' en el catálogo',true);return;
+  }
+  if(v.length<3){taRestaurar(el);notify('Escriba al menos 3 letras del nombre del proveedor',true);return;}
+  const ex=provPorNombre(v);if(ex){taCommit(el,{name:ex.razonSocial,num:ex.num});return;}
+  const c=provCandidatos().find(c=>c.key===provKey(v));if(c){taCommit(el,{name:c.name,num:c.num||''});return;}
+  const par=provParecido(v);
+  if(par&&confirm(`¿Se refiere a «${par.name}»${par.num?' (núm. '+par.num+')':''}?\n\nAceptar: usar ese proveedor.\nCancelar: registrar «${v}» como proveedor nuevo.`)){taCommit(el,{name:par.name,num:par.num||''});return;}
+  taCommit(el,{name:v,num:'',nuevo:true});
+}
+function taRestaurar(el){const v0=el.dataset.v0||'';el.value=v0;el.dataset.done=v0;}
+function taCommit(el,sel){
+  if(sel.name)el.value=sel.name;
+  const ctx=el.dataset.ta||'';
+  if(ctx==='sp')spProvElegir(sel);
+  else if(ctx.indexOf('cap:')===0)capProvElegir(+ctx.split(':')[1],sel);
+  el.dataset.done=el.value;el.dataset.v0=el.value;
+}
+document.addEventListener('focusin',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.ta&&!el.readOnly){el.dataset.v0=el.value;el.dataset.done='';taOpen(el);}});
+document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.ta&&!el.readOnly){el.dataset.done='';taOpen(el);}});
+document.addEventListener('focusout',e=>{const el=e.target;if(!el||!el.dataset||!el.dataset.ta)return;setTimeout(()=>{if(TA.el===el)taClose();taCommitText(el);},0);});
+document.addEventListener('mousedown',e=>{const o=e.target.closest&&e.target.closest('#taList .ta-opt');if(!o)return;e.preventDefault();taPick(+o.dataset.i);},true);
+document.addEventListener('keydown',e=>{
+  const el=e.target;if(!el||!el.dataset||!el.dataset.ta||el.readOnly)return;
+  const L=document.getElementById('taList'),open=!!(L&&L.classList.contains('open')&&TA.el===el);
+  if(e.key==='ArrowDown'){if(!open)taOpen(el);else{TA.idx=Math.min(TA.items.length-1,TA.idx+1);taRender();}e.preventDefault();e.stopPropagation();}
+  else if(e.key==='ArrowUp'&&open){TA.idx=Math.max(-1,TA.idx-1);taRender();e.preventDefault();e.stopPropagation();}
+  else if(e.key==='Enter'){e.preventDefault();e.stopPropagation();if(open&&TA.idx>=0)taPick(TA.idx);else{taClose();taCommitText(el);}}
+  else if(e.key==='Escape'||e.key==='Esc'){ // Esc cancela la edición: regresa al valor anterior
+    const cambiado=el.value!==(el.dataset.v0||'');
+    if(open||cambiado){taClose();if(cambiado)taRestaurar(el);e.preventDefault();e.stopPropagation();}
+  }
+  else if(e.key==='Tab'&&open&&TA.idx>=0)taPick(TA.idx);
+},true);
+window.addEventListener('scroll',e=>{if(TA.el&&!(e.target&&e.target.id==='taList'))taRender();},true);
+window.addEventListener('resize',()=>{if(TA.el)taRender();});
+
+/* ── Captura: Proveedor 1/2/3 ─────────────────────── */
+function capProvBadgeTxt(f,i){
+  const p=f&&f.prov&&f.prov[i];if(!p||!p.rz)return'';
+  const rec=provDeNombreONum(p.rz,p.numProv);
+  if(rec)return'Núm. de proveedor <b>'+esc(rec.num)+'</b>';
+  const est=provEstado(p.rz);
+  return est==='asignando'?'Asignando número…':est==='pendiente'?'Número pendiente: se asigna al reconectar':'Sin número en el catálogo';
+}
+function capProvBadge(i){const f=getActive();const b=document.getElementById('p'+i+'_rzNum');if(f&&b)b.innerHTML=capProvBadgeTxt(f,i);}
+function capProvElegir(i,sel){
+  const f=getActive();if(!f||!f.prov[i])return;
+  const el=document.getElementById('p'+i+'_rz');
+  if(!sel.name||!can('capture')){if(el){el.value=f.prov[i].rz||'';el.dataset.done=el.value;el.dataset.v0=el.value;}return;}
+  f.prov[i].rz=sel.name;f.prov[i].numProv=sel.num||'';
+  autoSave();refreshCalcs();
+  const head=document.querySelector('#acc-p'+i+' .acc-title');if(head)head.textContent=PLBL[i]+' — '+trunc(sel.name,26);
+  capProvBadge(i);
+  if(!sel.num){
+    const fid=f.id;
+    provAsegurar(sel.name,{}).then(n=>{
+      if(!n)return;const ff=folios.find(x=>x.id===fid);
+      if(ff&&ff.prov[i]&&provKey(ff.prov[i].rz)===provKey(sel.name)){ff.prov[i].numProv=n;ss();}
+      capProvBadge(i);
+    });
+  }
+}
+
+/* ── Dashboard: Catálogo de proveedores ───────────── */
+let provCatF={q:''};
+function provCardHtml(){
+  return`<div class="full-table-wrap" id="provCatWrap">
+      <div class="ft-head">
+        <div class="ft-head-l">
+          <span class="ft-title">Catálogo de proveedores (<span id="provCatN">0</span>)</span>
+          <span class="ft-count" id="provCatCount"></span>
+        </div>
+        <div class="ft-tools">
+          ${can('capture')?'<button class="btn btn-ghost btn-sm" onclick="provCatAbrir(\'\')">＋ Nuevo proveedor</button>':''}
+          <button class="btn btn-green btn-sm" onclick="provCatExport()" title="Exporta los proveedores visibles">⬇ Exportar a Excel</button>
+        </div>
+      </div>
+      <div class="ft-filters">
+        <div class="ft-search">🔍 <input type="search" id="provCatQ" name="ies-prov-buscar" aria-label="Buscar en el catálogo de proveedores" placeholder="Número, razón social, banco..." value="${esc(provCatF.q)}" oninput="provCatF.q=this.value;provRenderCat()" onsearch="provCatF.q=this.value;provRenderCat()" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"/></div>
+      </div>
+      <div id="provCatBody" class="ft-scroll"></div>
+    </div>`;
+}
+function provCatFiltrados(){
+  const q=provKey(provCatF.q);const all=provItems();
+  if(!q)return{all,rows:all};
+  const toks=q.split(' ');
+  return{all,rows:all.filter(x=>{const hay=provKey([x.num,x.razonSocial,x.nombreComercial,x.banco,...(Array.isArray(x.alias)?x.alias:[])].join(' '));return toks.every(t=>hay.includes(t));})};
+}
+function provRenderCat(){
+  const body=document.getElementById('provCatBody');if(!body)return;
+  const {all,rows}=provCatFiltrados(),pend=provPendLoad();
+  const n=document.getElementById('provCatN');if(n)n.textContent=all.length;
+  const c=document.getElementById('provCatCount');if(c)c.textContent=rows.length!==all.length?'Mostrando '+rows.length+' de '+all.length:(pend.length?pend.length+' por numerar (sin conexión)':'');
+  const empty=msg=>`<div style="padding:24px 16px;text-align:center;font-size:12px;color:var(--muted)">${msg}</div>`;
+  if(!all.length){body.innerHTML=empty(_provState==='error'?'El catálogo no está disponible: revise que las reglas de Firebase permitan lectura y escritura en <strong>ies-comparativos/proveedores</strong>.':'El catálogo se forma solo: el primer proveedor que capture en un folio o en una SOLPED recibirá el número <strong>0001</strong>.');return;}
+  if(!rows.length){body.innerHTML=empty('Ningún proveedor coincide con la búsqueda.');return;}
+  const th=(h,al)=>`<th style="padding:8px 8px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;text-align:${al||'left'}">${h}</th>`;
+  const td='padding:7px 8px;border-bottom:1px solid var(--bd)';
+  body.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr>${th('Núm.')}${th('Razón social')}${th('Nombre comercial o taller')}${th('Banco')}${th('Moneda')}${th('SOLPED','center')}${th('Última SOLPED')}${th('Actualizado')}</tr></thead>
+    <tbody>${rows.map(x=>`<tr style="cursor:pointer" onclick="provCatAbrir('${esc(x.num)}')" title="${can('capture')?'Ver y editar':'Ver'} los datos del proveedor">
+      <td style="${td}"><span class="ta-num">${esc(x.num)}</span></td>
+      <td style="${td};font-size:11.5px;font-weight:600;max-width:280px">${esc(x.razonSocial)}</td>
+      <td style="${td};font-size:11px;color:var(--dim)">${esc(x.nombreComercial||'—')}</td>
+      <td style="${td};font-size:11px">${esc(x.banco||'—')}</td>
+      <td style="${td};font-size:11px">${esc(x.moneda||'MXN')}</td>
+      <td style="${td};text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px">${Number(x.solpeds)||0}</td>
+      <td style="${td};font-size:11px;white-space:nowrap">${x.ultimaSolped?fmtFH(new Date(x.ultimaSolped),false):'—'}</td>
+      <td style="${td};font-size:11px;white-space:nowrap;color:var(--dim)">${x.actualizado?fmtFH(new Date(x.actualizado),false):'—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function provCatExport(){
+  const {rows}=provCatFiltrados();
+  if(!rows.length){notify('Sin proveedores para exportar',true);return;}
+  const H=['NÚM.','RAZÓN SOCIAL','NOMBRE COMERCIAL O TALLER','BANCO','MONEDA','ÚLTIMO TIPO DE SOLICITUD','SOLPED EMITIDAS','ÚLTIMA SOLPED','ÚLTIMO FOLIO','ALTA','ALTA POR','ACTUALIZADO','ACTUALIZADO POR','NOMBRES ANTERIORES'];
+  const tl=k=>{const t=SP_TIPOS.find(t=>t.k===k);return t?t.l:'';};
+  const fd=s=>{const d=new Date(s);return s&&!isNaN(d)?fmtFH(d):'';};
+  const data=[H,...rows.map(x=>[x.num,x.razonSocial,x.nombreComercial||'',x.banco||'',x.moneda||'MXN',tl(x.tipoPago),Number(x.solpeds)||0,fd(x.ultimaSolped),x.ultimoFolio||'',fd(x.alta),x.altaPor||'',fd(x.actualizado),x.actualizadoPor||'',(Array.isArray(x.alias)?x.alias:[]).join(' | ')])];
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  for(let r=1;r<=rows.length;r++){const cell=ws[XLSX.utils.encode_cell({r,c:0})];if(cell){cell.t='s';cell.v=String(rows[r-1].num);}}
+  ws['!cols']=[{wch:7},{wch:44},{wch:30},{wch:18},{wch:8},{wch:26},{wch:10},{wch:17},{wch:24},{wch:17},{wch:16},{wch:17},{wch:16},{wch:30}];
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:H.length-1}})};
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'PROVEEDORES');
+  XLSX.writeFile(wb,'Catalogo_Proveedores_'+_ymdLocal(new Date())+'.xlsx');
+  notify('Excel exportado — '+rows.length+' proveedor'+(rows.length!==1?'es':''));
+}
+
+/* ── Ventana: ver / editar / dar de alta ──────────── */
+let _pcNum='';
+function provCatAbrir(num){
+  const rec=num?provPorNum(num):null;
+  if(num&&!rec){notify('El proveedor '+num+' no está en el catálogo',true);return;}
+  if(!num&&!can('capture'))return;
+  _pcNum=rec?rec.num:'';
+  const ed=can('capture');
+  const set=(id,v)=>{const el=document.getElementById(id);if(el){el.value=v||'';el.readOnly=!ed&&el.tagName!=='SELECT';if(el.tagName==='SELECT')el.disabled=!ed;}};
+  document.getElementById('pcTitle').textContent=rec?'Proveedor '+rec.num:'Nuevo proveedor';
+  document.getElementById('pcSub').textContent=rec
+    ?('Alta: '+(rec.alta?fmtFH(new Date(rec.alta)):'—')+(rec.altaPor?' por '+rec.altaPor:'')+'. Última actualización: '+(rec.actualizado?fmtFH(new Date(rec.actualizado)):'—')+(rec.actualizadoPor?' por '+rec.actualizadoPor:'')+'.')
+    :'El sistema le asigna el siguiente número consecutivo al guardar.';
+  set('pcNum',rec?rec.num:'Se asigna al guardar');document.getElementById('pcNum').readOnly=true;
+  set('pcRz',rec?rec.razonSocial:'');set('pcNC',rec?rec.nombreComercial:'');set('pcBanco',rec?rec.banco:'');set('pcMon',rec?(rec.moneda||'MXN'):'MXN');
+  const dl=document.getElementById('dlPcBancos');if(dl)dl.innerHTML=[...new Set([...provItems().map(x=>x.banco).filter(Boolean),...SP_BANCOS])].map(v=>`<option value="${esc(v)}">`).join('');
+  const al=rec&&Array.isArray(rec.alias)&&rec.alias.length?'Nombres anteriores: '+rec.alias.join(', ')+'.':'';
+  document.getElementById('pcAlias').textContent=al;
+  document.getElementById('pcMsg').textContent='';
+  const sv=document.getElementById('pcSave');sv.style.display=ed?'':'none';sv.textContent=rec?'↻ Actualizar proveedor':'＋ Agregar al catálogo';
+  document.getElementById('pcCancel').textContent=ed?'Cancelar':'Cerrar';
+  document.getElementById('provCatModal').classList.add('open');
+  if(ed)setTimeout(()=>document.getElementById(rec?'pcNC':'pcRz')?.focus(),60);
+}
+function closeProvCat(){document.getElementById('provCatModal')?.classList.remove('open');_pcNum='';}
+async function provCatGuardar(){
+  if(!can('capture'))return;
+  const msg=document.getElementById('pcMsg');
+  const rz=provNombre(document.getElementById('pcRz').value);
+  const datos={nombreComercial:document.getElementById('pcNC').value.replace(/\s+/g,' ').trim(),banco:document.getElementById('pcBanco').value.replace(/\s+/g,' ').trim(),moneda:document.getElementById('pcMon').value||'MXN'};
+  if(!rz){msg.textContent='Capture la razón social.';document.getElementById('pcRz').focus();return;}
+  const otro=provPorNombre(rz);
+  if(otro&&otro.num!==_pcNum){msg.textContent='Ya existe en el catálogo como proveedor '+otro.num+' ('+otro.razonSocial+').';return;}
+  if(_pcNum){
+    const rec=provPorNum(_pcNum),cambios={...datos};
+    if(rz!==rec.razonSocial){cambios.razonSocial=rz;cambios.alias=[...new Set([...(Array.isArray(rec.alias)?rec.alias:[]),rec.razonSocial])].filter(a=>provKey(a)!==provKey(rz));}
+    const n=_pcNum;closeProvCat();
+    if(await provGuardar(n,cambios))notify('Proveedor '+n+' actualizado en el catálogo');
+  }else{
+    if(!_provRef){msg.textContent='Sin conexión con Firebase: no se puede asignar el número ahora.';return;}
+    const par=provParecido(rz);
+    if(par&&!confirm(`Ya existe un proveedor muy parecido: «${par.name}»${par.num?' (núm. '+par.num+')':''}.\n\n¿Registrar de todos modos «${rz}» como proveedor nuevo?`))return;
+    closeProvCat();
+    await provAsegurar(rz,datos);
+  }
+}
+
+/* ══════════════════════════════════════════
    v4.4 — SOLPED · SOLICITUD DE TRANSFERENCIA PARA PAGO (FO-FIN-003)
    · El formato se prellena con el folio y el proveedor ganador; la hoja A4 se
      actualiza en tiempo real y admite corrección directa antes de imprimir.
    · SE GUARDAN en el folio (f.solpedCfg → Firebase vía sync): # de proveedor,
-     tipo de solicitud, moneda, banco, orden de compra, proyecto y fecha de autorización.
+     tipo de solicitud, moneda, banco, orden de compra y fecha de autorización.
+   · CECO (casilla que sustituye a PROYECTO): es el campo del folio en Información General.
    · NO SE GUARDAN (memoria de la sesión, SP_VOL): número de cuenta, CLABE y facturas.
      Nunca van a localStorage, a Firebase, a la bitácora ni al Excel.
    · Bitácora: nodo hermano ies-comparativos/solped (no lo toca el set() de v4).
@@ -4028,9 +4483,10 @@ const SP_TIPOS=[{k:'SERVICIO_TERCEROS',l:'SERVICIO DE TERCEROS'},{k:'REFACCIONES
 const SP_MONEDAS={MXN:'MXN (PESO MEXICANO)',USD:'USD (DÓLAR ESTADOUNIDENSE)'};
 const SP_LUGAR={CANCUN:'Cancún, Quintana Roo',PDC:'Playa del Carmen, Quintana Roo',CABOS:'Los Cabos, Baja California Sur'};
 const SP_FIRMAS={firmaRecibe:'Lic. Marina Ramirez Pech',firmaGerente:'Lic. Alejandra Pardo Cantu',firmaAutoriza:'Ing. Ana Ferrer Lugo'};
-const SP_PERSIST=['numProveedor','tipoPago','moneda','banco','ordenCompra','proyecto','fechaAutorizacion'];
+const SP_PERSIST=['numProveedor','tipoPago','moneda','banco','ordenCompra','fechaAutorizacion'];
+const SP_GENERAL=['ceco']; // campos del folio (Información General) editables desde la SOLPED
 const SP_VOLATIL=['cuenta','clabe','facturas'];
-const SP_OV_LBL={lugar:'lugar',fecha:'fecha',hora:'hora',persona:'persona que solicita',depto:'depto.',razon:'razón social',concepto:'concepto',importeNum:'importe en número',importeLetra:'importe en letra',requisicion:'requisición',motivo:'motivo',firmaRecibe:'firma de recibe',firmaGerente:'firma de gerente',firmaAutoriza:'firma de autorización',fechaAut:'fecha de autorización'};
+const SP_OV_LBL={ceco:'CECO',lugar:'lugar',fecha:'fecha',hora:'hora',persona:'persona que solicita',depto:'depto.',razon:'razón social',concepto:'concepto',importeNum:'importe en número',importeLetra:'importe en letra',requisicion:'requisición',motivo:'motivo',firmaRecibe:'firma de recibe',firmaGerente:'firma de gerente',firmaAutoriza:'firma de autorización',fechaAut:'fecha de autorización'};
 const SP_BANCOS_CLABE={'002':'BANAMEX','012':'BBVA MÉXICO','014':'SANTANDER','021':'HSBC','030':'BANBAJÍO','036':'INBURSA','042':'MIFEL','044':'SCOTIABANK','058':'BANREGIO','059':'INVEX','062':'AFIRME','072':'BANORTE','127':'BANCO AZTECA','130':'COMPARTAMOS','137':'BANCOPPEL','646':'STP'};
 const SP_BANCOS=['BBVA MÉXICO','BANAMEX','SANTANDER','BANORTE','HSBC','SCOTIABANK','INBURSA','BANBAJÍO','BANREGIO','AFIRME','BANCO AZTECA','BANCOPPEL'];
 let SP={open:false};
@@ -4068,16 +4524,6 @@ function placaDeUnidad(unidad,exceptId){
   return best?best.p:'';
 }
 function spPlaca(f){const g=f.general||{};if(getAssetType(f)!=='VEHICULO')return'';return g.placa||placaDeUnidad(g.unidad,f.id);}
-// Último dato capturado para el mismo proveedor en otro folio (# de proveedor, banco)
-function spHistProv(rz,key,exceptId){
-  if(!rz)return'';let best=null;
-  folios.forEach(x=>{
-    if(!x||x.id===exceptId||!x.solpedCfg||!x.solpedCfg[key])return;
-    const gi=spGanadorIdx(x);if(gi===null||x.prov[gi].rz!==rz)return;
-    const t=Date.parse(x.updatedAt||x.createdAt||0)||0;if(!best||t>best.t)best={t,v:x.solpedCfg[key]};
-  });
-  return best?best.v:'';
-}
 function spUniq(fn){return[...new Set(folios.map(x=>{try{return fn(x);}catch(e){return'';}}).filter(v=>v&&String(v).trim()))].sort((a,b)=>String(a).localeCompare(String(b),'es'));}
 function spTipoDefault(f){
   const t=String((f.general||{}).tipo||'').toUpperCase();const veh=getAssetType(f)==='VEHICULO';
@@ -4089,6 +4535,23 @@ function spTipoDefault(f){
 function spMotivo(f){
   const g=f.general||{};const z=folioZona(f);
   return[getAssetName(f),z?(ZONA_LBL[z]||z):(g.zona||''),spPlaca(f),g.depto,String(g.justificacion||'').replace(/\s+/g,' ').trim()].filter(Boolean).join(' - ');
+}
+
+// Proveedor de la SOLPED en el catálogo (por número del ganador o por nombre)
+function spProvRec(f){
+  if(!SP.open||!f)return null;
+  const gi=spGanadorIdx(f),gan=gi!==null?f.prov[gi]:null;
+  const mismo=gan&&provKey(gan.rz)===provKey(SP.provRz);
+  return provDeNombreONum(SP.provRz,mismo?gan.numProv:'');
+}
+// Diferencias entre lo capturado en la SOLPED y la ficha del catálogo
+function spProvCambios(f){
+  const rec=spProvRec(f);if(!rec)return[];
+  const cfg=spCfg(f),ch=[];
+  if(provKey(cfg.banco)!==provKey(rec.banco))ch.push('banco');
+  if(String(SP.provNC||'').replace(/\s+/g,' ').trim()!==String(rec.nombreComercial||'').trim())ch.push('nombre comercial');
+  if((cfg.moneda||'MXN')!==(rec.moneda||'MXN'))ch.push('moneda');
+  return ch;
 }
 
 /* ── Fechas ───────────────────────────────────────── */
@@ -4146,6 +4609,7 @@ function spVals(f){
   const has=k=>Object.prototype.hasOwnProperty.call(ov,k);
   const gi=spGanadorIdx(f),p=gi!==null?f.prov[gi]:null;
   const moneda=cfg.moneda||'MXN';
+  const rec=spProvRec(f),est=rec?'':provEstado(SP.provRz);
   const importe=(has('importeNum')&&isFinite(ov.importeNum))?ov.importeNum:(spTotalFolio(f)||0);
   const z=folioZona(f);
   const d={
@@ -4154,14 +4618,14 @@ function spVals(f){
     hora:has('hora')?ov.hora:spHora(SP.ts),
     persona:has('persona')?ov.persona:(g.gestor||''),
     depto:has('depto')?ov.depto:'ACTIVOS FIJOS',
-    numProveedor:cfg.numProveedor||'',
-    razon:has('razon')?ov.razon:(p?(p.rz||''):''),
+    numProveedor:rec?rec.num:'',
+    razon:has('razon')?ov.razon:(SP.provRz||''),
     concepto:has('concepto')?ov.concepto:String(g.descripcion||f.desc||'').trim(),
     importeNum:fmt(importe),
     importeLetra:has('importeLetra')?ov.importeLetra:importeEnLetra(importe,moneda),
     moneda:SP_MONEDAS[moneda]||moneda,
     cuenta:vol.cuenta||'',clabe:vol.clabe||'',facturas:vol.facturas||'',
-    banco:cfg.banco||'',ordenCompra:cfg.ordenCompra||'',proyecto:cfg.proyecto||'',
+    banco:cfg.banco||'',ordenCompra:cfg.ordenCompra||'',ceco:g.ceco||'',
     requisicion:has('requisicion')?ov.requisicion:(f.name||''),
     motivo:has('motivo')?ov.motivo:spMotivo(f),
     firmaRecibe:has('firmaRecibe')?ov.firmaRecibe:SP_FIRMAS.firmaRecibe,
@@ -4169,10 +4633,10 @@ function spVals(f){
     firmaAutoriza:has('firmaAutoriza')?ov.firmaAutoriza:SP_FIRMAS.firmaAutoriza,
     fechaAut:has('fechaAut')?ov.fechaAut:spISOtoDMY(cfg.fechaAutorizacion)
   };
-  const raw={numProveedor:cfg.numProveedor||'',tipoPago:cfg.tipoPago||'',moneda,banco:cfg.banco||'',
-    ordenCompra:cfg.ordenCompra||'',proyecto:cfg.proyecto||'',fechaAutorizacion:cfg.fechaAutorizacion||'',
+  const raw={numProveedor:rec?rec.num:(est==='asignando'?'Asignando…':est==='pendiente'?'Por asignar':''),provRz:SP.provRz||'',provNC:SP.provNC||'',tipoPago:cfg.tipoPago||'',moneda,banco:cfg.banco||'',
+    ordenCompra:cfg.ordenCompra||'',ceco:g.ceco||'',fechaAutorizacion:cfg.fechaAutorizacion||'',
     cuenta:vol.cuenta||'',clabe:vol.clabe||'',facturas:vol.facturas||''};
-  return{d,raw,importe,moneda,tipoPago:cfg.tipoPago||'',gi,p};
+  return{d,raw,importe,moneda,tipoPago:cfg.tipoPago||'',gi,p,rec,est};
 }
 
 /* ── Plantillas ───────────────────────────────────── */
@@ -4193,7 +4657,7 @@ function spSheetHtml(){
   ${C('ctr',3,5.9,spE('lugar','Lugar'))}${C('ctr',2,5.9,spE('fecha','dd/mm/aaaa'))}${C('ctr',1,5.9,spE('hora','hh:mm'))}
   ${C('l',1,10.7,'PERSONA QUE SOLICITA')}${C('',1,10.7,spE('persona','Nombre'))}${C('l ctr',2,10.7,'DEPTO')}${C('ctr',2,10.7,'<b style="width:100%">'+spE('depto','Departamento')+'</b>')}
   ${C('b',6,6.8,'Datos para pago')}
-  ${C('l',1,12.7,'NUM PROVEEDOR MPROO')}${C('',1,12.7,spE('numProveedor','Capturar'))}${C('l ctr',2,12.7,'NOMBRE Y/O RAZON SOCIAL')}${C('',2,12.7,spE('razon','Razón social'))}
+  ${C('l',1,12.7,'NUM PROVEEDOR MPROO')}${C('',1,12.7,'<span class="sp-e" data-k="numProveedor" data-ph="Por asignar" title="Número asignado por el catálogo de proveedores"></span><button type="button" class="sp-upd" id="spUpdChip" onclick="spProvActualizar()" title="Guarda en el catálogo los datos del proveedor capturados en esta SOLPED" hidden>↻ Actualizar proveedor</button>','flex-wrap:wrap;align-content:center')}${C('l ctr',2,12.7,'NOMBRE Y/O RAZON SOCIAL')}${C('',2,12.7,spE('razon','Razón social'))}
   <div class="sp-c l" style="grid-column:span 1;grid-row:span 2">PAGO DE</div>
   ${opt(SP_TIPOS[0],1)}${opt(SP_TIPOS[1],2)}${opt(SP_TIPOS[2],1)}${opt(SP_TIPOS[3],1)}
   ${C('',5,7,'<b style="margin-right:1.6mm;white-space:nowrap">Concepto:</b>'+spE('concepto','Descripción del artículo o servicio',1))}
@@ -4206,7 +4670,7 @@ function spSheetHtml(){
   ${C('l',1,6.1,'BANCO')}${C('',5,6.1,spE('banco','Banco'))}
   ${C('b',6,6.8,'Referencia para pago')}
   ${C('l',1,11,'ORDEN DE COMPRA')}${C('',1,11,spE('ordenCompra','Capturar'))}${C('l ctr',2,11,'REQUISICION')}${C('',2,11,spE('requisicion','Folio'))}
-  ${C('l',1,6.1,'PROYECTO')}${C('',1,6.1,spE('proyecto','Capturar'))}${C('l ctr',2,6.1,'FACTURA(S)')}${C('',2,6.1,spE('facturas','Capturar'))}
+  ${C('l',1,6.1,'CECO')}${C('',1,6.1,spE('ceco','Capturar'))}${C('l ctr',2,6.1,'FACTURA(S)')}${C('',2,6.1,spE('facturas','Capturar'))}
   ${C('l ctr',1,18.6,'MOTIVO')}${C('',5,18.6,spE('motivo','Motivo',1))}
   ${C('b',6,6.8,'F I R M A S')}
   ${C('l ctr',2,12,'<span style="font-size:9.5pt">Recibe Solicitud</span>')}${C('l ctr',2,12,'<span style="font-size:9.5pt">Gerente o Jefe departamental</span>')}${C('l ctr',2,12,'<span style="font-size:9.5pt">Autorizacion administracion y/o contraloria</span>')}
@@ -4221,12 +4685,20 @@ function spLeftHtml(){
   <div id="spWarns"></div>
   <div id="spOvBar" class="sp-ovbar" style="display:none"></div>
   <div class="sp-sec">
+    <div class="sp-sec-t">Proveedor</div>
+    <div class="fg">
+      <div class="form-group full"><label for="spProvRz">Proveedor (nombre o número)</label><input type="text" id="spProvRz" data-ta="sp" data-sp="provRz" maxlength="120" autocomplete="off" spellcheck="false" placeholder="Escriba para buscar en el catálogo" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="taList" data-lpignore="true" data-1p-ignore="true" data-form-type="other"/><div class="sp-hint" id="spProvRzHint"></div></div>
+      <div class="form-group"><label for="spNumProv">Núm. de proveedor</label><input type="text" id="spNumProv" data-sp="numProveedor" readonly tabindex="-1" title="Lo asigna el sistema de forma consecutiva"/></div>
+      ${inp('spBanco','banco','Banco','maxlength="60" list="dlSpBancos" placeholder="Ej. BBVA MÉXICO"')}
+      ${inp('spProvNC','provNC','Nombre comercial o taller','maxlength="80"',1)}
+    </div>
+    <div class="sp-prov-act" id="spProvAct"></div>
+  </div>
+  <div class="sp-sec">
     <div class="sp-sec-t">Datos para pago</div>
     <div class="fg">
-      ${inp('spNumProv','numProveedor','Núm. de proveedor','maxlength="30" placeholder="MPROO"')}
       <div class="form-group"><label for="spTipo">Tipo de solicitud</label><select id="spTipo" data-sp="tipoPago" onchange="spFromLeft(this)"><option value="">— Seleccionar —</option>${SP_TIPOS.map(t=>`<option value="${t.k}">${esc(t.l)}</option>`).join('')}</select></div>
       <div class="form-group"><label for="spMoneda">Moneda</label><select id="spMoneda" data-sp="moneda" onchange="spFromLeft(this)"><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
-      ${inp('spBanco','banco','Banco','maxlength="60" list="dlSpBancos" placeholder="Ej. BBVA MÉXICO"')}
     </div>
   </div>
   <div class="sp-sec">
@@ -4240,7 +4712,7 @@ function spLeftHtml(){
     <div class="sp-sec-t">Referencia para pago</div>
     <div class="fg">
       ${inp('spOC','ordenCompra','Orden de compra','maxlength="40"')}
-      ${inp('spProyecto','proyecto','Proyecto','maxlength="60" list="dlSpProyectos"')}
+      ${inp('spCeco','ceco','CECO','maxlength="40" list="dlSpCeco" placeholder="Centro de costos"')}
       ${inp('spFacturas','facturas','Factura(s)','maxlength="80" placeholder="Ej. A-1234, A-1235"',1,1)}
     </div>
   </div>
@@ -4250,9 +4722,9 @@ function spLeftHtml(){
       <div class="form-group full"><label for="spFechaAut">Fecha de autorización</label><input type="date" id="spFechaAut" data-sp="fechaAutorizacion" onchange="spFromLeft(this)"/><div class="sp-hint">Aparece bajo la firma de autorización. Si la deja vacía, se imprime una línea para llenarla a mano.</div></div>
     </div>
   </div>
-  <div class="sp-legend">Lo que capture en este panel se guarda en el folio y viaja a la nube, salvo los campos con 🔒: viven solo en esta sesión y nunca se envían a Firebase ni a la bitácora.<br><br>Los datos que vienen del folio (lugar, proveedor, importe, concepto, motivo y firmas) se corrigen directamente sobre la hoja; esas correcciones valen solo para esta impresión.</div>
-  ${dl('dlSpBancos',[...new Set([...spUniq(x=>x.solpedCfg&&x.solpedCfg.banco),...SP_BANCOS])])}
-  ${dl('dlSpProyectos',spUniq(x=>x.solpedCfg&&x.solpedCfg.proyecto))}`;
+  <div class="sp-legend">Lo que capture en este panel se guarda en el folio y viaja a la nube (el CECO es el mismo de Información General), salvo los campos con 🔒: viven solo en esta sesión y nunca se envían a Firebase, al catálogo ni a la bitácora.<br><br>Al imprimir o guardar el PDF, el catálogo de proveedores se actualiza solo con el banco, el nombre comercial y la moneda de esta SOLPED.<br><br>Los datos que vienen del folio (lugar, proveedor, importe, concepto, motivo y firmas) se corrigen directamente sobre la hoja; esas correcciones valen solo para esta impresión.</div>
+  ${dl('dlSpBancos',[...new Set([...provItems().map(x=>x.banco).filter(Boolean),...spUniq(x=>x.solpedCfg&&x.solpedCfg.banco),...SP_BANCOS])])}
+  ${dl('dlSpCeco',spUniq(x=>x.general&&x.general.ceco))}`;
 }
 
 /* ── Abrir / cerrar ───────────────────────────────── */
@@ -4264,9 +4736,18 @@ function openSolped(id){
   const gi=spGanadorIdx(f);
   if(gi===null){notify('Defina el proveedor ganador en «Decisión y Autorización» antes de generar la SOLPED',true);return;}
   if(SP.open)closeSolped();
-  const cfg=spCfg(f),rz=f.prov[gi].rz;
-  SP={open:true,folioId:f.id,ts:new Date(),ov:{},key:null,impresiones:0,dirty:false,hist:[],_t:null,_title:null};
-  ['numProveedor','banco'].forEach(k=>{if(!cfg[k]){const h=spHistProv(rz,k,f.id);if(h){cfg[k]=h;SP.hist.push(k);SP.dirty=true;}}});
+  const cfg=spCfg(f),gan=f.prov[gi];
+  SP={open:true,folioId:f.id,ts:new Date(),ov:{},key:null,impresiones:0,dirty:false,hist:[],_t:null,_title:null,provRz:'',provNC:''};
+  // Proveedor: el ganador (o el elegido antes en esta SOLPED) con sus datos del catálogo
+  SP.provRz=cfg.provRz||gan.rz||'';
+  const rec=provDeNombreONum(SP.provRz,cfg.provRz?'':gan.numProv);
+  if(rec){
+    if(!cfg.banco&&rec.banco){cfg.banco=rec.banco;SP.hist.push('banco');SP.dirty=true;}
+    if(!cfg.moneda&&rec.moneda){cfg.moneda=rec.moneda;SP.dirty=true;}
+    if(!cfg.tipoPago&&rec.tipoPago){cfg.tipoPago=rec.tipoPago;SP.dirty=true;}
+    if(!cfg.provRz&&gan.numProv!==rec.num){gan.numProv=rec.num;SP.dirty=true;}
+  }
+  SP.provNC=(rec&&rec.nombreComercial)||String((f.general||{}).taller||'').trim();
   if(!cfg.tipoPago){const t=spTipoDefault(f);if(t){cfg.tipoPago=t;SP.dirty=true;}}
   if(!cfg.moneda){cfg.moneda='MXN';SP.dirty=true;}
   if(SP.dirty){f.updatedAt=new Date().toISOString();ss();setSyncState('pending');}
@@ -4280,10 +4761,21 @@ function openSolped(id){
   spPaint();
   requestAnimationFrame(spFit);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(SP.open)spFit();});
+  // Proveedor sin número: entra al catálogo con el siguiente consecutivo
+  if(!rec&&SP.provRz){
+    const fid=f.id,rz=SP.provRz;
+    provAsegurar(rz,{nombreComercial:SP.provNC,banco:cfg.banco||'',moneda:cfg.moneda||'MXN',tipoPago:cfg.tipoPago||''}).then(n=>{
+      const ff=folios.find(x=>x.id===fid),g2=ff?spGanadorIdx(ff):null;
+      if(n&&ff&&g2!==null&&provKey(ff.prov[g2].rz)===provKey(rz)&&ff.prov[g2].numProv!==n){ff.prov[g2].numProv=n;ss();}
+      if(SP.open)spPaint();
+    });
+  }
 }
 function closeSolped(){
   if(!SP.open)return;
   const f=spFolio(),sync=SP.dirty;
+  const ch=f?spProvCambios(f):[];
+  if(ch.length&&can('capture')&&confirm('Hay cambios del proveedor sin guardar en el catálogo ('+ch.join(', ')+').\n\n¿Actualizar el proveedor antes de cerrar?'))spProvActualizar();
   spPersistNow();
   if(SP._title){document.title=SP._title;SP._title=null;}
   SP={open:false};
@@ -4302,7 +4794,10 @@ function spPersistNow(){clearTimeout(SP._t);if(SP.dirty){ss();setSyncState('pend
 function spSet(k,val){
   const f=spFolio();if(!f)return;
   val=val==null?'':String(val);
-  if(SP_PERSIST.includes(k)){
+  if(SP_GENERAL.includes(k)){
+    const g=f.general||(f.general={});
+    if((g[k]||'')!==val){g[k]=val;f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistSoon();}
+  }else if(SP_PERSIST.includes(k)){
     const cfg=spCfg(f);
     if((cfg[k]||'')!==val){cfg[k]=val;f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistSoon();}
   }else if(SP_VOLATIL.includes(k)){
@@ -4320,7 +4815,38 @@ function spFromLeft(el){
   const k=el.dataset.sp;let v=el.value;
   if(k==='cuenta'||k==='clabe'){const c=v.replace(/\D/g,'');if(c!==v){el.value=c;v=c;}}
   if(k==='banco')SP.bancoAuto=false;
+  if(k==='provNC'){SP.provNC=v;spPaint();return;}
   spSet(k,v);
+}
+// Elegir proveedor en el buscador: despliega sus datos del catálogo (editables)
+function spProvElegir(sel){
+  const f=spFolio();if(!f)return;
+  const el=document.getElementById('spProvRz');
+  if(!sel.name){if(el)el.value=SP.provRz||'';return;}
+  const cfg=spCfg(f),gi=spGanadorIdx(f),ganRz=gi!==null?f.prov[gi].rz:'';
+  SP.provRz=sel.name;delete SP.ov.razon;
+  if(provKey(sel.name)===provKey(ganRz))delete cfg.provRz;else cfg.provRz=sel.name;
+  const rec=provDeNombreONum(sel.name,sel.num);
+  SP.bancoAuto=false;SP.hist=SP.hist.filter(k=>k!=='banco');
+  if(rec){
+    cfg.banco=rec.banco||'';if(rec.moneda)cfg.moneda=rec.moneda;if(rec.tipoPago)cfg.tipoPago=rec.tipoPago;
+    SP.provNC=rec.nombreComercial||'';if(rec.banco)SP.hist.push('banco');
+    notify('Datos del proveedor '+rec.num+' cargados');
+  }else{
+    cfg.banco='';SP.provNC='';
+    provAsegurar(sel.name,{moneda:cfg.moneda||'MXN',tipoPago:cfg.tipoPago||''}).then(()=>{if(SP.open)spPaint();});
+  }
+  f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistSoon();
+  spPaint();
+}
+// «Actualizar proveedor»: guarda en el catálogo lo capturado en esta SOLPED
+async function spProvActualizar(){
+  const f=spFolio();if(!f||!can('capture'))return;
+  const cfg=spCfg(f),rec=spProvRec(f);
+  const datos={nombreComercial:String(SP.provNC||'').replace(/\s+/g,' ').trim(),banco:String(cfg.banco||'').trim(),moneda:cfg.moneda||'MXN'};
+  if(!rec){if(SP.provRz)await provAsegurar(SP.provRz,{...datos,tipoPago:cfg.tipoPago||''});if(SP.open)spPaint();return;}
+  if(await provGuardar(rec.num,datos))notify('Proveedor '+rec.num+' actualizado en el catálogo');
+  if(SP.open)spPaint();
 }
 function spSetTipo(k){const f=spFolio();if(!f)return;spSet('tipoPago',spCfg(f).tipoPago===k?'':k);}
 function spFromSheet(el){
@@ -4345,7 +4871,7 @@ function spFromSheet(el){
     else{SP.ov.fechaAut=t;spPaint();}
     return;
   }
-  if(SP_PERSIST.includes(k)||SP_VOLATIL.includes(k)){
+  if(SP_PERSIST.includes(k)||SP_VOLATIL.includes(k)||SP_GENERAL.includes(k)){
     spSet(k,(k==='cuenta'||k==='clabe')?t.replace(/\D/g,''):t);return;
   }
   delete SP.ov[k];
@@ -4402,7 +4928,11 @@ function spRenderInfo(f,v){
   if(getAssetType(f)==='VEHICULO'&&!spPlaca(f))W.push('La unidad no tiene placa: el motivo sale sin ella. Captúrela en Información General.');
   if(!String((f.general||{}).justificacion||'').trim())W.push('El folio no tiene justificación: el motivo sale incompleto.');
   if(!(f.general||{}).gestor)W.push('El folio no tiene gestor: «Persona que solicita» sale vacía.');
+  if(!String((f.general||{}).ceco||'').trim())W.push('El folio no tiene CECO: la casilla sale vacía.');
   if(SP.overflow)W.push('El contenido rebasa una página: acorte el motivo o el concepto sobre la hoja.');
+  const giW=spGanadorIdx(f),ganW=giW!==null?f.prov[giW].rz:'';
+  if(SP.provRz&&ganW&&provKey(SP.provRz)!==provKey(ganW))W.push(`La SOLPED se emite a <b>${esc(SP.provRz)}</b>, que no es el proveedor ganador del comparativo (${esc(ganW)}).`);
+  if(!v.rec&&v.est==='pendiente')W.push('Sin conexión con el catálogo: el número de proveedor se asignará al reconectar; mientras tanto la casilla sale vacía.');
   const wr=document.getElementById('spWarns');if(wr)wr.innerHTML=W.map(w=>`<div class="sp-warn">${w}</div>`).join('');
   const bar=document.getElementById('spOvBar');
   if(bar){
@@ -4411,9 +4941,19 @@ function spRenderInfo(f,v){
     if(ks.length)bar.innerHTML=`<span>Corregido a mano en la hoja: ${ks.map(k=>esc(SP_OV_LBL[k]||k)).join(', ')}.</span><button class="btn btn-ghost btn-sm" onclick="spRestablecer()">Restablecer</button>`;
   }
   const hint=(id,txt,cls)=>{const el=document.getElementById(id);if(el){el.textContent=txt||'';el.className='sp-hint'+(cls?' '+cls:'');}};
-  const cfg=spCfg(f),gi=spGanadorIdx(f),rz=gi!==null?f.prov[gi].rz:'';
-  hint('spNumProvHint',SP.hist.includes('numProveedor')&&cfg.numProveedor&&cfg.numProveedor===spHistProv(rz,'numProveedor',f.id)?'Tomado de la última SOLPED de este proveedor.':'');
-  hint('spBancoHint',SP.bancoAuto&&cfg.banco?'Completado según la CLABE.':(SP.hist.includes('banco')&&cfg.banco&&cfg.banco===spHistProv(rz,'banco',f.id)?'Tomado de la última SOLPED de este proveedor.':''));
+  const cfg=spCfg(f),rec=v.rec,ch=spProvCambios(f);
+  hint('spBancoHint',SP.bancoAuto&&cfg.banco?'Completado según la CLABE.':(SP.hist.includes('banco')&&rec&&cfg.banco&&provKey(cfg.banco)===provKey(rec.banco)?'Tomado del catálogo de proveedores.':''));
+  const pa=document.getElementById('spProvAct');
+  if(pa){
+    let h='';
+    if(rec&&ch.length)h=`<span>Cambios sin guardar en el catálogo: ${esc(ch.join(', '))}.</span><button type="button" class="btn btn-acc btn-sm" onclick="spProvActualizar()">↻ Actualizar proveedor</button>`;
+    else if(rec)h=`<span class="ok">Proveedor ${esc(rec.num)} al día en el catálogo${Number(rec.solpeds)?', '+Number(rec.solpeds)+' SOLPED emitida'+(Number(rec.solpeds)!==1?'s':''):''}.</span>`;
+    else if(v.est==='asignando')h='<span>Asignando número de proveedor…</span>';
+    else if(SP.provRz)h=`<span>Este proveedor aún no tiene número.</span><button type="button" class="btn btn-acc btn-sm" onclick="spProvActualizar()">＋ Agregar al catálogo</button>`;
+    if(pa.innerHTML!==h)pa.innerHTML=h;
+    pa.classList.toggle('dirty',!!(rec&&ch.length));
+  }
+  const chip=document.getElementById('spUpdChip');if(chip)chip.hidden=!(rec&&ch.length);
   const cl=spClabeCheck(v.raw.clabe);hint('spClabeHint',cl.msg,cl.st);
   const cu=v.raw.cuenta;hint('spCuentaHint',cu&&(cu.length<10||cu.length>12)?'Verifique: una cuenta suele tener entre 10 y 12 dígitos.':'');
 }
@@ -4470,15 +5010,17 @@ window.addEventListener('afterprint',()=>{
 function spRegistrar(f){
   const v=spVals(f),cfg=spCfg(f),r=ROLES[currentRole]||{};
   const first=!SP.key;
+  const rec=v.rec,numProv=rec?rec.num:'';
+  cfg.numProveedor=numProv;
   if(first){let k=null;try{k=_spRef?_spRef.push().key:null;}catch(e){}SP.key=k||('L'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));}
   SP.impresiones=(SP.impresiones||0)+1;
   const tipo=SP_TIPOS.find(t=>t.k===v.tipoPago);
   const e={folioId:f.id,folio:f.name||'',zona:folioZona(f)||'',fechaGen:SP.ts.toISOString(),
-    proveedor:v.d.razon||'',numProveedor:cfg.numProveedor||'',taller:String((f.general||{}).taller||'').trim(),
+    proveedor:v.d.razon||'',numProveedor:numProv,taller:String((f.general||{}).taller||'').trim()||String(SP.provNC||'').trim(),
     importe:v.importe,moneda:v.moneda,tipoPago:tipo?tipo.l:'',concepto:String(v.d.concepto||'').slice(0,300),
     autoriza:v.d.firmaAutoriza||'',fechaAutorizacion:cfg.fechaAutorizacion||'',
     activo:getAssetName(f)||'',placa:spPlaca(f)||'',ceco:String((f.general||{}).ceco||'').trim(),depto:(f.general||{}).depto||'',
-    ordenCompra:cfg.ordenCompra||'',proyecto:cfg.proyecto||'',
+    ordenCompra:cfg.ordenCompra||'',
     rol:currentRole||'',rolLabel:r.label||currentRole||'',impresiones:SP.impresiones,actualizado:new Date().toISOString(),sid:NTF_SID};
   if(first){
     e.ts=(window.firebase&&firebase.database&&firebase.database.ServerValue)?firebase.database.ServerValue.TIMESTAMP:Date.now();
@@ -4491,8 +5033,13 @@ function spRegistrar(f){
   cfg.ultima={id:SP.key,fecha:SP.ts.toISOString(),impresiones:SP.impresiones};
   f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistNow();
   if(first)logBitacora('SOLPED',f);
+  // Catálogo de proveedores: se actualiza solo al guardar la SOLPED
+  const datosProv={nombreComercial:String(SP.provNC||'').replace(/\s+/g,' ').trim(),banco:String(cfg.banco||'').trim(),moneda:cfg.moneda||'MXN',
+    tipoPago:cfg.tipoPago||'',ultimaSolped:new Date().toISOString(),ultimoFolio:f.name||''};
+  if(rec&&can('capture'))provGuardar(rec.num,{...datosProv,solpeds:(Number(rec.solpeds)||0)+(first?1:0)});
+  else if(SP.provRz)provAsegurar(SP.provRz,{...datosProv,solpeds:1});
   spRenderBit();
-  notify(first?'SOLPED registrada en la bitácora':'Reimpresión registrada en la bitácora ('+SP.impresiones+')');
+  notify((first?'SOLPED registrada en la bitácora':'Reimpresión registrada en la bitácora ('+SP.impresiones+')')+(rec?'; proveedor '+rec.num+' actualizado en el catálogo':''));
 }
 
 /* ── Cola local + Firebase (ies-comparativos/solped) ── */
@@ -4552,7 +5099,7 @@ function spBitFiltered(all){
   return all.filter(e=>{
     if(F.moneda&&e.moneda!==F.moneda)return false;
     if(F.desde||F.hasta){const dt=new Date(e.fechaGen);if(isNaN(dt))return false;const d=_ymdLocal(dt);if(F.desde&&d<F.desde)return false;if(F.hasta&&d>F.hasta)return false;}
-    if(q){const hay=[e.folio,e.proveedor,e.taller,e.autoriza,e.numProveedor,e.ordenCompra,e.proyecto,e.activo,e.placa,e.ceco].filter(Boolean).join(' ').toLowerCase();if(!hay.includes(q))return false;}
+    if(q){const hay=[e.folio,e.proveedor,e.taller,e.autoriza,e.numProveedor,e.ordenCompra,e.activo,e.placa,e.ceco].filter(Boolean).join(' ').toLowerCase();if(!hay.includes(q))return false;}
     return true;
   });
 }
@@ -4633,14 +5180,14 @@ function spAbrirFolio(id){
 function spBitExport(){
   const rows=spBitFiltered(spBitItems());
   if(!rows.length){notify('Sin solicitudes para exportar con los filtros actuales',true);return;}
-  const H=['FOLIO','FECHA','HORA','PROVEEDOR','NUM. PROVEEDOR','TALLER','IMPORTE','MONEDA','TIPO DE SOLICITUD','AUTORIZA','FECHA AUTORIZACIÓN','ZONA','ACTIVO','PLACA','CECO','DEPARTAMENTO','ORDEN DE COMPRA','PROYECTO','IMPRESIONES','GENERADO POR','ESTADO EN NUBE'];
+  const H=['FOLIO','FECHA','HORA','PROVEEDOR','NUM. PROVEEDOR','TALLER','IMPORTE','MONEDA','TIPO DE SOLICITUD','AUTORIZA','FECHA AUTORIZACIÓN','ZONA','ACTIVO','PLACA','CECO','DEPARTAMENTO','ORDEN DE COMPRA','IMPRESIONES','GENERADO POR','ESTADO EN NUBE'];
   const data=[H,...rows.map(e=>{const d=new Date(e.fechaGen);const ok=!isNaN(d);return[
     e.folio||'',ok?fmtFH(d,false):'',ok?spP2(d.getHours())+':'+spP2(d.getMinutes()):'',e.proveedor||'',e.numProveedor||'',e.taller||'',
     Number(e.importe)||0,e.moneda||'',e.tipoPago||'',e.autoriza||'',spISOtoDMY(e.fechaAutorizacion),ZONA_LBL[e.zona]||e.zona||'',
-    e.activo||'',e.placa||'',e.ceco||'',e.depto||'',e.ordenCompra||'',e.proyecto||'',e.impresiones||1,e.rolLabel||e.rol||'',e._pend?'Pendiente':'Sincronizado'];})];
+    e.activo||'',e.placa||'',e.ceco||'',e.depto||'',e.ordenCompra||'',e.impresiones||1,e.rolLabel||e.rol||'',e._pend?'Pendiente':'Sincronizado'];})];
   const ws=XLSX.utils.aoa_to_sheet(data);
   for(let r=1;r<=rows.length;r++){const cell=ws[XLSX.utils.encode_cell({r,c:6})];if(cell)cell.z='#,##0.00';}
-  ws['!cols']=[{wch:24},{wch:11},{wch:7},{wch:40},{wch:14},{wch:26},{wch:14},{wch:8},{wch:24},{wch:22},{wch:14},{wch:16},{wch:20},{wch:12},{wch:14},{wch:16},{wch:16},{wch:18},{wch:11},{wch:16},{wch:14}];
+  ws['!cols']=[{wch:24},{wch:11},{wch:7},{wch:40},{wch:14},{wch:26},{wch:14},{wch:8},{wch:24},{wch:22},{wch:14},{wch:16},{wch:20},{wch:12},{wch:14},{wch:16},{wch:16},{wch:11},{wch:16},{wch:14}];
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:H.length-1}})};
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'BITACORA SOLPED');
@@ -4723,6 +5270,7 @@ async function appStart(){
   startPolling(); // Activa el listener de tiempo real de Firebase
   initBitacora(); // Notificaciones en tiempo real (nodo hermano: ies-comparativos/bitacora)
   initSolpedLog(); // Bitácora de SOLPED (nodo hermano: ies-comparativos/solped)
+  initProvCat();   // Catálogo de proveedores (nodo hermano: ies-comparativos/proveedores)
   renderSidebar();
   openDashboard();
   guardSearchAutofill();
