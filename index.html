@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Comparativo de Proveedores v4.6 — IES Internacional</title>
+<title>Comparativo de Proveedores v4.7 — IES Internacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 <!-- Firebase SDK v10 compat -->
@@ -695,6 +695,17 @@ body.sp-open{overflow:hidden}
 .sp-upd[hidden]{display:none}
 @media print{body.sp-open .sp-upd{display:none!important}}
 
+/* v4.7 — lista desplegable del catálogo y correo a Finanzas */
+.ta-wrap{position:relative}
+.ta-wrap input{padding-right:34px!important}
+.ta-tog{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;border-radius:7px;background:transparent;color:#0369a1;font-size:13px;cursor:pointer;line-height:1}
+.ta-tog:hover{background:rgba(2,132,199,.12)}
+.ta-head{position:sticky;top:-4px;z-index:1;margin:-4px -4px 4px;padding:8px 13px;font-size:10.5px;font-weight:700;color:#2e7a92;background:rgba(240,249,255,.98);border-bottom:1px solid rgba(8,145,178,.14);border-radius:12px 12px 0 0}
+.ta-sep{margin:6px 6px 2px;padding-top:7px;border-top:1px dashed rgba(8,145,178,.25);font-size:10px;font-weight:700;color:#6ea8be;text-transform:uppercase;letter-spacing:.3px}
+.ta-opt.cur{box-shadow:inset 3px 0 0 #0284c7;background:rgba(2,132,199,.06)}
+.sp-keep{font-size:9px;font-weight:700;letter-spacing:0;text-transform:none;color:#047857;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.25);border-radius:8px;padding:1px 6px}
+#smBody{font-family:inherit;font-size:12.5px;line-height:1.5;min-height:200px;resize:vertical}
+
 </style>
 </head>
 <body>
@@ -1060,13 +1071,36 @@ body.sp-open{overflow:hidden}
       <div class="form-group full"><label for="pcNC">Nombre comercial o taller</label><input type="text" id="pcNC" maxlength="80" autocomplete="off"/></div>
       <div class="form-group"><label for="pcMon">Moneda</label><select id="pcMon"><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
       <div class="form-group"><label for="pcBanco">Banco</label><input type="text" id="pcBanco" list="dlPcBancos" maxlength="60" autocomplete="off"/><datalist id="dlPcBancos"></datalist></div>
+      <div class="form-group"><label for="pcCuenta">Número de cuenta</label><input type="text" id="pcCuenta" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="Solo dígitos" oninput="this.value=this.value.replace(/\D/g,'')"/></div>
+      <div class="form-group"><label for="pcClabe">Cuenta CLABE</label><input type="text" id="pcClabe" inputmode="numeric" maxlength="24" autocomplete="off" placeholder="18 dígitos" oninput="pcClabeMsg()"/><div id="pcClabeMsg" style="font-size:10.5px;margin-top:3px;min-height:13px"></div></div>
     </div>
     <div id="pcAlias" style="font-size:11px;color:#2e7a92;margin-top:8px"></div>
-    <div style="font-size:11px;color:#2e7a92;margin-top:6px">Número de cuenta y CLABE no se guardan en el catálogo; se capturan en cada SOLPED.</div>
     <div id="pcMsg" style="font-size:11px;color:var(--red);min-height:16px;margin-top:6px"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="pcCancel" onclick="closeProvCat()">Cancelar</button>
       <button class="btn btn-acc" id="pcSave" onclick="provCatGuardar()">↻ Actualizar proveedor</button>
+    </div>
+  </div>
+</div>
+
+<!-- v4.7 — VENTANA: CORREO A FINANZAS Y ADMINISTRACIÓN -->
+<div class="overlay" id="spMailModal" style="z-index:460">
+  <div class="modal" style="width:640px;max-height:92vh;overflow:auto">
+    <h3>✉ Correo a Finanzas y Administración — <span id="smFolio" style="color:var(--acc2)"></span></h3>
+    <p style="margin-bottom:10px">Revise y ajuste el texto. Outlook no permite adjuntar archivos desde aquí: adjunte el PDF de la SOLPED y los documentos soporte antes de enviar.</p>
+    <div class="fg" style="grid-template-columns:1fr 1fr">
+      <div class="form-group"><label for="smTo">Para</label><input type="text" id="smTo" placeholder="finanzas@ies.com.mx; ..." autocomplete="off" spellcheck="false"/></div>
+      <div class="form-group"><label for="smCc">CC (opcional)</label><input type="text" id="smCc" placeholder="administracion@ies.com.mx" autocomplete="off" spellcheck="false"/></div>
+      <div class="form-group full"><label for="smSubj">Asunto</label><input type="text" id="smSubj" autocomplete="off"/></div>
+      <div class="form-group full"><label for="smBody">Cuerpo del mensaje</label><textarea id="smBody" rows="11"></textarea></div>
+    </div>
+    <div style="font-size:10.5px;color:#2e7a92;margin-top:6px">Los destinatarios se recuerdan en este equipo para la siguiente solicitud.</div>
+    <div class="email-actions">
+      <button class="btn btn-acc" onclick="spMailOutlook()" title="Outlook en el navegador (Microsoft 365)">Abrir en Outlook web</button>
+      <button class="btn btn-ghost" onclick="spMailApp()" title="Abre la app de correo predeterminada del equipo">Abrir en app de correo</button>
+      <button class="email-copy-btn" id="smCopySubj" onclick="spMailCopy('subject')">📋 Copiar asunto</button>
+      <button class="email-copy-btn" id="smCopyBody" onclick="spMailCopy('body')">📋 Copiar cuerpo</button>
+      <button class="btn btn-ghost" style="margin-left:auto" onclick="closeSpMail()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -1082,6 +1116,7 @@ body.sp-open{overflow:hidden}
     <div class="sp-top-r">
       <button class="btn btn-ghost btn-sm" onclick="spRestablecer()" title="Quita las correcciones hechas a mano sobre la hoja">↺ Restablecer hoja</button>
       <button class="btn btn-acc btn-sm" onclick="spImprimir()" title="Abre la impresión; elija «Guardar como PDF» para descargarla">🖨 Imprimir / PDF</button>
+      <button class="btn btn-ghost btn-sm" onclick="spMailAbrir()" title="Redacta la solicitud de pago para Finanzas y Administración (Outlook)">✉ Correo a Finanzas</button>
       <button class="btn btn-ghost btn-sm" onclick="closeSolped()" title="Cerrar (Esc)">✕ Cerrar</button>
     </div>
   </div>
@@ -2020,7 +2055,7 @@ function genCP(f,i){
     </div>
     <div class="acc-body"><div class="acc-inner"><div class="fg">
       <div class="form-group"><label># Cot. Proveedor</label><input type="text" id="p${i}_numCot" value="${esc(p.numCot)}" placeholder="Texto libre" onchange="autoSave()"/></div>
-      <div class="form-group half"><label for="p${i}_rz">Proveedor (Razón Social)</label><input type="text" id="p${i}_rz" data-ta="cap:${i}" value="${esc(p.rz)}" placeholder="Escriba el nombre o el número del proveedor" maxlength="120" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="taList" data-lpignore="true" data-1p-ignore="true" data-form-type="other" ${can('capture')?'':'readonly'}/><span class="calc-badge" id="p${i}_rzNum">${capProvBadgeTxt(f,i)}</span></div>
+      <div class="form-group half"><label for="p${i}_rz">Proveedor (Razón Social)</label><div class="ta-wrap"><input type="text" id="p${i}_rz" data-ta="cap:${i}" value="${esc(p.rz)}" placeholder="Escriba o despliegue la lista" maxlength="120" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="taList" data-lpignore="true" data-1p-ignore="true" data-form-type="other" ${can('capture')?'':'readonly'}/>${can('capture')?`<button type="button" class="ta-tog" tabindex="-1" aria-label="Desplegar el catálogo de proveedores" title="Desplegar el catálogo de proveedores" onmousedown="event.preventDefault();taToggle('p${i}_rz')">▾</button>`:''}</div><span class="calc-badge" id="p${i}_rzNum">${capProvBadgeTxt(f,i)}</span></div>
       <div class="form-group"><label>Marca</label><input type="text" id="p${i}_marca" value="${esc(p.marca)}" placeholder="Texto libre" onchange="autoSave()"/></div>
       <div class="form-group"><label>P.U. ($)</label><input type="number" id="p${i}_pu" value="${esc(p.pu)}" placeholder="0.00" step="0.01" oninput="autoSave();refreshCalcs()"/></div>
       <div class="form-group"><label>Subtotal ($)</label><input type="text" id="p${i}_sub" value="${c?fmt(c.sub):'$0.00'}" readonly/><span class="calc-badge">= P.U. × Cantidad</span></div>
@@ -3557,7 +3592,8 @@ function applyRole(role){
 function logoutRole(){
   if(!confirm('¿Cerrar sesión y cambiar de usuario?'))return;
   if(SP.open)closeSolped();
-  taClose();
+  taClose();closeSpMail();
+  try{localStorage.removeItem(PROV_CACHE_KEY);}catch(e){}
   SP_VOL={}; // datos bancarios y facturas: se descartan al cerrar sesión
   currentRole=null;localStorage.removeItem('ies_role_v4');
   resetSearchBoxes();
@@ -3996,8 +4032,8 @@ function notifyInfo(msg){
 ══════════════════════════════════════════ */
 function closeAllModals(){
   let n=0;
-  if(SP.open){closeSolped();n++;}
-  const closers={provCatModal:closeProvCat,folioModal:closeFolioModal,adminModal:closeAdminModal,delCotModal:closeDelCotModal,cloudModal:closeCloudModal,previewModal:closePreview,mailGenModal:closeMailGen};
+  if(SP.open&&!document.querySelector('#spMailModal.open')){closeSolped();n++;}
+  const closers={spMailModal:closeSpMail,provCatModal:closeProvCat,folioModal:closeFolioModal,adminModal:closeAdminModal,delCotModal:closeDelCotModal,cloudModal:closeCloudModal,previewModal:closePreview,mailGenModal:closeMailGen};
   document.querySelectorAll('.overlay.open').forEach(o=>{
     const fn=closers[o.id];
     try{if(typeof fn==='function')fn();else o.classList.remove('open');}catch(e){o.classList.remove('open');}
@@ -4070,8 +4106,9 @@ window.addEventListener('pageshow',e=>{if(e.persisted&&resetSearchBoxes()){rende
      dar de alta dos veces el mismo proveedor.
    · Nodo propio: ies-comparativos/proveedores { seq, items:{P0001:{…}} }
      (claves con prefijo P para que Firebase no convierta el catálogo en arreglo).
-   · Datos del proveedor: núm., razón social, nombre comercial/taller, banco, moneda,
-     último tipo de solicitud y uso en SOLPED. Cuenta y CLABE NO se guardan (regla v4.4).
+   · Datos del proveedor: núm., razón social, nombre comercial/taller, banco, número de
+     cuenta, CLABE, moneda, último tipo de solicitud y uso en SOLPED (v4.7: cuenta y CLABE
+     se guardan con el proveedor y se actualizan junto con él).
    · Búsqueda mientras se escribe: por número o por nombre, sin acentos ni puntuación
      y tolerante a errores de captura.
 ══════════════════════════════════════════ */
@@ -4225,7 +4262,7 @@ function provOnChange(){
     [0,1,2].forEach(capProvBadge);
     if(typeof SP!=='undefined'&&SP.open)spPaint();
     provRenderCat();
-    if(TA.el&&document.activeElement===TA.el)taOpen(TA.el);
+    if(TA.el&&document.activeElement===TA.el)taOpen(TA.el,TA.all);
   },60);
 }
 
@@ -4237,28 +4274,52 @@ function taHi(name,q){
   toks.forEach(t=>{const i=h.toUpperCase().indexOf(esc(t));if(i>=0)h=h.slice(0,i)+'<b>'+h.slice(i,i+esc(t).length)+'</b>'+h.slice(i+esc(t).length);});
   return h;
 }
-function taOpen(el){
+// Lista completa: primero el catálogo numerado, después los proveedores aún sin número
+function provListaCompleta(){
+  const C=provCandidatos().filter(c=>!c.alias);
+  const con=C.filter(c=>c.num).sort((a,b)=>String(a.num).localeCompare(String(b.num)));
+  const sin=C.filter(c=>!c.num).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  return[...con,...sin];
+}
+function taOpen(el,all){
   if(!el||el.readOnly||el.disabled)return;
-  TA.el=el;TA.q=el.value;
-  const items=provBuscar(el.value,8),qk=provKey(el.value);
-  const exacto=!!provPorNombre(el.value)||items.some(x=>x.key===qk);
-  TA.items=items.map(x=>({t:'p',...x}));
-  if(qk&&!exacto&&can('capture'))TA.items.push({t:'new',name:provNombre(el.value)});
+  TA.el=el;TA.all=!!all;TA.q=all?'':el.value;TA.cur=provKey(el.value);
+  if(all){
+    TA.items=provListaCompleta().map(x=>({t:'p',...x}));
+  }else{
+    const items=provBuscar(el.value,8),qk=provKey(el.value);
+    const exacto=!!provPorNombre(el.value)||items.some(x=>x.key===qk);
+    TA.items=items.map(x=>({t:'p',...x}));
+    if(qk&&!exacto&&can('capture'))TA.items.push({t:'new',name:provNombre(el.value)});
+  }
   TA.idx=-1;
   el.setAttribute('aria-expanded','true');
   taRender();
+  if(all){const L=document.getElementById('taList'),c=L&&L.querySelector('.ta-opt.cur');if(c)L.scrollTop=Math.max(0,c.offsetTop-L.clientHeight/2);}
+}
+// Botón ▾: despliega u oculta la lista completa del catálogo
+function taToggle(id){
+  const el=document.getElementById(id);if(!el||el.readOnly)return;
+  const L=document.getElementById('taList');
+  if(L&&L.classList.contains('open')&&TA.el===el&&TA.all){taClose();return;}
+  if(document.activeElement!==el){el.dataset.v0=el.value;el.dataset.done='';TA.skipFocus=true;el.focus();}
+  taOpen(el,true);
 }
 function taRender(){
   const L=taListEl(),el=TA.el;if(!el)return;
   if(!TA.items.length){
     L.innerHTML=`<div class="ta-empty">${provKey(TA.q)?'Sin coincidencias en el catálogo.':(provItems().length?'Escriba el nombre o el número del proveedor.':'El catálogo está vacío: escriba el nombre del primer proveedor.')}</div>`;
   }else{
-    L.innerHTML=TA.items.map((x,i)=>{
+    let prevNum=null;
+    const nCat=TA.items.filter(x=>x.num).length;
+    L.innerHTML=(TA.all?`<div class="ta-head">Catálogo de proveedores: ${nCat} con número${TA.items.length>nCat?', '+(TA.items.length-nCat)+' sin número':''}. Escriba para filtrar.</div>`:'')+TA.items.map((x,i)=>{
+      const sep=TA.all&&prevNum===true&&!x.num?'<div class="ta-sep">Proveedores sin número (lo reciben al elegirlos)</div>':'';
+      prevNum=!!x.num;
       if(x.t==='new')return`<div class="ta-opt ta-new${i===TA.idx?' on':''}" role="option" id="ta-o${i}" data-i="${i}">＋ Agregar «${esc(x.name)}» como proveedor nuevo</div>`;
       const est=!x.num?provEstado(x.name):'';
       const sub=x.rec?[x.rec.nombreComercial,x.rec.banco].filter(Boolean).join(', ')+(x.alias?(x.rec.nombreComercial||x.rec.banco?'; ':'')+'antes «'+x.alias+'»':'')
         :(est==='asignando'?'Asignando número…':est==='pendiente'?'Número pendiente (sin conexión)':'Sin número: se asigna al elegirlo');
-      return`<div class="ta-opt${i===TA.idx?' on':''}" role="option" id="ta-o${i}" data-i="${i}" aria-selected="${i===TA.idx}"><span class="ta-num${x.num?'':' nn'}">${x.num||'s/n'}</span><div style="min-width:0"><div class="ta-name">${taHi(x.name,TA.q)}</div>${sub?`<div class="ta-sub">${esc(sub)}</div>`:''}</div></div>`;
+      return sep+`<div class="ta-opt${i===TA.idx?' on':''}${TA.cur&&x.key===TA.cur?' cur':''}" role="option" id="ta-o${i}" data-i="${i}" aria-selected="${i===TA.idx}"><span class="ta-num${x.num?'':' nn'}">${x.num||'s/n'}</span><div style="min-width:0"><div class="ta-name">${taHi(x.name,TA.q)}</div>${sub?`<div class="ta-sub">${esc(sub)}</div>`:''}</div></div>`;
     }).join('');
   }
   const r=el.getBoundingClientRect();
@@ -4267,7 +4328,7 @@ function taRender(){
   L.classList.add('open');
   const h=L.offsetHeight;
   L.style.top=(r.bottom+4+h>window.innerHeight&&r.top-h-4>0?r.top-h-4:r.bottom+4)+'px';
-  if(TA.idx>=0){el.setAttribute('aria-activedescendant','ta-o'+TA.idx);document.getElementById('ta-o'+TA.idx)?.scrollIntoView({block:'nearest'});}
+  if(TA.idx>=0){el.setAttribute('aria-activedescendant','ta-o'+TA.idx);const o=document.getElementById('ta-o'+TA.idx);if(o){if(o.offsetTop<L.scrollTop)L.scrollTop=o.offsetTop-4;else if(o.offsetTop+o.offsetHeight>L.scrollTop+L.clientHeight)L.scrollTop=o.offsetTop+o.offsetHeight-L.clientHeight+4;}}
   else el.removeAttribute('aria-activedescendant');
 }
 function taClose(){
@@ -4306,14 +4367,14 @@ function taCommit(el,sel){
   else if(ctx.indexOf('cap:')===0)capProvElegir(+ctx.split(':')[1],sel);
   el.dataset.done=el.value;el.dataset.v0=el.value;
 }
-document.addEventListener('focusin',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.ta&&!el.readOnly){el.dataset.v0=el.value;el.dataset.done='';taOpen(el);}});
+document.addEventListener('focusin',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.ta&&!el.readOnly){if(TA.skipFocus){TA.skipFocus=false;return;}el.dataset.v0=el.value;el.dataset.done='';taOpen(el,true);}});
 document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.ta&&!el.readOnly){el.dataset.done='';taOpen(el);}});
 document.addEventListener('focusout',e=>{const el=e.target;if(!el||!el.dataset||!el.dataset.ta)return;setTimeout(()=>{if(TA.el===el)taClose();taCommitText(el);},0);});
 document.addEventListener('mousedown',e=>{const o=e.target.closest&&e.target.closest('#taList .ta-opt');if(!o)return;e.preventDefault();taPick(+o.dataset.i);},true);
 document.addEventListener('keydown',e=>{
   const el=e.target;if(!el||!el.dataset||!el.dataset.ta||el.readOnly)return;
   const L=document.getElementById('taList'),open=!!(L&&L.classList.contains('open')&&TA.el===el);
-  if(e.key==='ArrowDown'){if(!open)taOpen(el);else{TA.idx=Math.min(TA.items.length-1,TA.idx+1);taRender();}e.preventDefault();e.stopPropagation();}
+  if(e.key==='ArrowDown'){if(!open)taOpen(el,true);else{TA.idx=Math.min(TA.items.length-1,TA.idx+1);taRender();}e.preventDefault();e.stopPropagation();}
   else if(e.key==='ArrowUp'&&open){TA.idx=Math.max(-1,TA.idx-1);taRender();e.preventDefault();e.stopPropagation();}
   else if(e.key==='Enter'){e.preventDefault();e.stopPropagation();if(open&&TA.idx>=0)taPick(TA.idx);else{taClose();taCommitText(el);}}
   else if(e.key==='Escape'||e.key==='Esc'){ // Esc cancela la edición: regresa al valor anterior
@@ -4378,6 +4439,7 @@ function provCatFiltrados(){
   const toks=q.split(' ');
   return{all,rows:all.filter(x=>{const hay=provKey([x.num,x.razonSocial,x.nombreComercial,x.banco,...(Array.isArray(x.alias)?x.alias:[])].join(' '));return toks.every(t=>hay.includes(t));})};
 }
+function provMask(v){const s=String(v||'').replace(/\D/g,'');return s?'•••• '+s.slice(-4):'';}
 function provRenderCat(){
   const body=document.getElementById('provCatBody');if(!body)return;
   const {all,rows}=provCatFiltrados(),pend=provPendLoad();
@@ -4389,12 +4451,13 @@ function provRenderCat(){
   const th=(h,al)=>`<th style="padding:8px 8px;background:var(--surf2);color:var(--dim);font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;text-align:${al||'left'}">${h}</th>`;
   const td='padding:7px 8px;border-bottom:1px solid var(--bd)';
   body.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead><tr>${th('Núm.')}${th('Razón social')}${th('Nombre comercial o taller')}${th('Banco')}${th('Moneda')}${th('SOLPED','center')}${th('Última SOLPED')}${th('Actualizado')}</tr></thead>
+    <thead><tr>${th('Núm.')}${th('Razón social')}${th('Nombre comercial o taller')}${th('Banco')}${th('Cuenta / CLABE')}${th('Moneda')}${th('SOLPED','center')}${th('Última SOLPED')}${th('Actualizado')}</tr></thead>
     <tbody>${rows.map(x=>`<tr style="cursor:pointer" onclick="provCatAbrir('${esc(x.num)}')" title="${can('capture')?'Ver y editar':'Ver'} los datos del proveedor">
       <td style="${td}"><span class="ta-num">${esc(x.num)}</span></td>
       <td style="${td};font-size:11.5px;font-weight:600;max-width:280px">${esc(x.razonSocial)}</td>
       <td style="${td};font-size:11px;color:var(--dim)">${esc(x.nombreComercial||'—')}</td>
       <td style="${td};font-size:11px">${esc(x.banco||'—')}</td>
+      <td style="${td};font-family:'JetBrains Mono',monospace;font-size:10.5px;white-space:nowrap;color:var(--dim)" title="Datos completos en la ficha del proveedor">${[x.cuenta?'Cta '+provMask(x.cuenta):'',x.clabe?'CLABE '+provMask(x.clabe):''].filter(Boolean).join('<br>')||'—'}</td>
       <td style="${td};font-size:11px">${esc(x.moneda||'MXN')}</td>
       <td style="${td};text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px">${Number(x.solpeds)||0}</td>
       <td style="${td};font-size:11px;white-space:nowrap">${x.ultimaSolped?fmtFH(new Date(x.ultimaSolped),false):'—'}</td>
@@ -4404,13 +4467,13 @@ function provRenderCat(){
 function provCatExport(){
   const {rows}=provCatFiltrados();
   if(!rows.length){notify('Sin proveedores para exportar',true);return;}
-  const H=['NÚM.','RAZÓN SOCIAL','NOMBRE COMERCIAL O TALLER','BANCO','MONEDA','ÚLTIMO TIPO DE SOLICITUD','SOLPED EMITIDAS','ÚLTIMA SOLPED','ÚLTIMO FOLIO','ALTA','ALTA POR','ACTUALIZADO','ACTUALIZADO POR','NOMBRES ANTERIORES'];
+  const H=['NÚM.','RAZÓN SOCIAL','NOMBRE COMERCIAL O TALLER','BANCO','NÚMERO DE CUENTA','CUENTA CLABE','MONEDA','ÚLTIMO TIPO DE SOLICITUD','SOLPED EMITIDAS','ÚLTIMA SOLPED','ÚLTIMO FOLIO','ALTA','ALTA POR','ACTUALIZADO','ACTUALIZADO POR','NOMBRES ANTERIORES'];
   const tl=k=>{const t=SP_TIPOS.find(t=>t.k===k);return t?t.l:'';};
   const fd=s=>{const d=new Date(s);return s&&!isNaN(d)?fmtFH(d):'';};
-  const data=[H,...rows.map(x=>[x.num,x.razonSocial,x.nombreComercial||'',x.banco||'',x.moneda||'MXN',tl(x.tipoPago),Number(x.solpeds)||0,fd(x.ultimaSolped),x.ultimoFolio||'',fd(x.alta),x.altaPor||'',fd(x.actualizado),x.actualizadoPor||'',(Array.isArray(x.alias)?x.alias:[]).join(' | ')])];
+  const data=[H,...rows.map(x=>[x.num,x.razonSocial,x.nombreComercial||'',x.banco||'',String(x.cuenta||''),String(x.clabe||''),x.moneda||'MXN',tl(x.tipoPago),Number(x.solpeds)||0,fd(x.ultimaSolped),x.ultimoFolio||'',fd(x.alta),x.altaPor||'',fd(x.actualizado),x.actualizadoPor||'',(Array.isArray(x.alias)?x.alias:[]).join(' | ')])];
   const ws=XLSX.utils.aoa_to_sheet(data);
-  for(let r=1;r<=rows.length;r++){const cell=ws[XLSX.utils.encode_cell({r,c:0})];if(cell){cell.t='s';cell.v=String(rows[r-1].num);}}
-  ws['!cols']=[{wch:7},{wch:44},{wch:30},{wch:18},{wch:8},{wch:26},{wch:10},{wch:17},{wch:24},{wch:17},{wch:16},{wch:17},{wch:16},{wch:30}];
+  for(let r=1;r<=rows.length;r++)[0,4,5].forEach(c=>{const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell){cell.t='s';cell.v=String(cell.v);}});
+  ws['!cols']=[{wch:7},{wch:44},{wch:30},{wch:18},{wch:14},{wch:20},{wch:8},{wch:26},{wch:10},{wch:17},{wch:24},{wch:17},{wch:16},{wch:17},{wch:16},{wch:30}];
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:H.length-1}})};
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'PROVEEDORES');
   XLSX.writeFile(wb,'Catalogo_Proveedores_'+_ymdLocal(new Date())+'.xlsx');
@@ -4431,7 +4494,7 @@ function provCatAbrir(num){
     ?('Alta: '+(rec.alta?fmtFH(new Date(rec.alta)):'—')+(rec.altaPor?' por '+rec.altaPor:'')+'. Última actualización: '+(rec.actualizado?fmtFH(new Date(rec.actualizado)):'—')+(rec.actualizadoPor?' por '+rec.actualizadoPor:'')+'.')
     :'El sistema le asigna el siguiente número consecutivo al guardar.';
   set('pcNum',rec?rec.num:'Se asigna al guardar');document.getElementById('pcNum').readOnly=true;
-  set('pcRz',rec?rec.razonSocial:'');set('pcNC',rec?rec.nombreComercial:'');set('pcBanco',rec?rec.banco:'');set('pcMon',rec?(rec.moneda||'MXN'):'MXN');
+  set('pcRz',rec?rec.razonSocial:'');set('pcNC',rec?rec.nombreComercial:'');set('pcBanco',rec?rec.banco:'');set('pcCuenta',rec?rec.cuenta:'');set('pcClabe',rec?rec.clabe:'');pcClabeMsg();set('pcMon',rec?(rec.moneda||'MXN'):'MXN');
   const dl=document.getElementById('dlPcBancos');if(dl)dl.innerHTML=[...new Set([...provItems().map(x=>x.banco).filter(Boolean),...SP_BANCOS])].map(v=>`<option value="${esc(v)}">`).join('');
   const al=rec&&Array.isArray(rec.alias)&&rec.alias.length?'Nombres anteriores: '+rec.alias.join(', ')+'.':'';
   document.getElementById('pcAlias').textContent=al;
@@ -4441,12 +4504,21 @@ function provCatAbrir(num){
   document.getElementById('provCatModal').classList.add('open');
   if(ed)setTimeout(()=>document.getElementById(rec?'pcNC':'pcRz')?.focus(),60);
 }
+function pcClabeMsg(){
+  const el=document.getElementById('pcClabe'),m=document.getElementById('pcClabeMsg');if(!el||!m)return;
+  const d=el.value.replace(/\D/g,'');if(d!==el.value)el.value=d;
+  const r=spClabeCheck(d);m.textContent=r.msg;m.style.color=r.st==='bad'?'var(--red)':'#047857';
+  const b=document.getElementById('pcBanco');if(r.banco&&b&&!b.value&&!b.readOnly)b.value=r.banco;
+}
 function closeProvCat(){document.getElementById('provCatModal')?.classList.remove('open');_pcNum='';}
 async function provCatGuardar(){
   if(!can('capture'))return;
   const msg=document.getElementById('pcMsg');
   const rz=provNombre(document.getElementById('pcRz').value);
-  const datos={nombreComercial:document.getElementById('pcNC').value.replace(/\s+/g,' ').trim(),banco:document.getElementById('pcBanco').value.replace(/\s+/g,' ').trim(),moneda:document.getElementById('pcMon').value||'MXN'};
+  const datos={nombreComercial:document.getElementById('pcNC').value.replace(/\s+/g,' ').trim(),banco:document.getElementById('pcBanco').value.replace(/\s+/g,' ').trim(),
+    cuenta:document.getElementById('pcCuenta').value.replace(/\D/g,''),clabe:document.getElementById('pcClabe').value.replace(/\D/g,''),moneda:document.getElementById('pcMon').value||'MXN'};
+  const cl=spClabeCheck(datos.clabe);
+  if(datos.clabe&&cl.st==='bad'&&!confirm(cl.msg+'\n\n¿Guardar de todos modos?'))return;
   if(!rz){msg.textContent='Capture la razón social.';document.getElementById('pcRz').focus();return;}
   const otro=provPorNombre(rz);
   if(otro&&otro.num!==_pcNum){msg.textContent='Ya existe en el catálogo como proveedor '+otro.num+' ('+otro.razonSocial+').';return;}
@@ -4471,8 +4543,9 @@ async function provCatGuardar(){
    · SE GUARDAN en el folio (f.solpedCfg → Firebase vía sync): # de proveedor,
      tipo de solicitud, moneda, banco, orden de compra y fecha de autorización.
    · CECO (casilla que sustituye a PROYECTO): es el campo del folio en Información General.
-   · NO SE GUARDAN (memoria de la sesión, SP_VOL): número de cuenta, CLABE y facturas.
-     Nunca van a localStorage, a Firebase, a la bitácora ni al Excel.
+   · Número de cuenta y CLABE (v4.7): se guardan con el proveedor en el catálogo y se
+     actualizan junto con él; no van al folio, a la bitácora ni a su Excel.
+   · NO SE GUARDAN (memoria de la sesión, SP_VOL): facturas.
    · Bitácora: nodo hermano ies-comparativos/solped (no lo toca el set() de v4).
      Se registra al imprimir / guardar PDF; las reimpresiones actualizan el mismo registro.
 ══════════════════════════════════════════ */
@@ -4550,6 +4623,9 @@ function spProvCambios(f){
   const cfg=spCfg(f),ch=[];
   if(provKey(cfg.banco)!==provKey(rec.banco))ch.push('banco');
   if(String(SP.provNC||'').replace(/\s+/g,' ').trim()!==String(rec.nombreComercial||'').trim())ch.push('nombre comercial');
+  const vol=spVol(f.id);
+  if(String(vol.cuenta||'')!==String(rec.cuenta||''))ch.push('número de cuenta');
+  if(String(vol.clabe||'')!==String(rec.clabe||''))ch.push('CLABE');
   if((cfg.moneda||'MXN')!==(rec.moneda||'MXN'))ch.push('moneda');
   return ch;
 }
@@ -4657,7 +4733,7 @@ function spSheetHtml(){
   ${C('ctr',3,5.9,spE('lugar','Lugar'))}${C('ctr',2,5.9,spE('fecha','dd/mm/aaaa'))}${C('ctr',1,5.9,spE('hora','hh:mm'))}
   ${C('l',1,10.7,'PERSONA QUE SOLICITA')}${C('',1,10.7,spE('persona','Nombre'))}${C('l ctr',2,10.7,'DEPTO')}${C('ctr',2,10.7,'<b style="width:100%">'+spE('depto','Departamento')+'</b>')}
   ${C('b',6,6.8,'Datos para pago')}
-  ${C('l',1,12.7,'NUM PROVEEDOR MPROO')}${C('',1,12.7,'<span class="sp-e" data-k="numProveedor" data-ph="Por asignar" title="Número asignado por el catálogo de proveedores"></span><button type="button" class="sp-upd" id="spUpdChip" onclick="spProvActualizar()" title="Guarda en el catálogo los datos del proveedor capturados en esta SOLPED" hidden>↻ Actualizar proveedor</button>','flex-wrap:wrap;align-content:center')}${C('l ctr',2,12.7,'NOMBRE Y/O RAZON SOCIAL')}${C('',2,12.7,spE('razon','Razón social'))}
+  ${C('l',1,12.7,'NUMERO DE PROVEEDOR')}${C('',1,12.7,'<span class="sp-e" data-k="numProveedor" data-ph="Por asignar" title="Número asignado por el catálogo de proveedores"></span><button type="button" class="sp-upd" id="spUpdChip" onclick="spProvActualizar()" title="Guarda en el catálogo los datos del proveedor capturados en esta SOLPED" hidden>↻ Actualizar proveedor</button>','flex-wrap:wrap;align-content:center')}${C('l ctr',2,12.7,'NOMBRE Y/O RAZON SOCIAL')}${C('',2,12.7,spE('razon','Razón social'))}
   <div class="sp-c l" style="grid-column:span 1;grid-row:span 2">PAGO DE</div>
   ${opt(SP_TIPOS[0],1)}${opt(SP_TIPOS[1],2)}${opt(SP_TIPOS[2],1)}${opt(SP_TIPOS[3],1)}
   ${C('',5,7,'<b style="margin-right:1.6mm;white-space:nowrap">Concepto:</b>'+spE('concepto','Descripción del artículo o servicio',1))}
@@ -4680,14 +4756,14 @@ function spSheetHtml(){
 }
 function spLeftHtml(){
   const dl=(id,arr)=>`<datalist id="${id}">${arr.map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
-  const inp=(id,k,lbl,ex,full,lock)=>`<div class="form-group${full?' full':''}"><label for="${id}">${lbl}${lock?' <span class="sp-lock">🔒 No se guarda</span>':''}</label><input type="text" id="${id}" data-sp="${k}" autocomplete="off" spellcheck="false" oninput="spFromLeft(this)" ${ex||''}/><div class="sp-hint" id="${id}Hint"></div></div>`;
+  const inp=(id,k,lbl,ex,full,lock)=>`<div class="form-group${full?' full':''}"><label for="${id}">${lbl}${lock===2?' <span class="sp-keep">Se guarda con el proveedor</span>':lock?' <span class="sp-lock">🔒 No se guarda</span>':''}</label><input type="text" id="${id}" data-sp="${k}" autocomplete="off" spellcheck="false" oninput="spFromLeft(this)" ${ex||''}/><div class="sp-hint" id="${id}Hint"></div></div>`;
   return`<div id="spSum"></div>
   <div id="spWarns"></div>
   <div id="spOvBar" class="sp-ovbar" style="display:none"></div>
   <div class="sp-sec">
     <div class="sp-sec-t">Proveedor</div>
     <div class="fg">
-      <div class="form-group full"><label for="spProvRz">Proveedor (nombre o número)</label><input type="text" id="spProvRz" data-ta="sp" data-sp="provRz" maxlength="120" autocomplete="off" spellcheck="false" placeholder="Escriba para buscar en el catálogo" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="taList" data-lpignore="true" data-1p-ignore="true" data-form-type="other"/><div class="sp-hint" id="spProvRzHint"></div></div>
+      <div class="form-group full"><label for="spProvRz">Proveedor (nombre o número)</label><div class="ta-wrap"><input type="text" id="spProvRz" data-ta="sp" data-sp="provRz" maxlength="120" autocomplete="off" spellcheck="false" placeholder="Escriba o despliegue la lista" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="taList" data-lpignore="true" data-1p-ignore="true" data-form-type="other"/><button type="button" class="ta-tog" tabindex="-1" aria-label="Desplegar el catálogo de proveedores" title="Desplegar el catálogo de proveedores" onmousedown="event.preventDefault();taToggle('spProvRz')">▾</button></div><div class="sp-hint" id="spProvRzHint"></div></div>
       <div class="form-group"><label for="spNumProv">Núm. de proveedor</label><input type="text" id="spNumProv" data-sp="numProveedor" readonly tabindex="-1" title="Lo asigna el sistema de forma consecutiva"/></div>
       ${inp('spBanco','banco','Banco','maxlength="60" list="dlSpBancos" placeholder="Ej. BBVA MÉXICO"')}
       ${inp('spProvNC','provNC','Nombre comercial o taller','maxlength="80"',1)}
@@ -4702,10 +4778,10 @@ function spLeftHtml(){
     </div>
   </div>
   <div class="sp-sec">
-    <div class="sp-sec-t">Cuenta bancaria <span style="font-weight:500;color:#2e7a92;font-size:10px">(proveedor nuevo o cambio de cuenta)</span></div>
+    <div class="sp-sec-t">Cuenta bancaria <span style="font-weight:500;color:#2e7a92;font-size:10px">(se precarga del proveedor)</span></div>
     <div class="fg">
-      ${inp('spCuenta','cuenta','Número de cuenta','inputmode="numeric" maxlength="20" placeholder="Solo dígitos"',1,1)}
-      ${inp('spClabe','clabe','Cuenta CLABE','inputmode="numeric" maxlength="24" placeholder="18 dígitos"',1,1)}
+      ${inp('spCuenta','cuenta','Número de cuenta','inputmode="numeric" maxlength="20" placeholder="Solo dígitos"',1,2)}
+      ${inp('spClabe','clabe','Cuenta CLABE','inputmode="numeric" maxlength="24" placeholder="18 dígitos"',1,2)}
     </div>
   </div>
   <div class="sp-sec">
@@ -4722,7 +4798,7 @@ function spLeftHtml(){
       <div class="form-group full"><label for="spFechaAut">Fecha de autorización</label><input type="date" id="spFechaAut" data-sp="fechaAutorizacion" onchange="spFromLeft(this)"/><div class="sp-hint">Aparece bajo la firma de autorización. Si la deja vacía, se imprime una línea para llenarla a mano.</div></div>
     </div>
   </div>
-  <div class="sp-legend">Lo que capture en este panel se guarda en el folio y viaja a la nube (el CECO es el mismo de Información General), salvo los campos con 🔒: viven solo en esta sesión y nunca se envían a Firebase, al catálogo ni a la bitácora.<br><br>Al imprimir o guardar el PDF, el catálogo de proveedores se actualiza solo con el banco, el nombre comercial y la moneda de esta SOLPED.<br><br>Los datos que vienen del folio (lugar, proveedor, importe, concepto, motivo y firmas) se corrigen directamente sobre la hoja; esas correcciones valen solo para esta impresión.</div>
+  <div class="sp-legend">Lo que capture en este panel se guarda en el folio y viaja a la nube (el CECO es el mismo de Información General), salvo las facturas (🔒), que viven solo en esta sesión.<br><br>Banco, número de cuenta, CLABE, nombre comercial y moneda pertenecen al proveedor: se precargan al elegirlo y, si los cambia, se guardan en el catálogo con «Actualizar proveedor» o al imprimir o guardar el PDF.<br><br>Los datos que vienen del folio (lugar, proveedor, importe, concepto, motivo y firmas) se corrigen directamente sobre la hoja; esas correcciones valen solo para esta impresión.</div>
   ${dl('dlSpBancos',[...new Set([...provItems().map(x=>x.banco).filter(Boolean),...spUniq(x=>x.solpedCfg&&x.solpedCfg.banco),...SP_BANCOS])])}
   ${dl('dlSpCeco',spUniq(x=>x.general&&x.general.ceco))}`;
 }
@@ -4748,6 +4824,7 @@ function openSolped(id){
     if(!cfg.provRz&&gan.numProv!==rec.num){gan.numProv=rec.num;SP.dirty=true;}
   }
   SP.provNC=(rec&&rec.nombreComercial)||String((f.general||{}).taller||'').trim();
+  if(rec){const vol=spVol(f.id);if(!vol.cuenta&&rec.cuenta)vol.cuenta=String(rec.cuenta);if(!vol.clabe&&rec.clabe)vol.clabe=String(rec.clabe);}
   if(!cfg.tipoPago){const t=spTipoDefault(f);if(t){cfg.tipoPago=t;SP.dirty=true;}}
   if(!cfg.moneda){cfg.moneda='MXN';SP.dirty=true;}
   if(SP.dirty){f.updatedAt=new Date().toISOString();ss();setSyncState('pending');}
@@ -4764,7 +4841,8 @@ function openSolped(id){
   // Proveedor sin número: entra al catálogo con el siguiente consecutivo
   if(!rec&&SP.provRz){
     const fid=f.id,rz=SP.provRz;
-    provAsegurar(rz,{nombreComercial:SP.provNC,banco:cfg.banco||'',moneda:cfg.moneda||'MXN',tipoPago:cfg.tipoPago||''}).then(n=>{
+    const vol=spVol(f.id);
+    provAsegurar(rz,{nombreComercial:SP.provNC,banco:cfg.banco||'',cuenta:vol.cuenta||'',clabe:vol.clabe||'',moneda:cfg.moneda||'MXN',tipoPago:cfg.tipoPago||''}).then(n=>{
       const ff=folios.find(x=>x.id===fid),g2=ff?spGanadorIdx(ff):null;
       if(n&&ff&&g2!==null&&provKey(ff.prov[g2].rz)===provKey(rz)&&ff.prov[g2].numProv!==n){ff.prov[g2].numProv=n;ss();}
       if(SP.open)spPaint();
@@ -4823,7 +4901,8 @@ function spProvElegir(sel){
   const f=spFolio();if(!f)return;
   const el=document.getElementById('spProvRz');
   if(!sel.name){if(el)el.value=SP.provRz||'';return;}
-  const cfg=spCfg(f),gi=spGanadorIdx(f),ganRz=gi!==null?f.prov[gi].rz:'';
+  if(provKey(sel.name)===provKey(SP.provRz)){if(el)el.value=SP.provRz;return;} // mismo proveedor: conserva lo capturado
+  const cfg=spCfg(f),gi=spGanadorIdx(f),ganRz=gi!==null?f.prov[gi].rz:'',vol=spVol(f.id);
   SP.provRz=sel.name;delete SP.ov.razon;
   if(provKey(sel.name)===provKey(ganRz))delete cfg.provRz;else cfg.provRz=sel.name;
   const rec=provDeNombreONum(sel.name,sel.num);
@@ -4831,9 +4910,10 @@ function spProvElegir(sel){
   if(rec){
     cfg.banco=rec.banco||'';if(rec.moneda)cfg.moneda=rec.moneda;if(rec.tipoPago)cfg.tipoPago=rec.tipoPago;
     SP.provNC=rec.nombreComercial||'';if(rec.banco)SP.hist.push('banco');
+    vol.cuenta=String(rec.cuenta||'');vol.clabe=String(rec.clabe||'');
     notify('Datos del proveedor '+rec.num+' cargados');
   }else{
-    cfg.banco='';SP.provNC='';
+    cfg.banco='';SP.provNC='';vol.cuenta='';vol.clabe='';
     provAsegurar(sel.name,{moneda:cfg.moneda||'MXN',tipoPago:cfg.tipoPago||''}).then(()=>{if(SP.open)spPaint();});
   }
   f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistSoon();
@@ -4843,7 +4923,8 @@ function spProvElegir(sel){
 async function spProvActualizar(){
   const f=spFolio();if(!f||!can('capture'))return;
   const cfg=spCfg(f),rec=spProvRec(f);
-  const datos={nombreComercial:String(SP.provNC||'').replace(/\s+/g,' ').trim(),banco:String(cfg.banco||'').trim(),moneda:cfg.moneda||'MXN'};
+  const vol=spVol(f.id);
+  const datos={nombreComercial:String(SP.provNC||'').replace(/\s+/g,' ').trim(),banco:String(cfg.banco||'').trim(),cuenta:String(vol.cuenta||''),clabe:String(vol.clabe||''),moneda:cfg.moneda||'MXN'};
   if(!rec){if(SP.provRz)await provAsegurar(SP.provRz,{...datos,tipoPago:cfg.tipoPago||''});if(SP.open)spPaint();return;}
   if(await provGuardar(rec.num,datos))notify('Proveedor '+rec.num+' actualizado en el catálogo');
   if(SP.open)spPaint();
@@ -5034,7 +5115,8 @@ function spRegistrar(f){
   f.updatedAt=new Date().toISOString();SP.dirty=true;spPersistNow();
   if(first)logBitacora('SOLPED',f);
   // Catálogo de proveedores: se actualiza solo al guardar la SOLPED
-  const datosProv={nombreComercial:String(SP.provNC||'').replace(/\s+/g,' ').trim(),banco:String(cfg.banco||'').trim(),moneda:cfg.moneda||'MXN',
+  const volP=spVol(f.id);
+  const datosProv={nombreComercial:String(SP.provNC||'').replace(/\s+/g,' ').trim(),banco:String(cfg.banco||'').trim(),cuenta:String(volP.cuenta||''),clabe:String(volP.clabe||''),moneda:cfg.moneda||'MXN',
     tipoPago:cfg.tipoPago||'',ultimaSolped:new Date().toISOString(),ultimoFolio:f.name||''};
   if(rec&&can('capture'))provGuardar(rec.num,{...datosProv,solpeds:(Number(rec.solpeds)||0)+(first?1:0)});
   else if(SP.provRz)provAsegurar(SP.provRz,{...datosProv,solpeds:1});
@@ -5204,6 +5286,66 @@ function spBitExport(){
   XLSX.utils.book_append_sheet(wb,wsc,'PARÁMETROS');
   XLSX.writeFile(wb,'Bitacora_SOLPED_'+(zr?zr+'_':'')+_ymdLocal(new Date())+'.xlsx');
   notify('Excel exportado — '+rows.length+' solicitud'+(rows.length!==1?'es':''));
+}
+
+/* ── v4.7 — Correo a Finanzas y Administración ─────── */
+const SP_MAIL_KEY='ies_mail_finanzas_v4';
+function spMailBuild(f){
+  const v=spVals(f);
+  const motivo=String(v.d.motivo||'').replace(/\s+/g,' ').trim();
+  const ceco=String(v.d.ceco||'').trim();
+  const subject='Solicitud de pago — '+(v.d.requisicion||f.name||'')+' — '+(v.d.razon||'')+' — '+v.d.importeNum+' '+v.moneda;
+  const body=['Buen día, equipo de Finanzas y Administración:','',
+    'Agradezco su valioso apoyo para aplicar el siguiente pago por concepto de:','',
+    'Motivo: '+(motivo||'—'),'CECO: '+(ceco||'—'),'',
+    'Adjunto documentos pertinentes. Quedo atento a cualquier duda.','','Saludos.'].join('\n');
+  return{subject,body};
+}
+function spMailAbrir(){
+  const f=spFolio();if(!f)return;
+  const ae=document.activeElement;if(ae&&document.getElementById('solpedView').contains(ae)&&ae.blur)ae.blur();
+  const m=spMailBuild(f);
+  let pref={};try{pref=JSON.parse(localStorage.getItem(SP_MAIL_KEY)||'{}')||{};}catch(e){}
+  document.getElementById('smFolio').textContent=f.name;
+  document.getElementById('smTo').value=pref.to||'';
+  document.getElementById('smCc').value=pref.cc||'';
+  document.getElementById('smSubj').value=m.subject;
+  document.getElementById('smBody').value=m.body;
+  ['smCopySubj','smCopyBody'].forEach(id=>{const b=document.getElementById(id);if(b){b.classList.remove('copied');b.textContent=id==='smCopySubj'?'📋 Copiar asunto':'📋 Copiar cuerpo';}});
+  document.getElementById('spMailModal').classList.add('open');
+  setTimeout(()=>document.getElementById(pref.to?'smBody':'smTo')?.focus(),60);
+}
+function closeSpMail(){document.getElementById('spMailModal')?.classList.remove('open');}
+function spMailDest(id){return(document.getElementById(id)?.value||'').split(/[;,\s]+/).map(x=>x.replace(/[^\w.@+\-]/g,'')).filter(x=>/^[^@]+@[^@]+\.[^@]+$/.test(x));}
+function spMailGuardarDest(){try{localStorage.setItem(SP_MAIL_KEY,JSON.stringify({to:spMailDest('smTo').join('; '),cc:spMailDest('smCc').join('; ')}));}catch(e){}}
+function spMailDatos(){return{to:spMailDest('smTo'),cc:spMailDest('smCc'),subject:document.getElementById('smSubj').value,body:document.getElementById('smBody').value};}
+// Outlook web (Microsoft 365): redacta el correo en una pestaña nueva
+function spMailOutlook(){
+  const d=spMailDatos();spMailGuardarDest();
+  const q=['to='+encodeURIComponent(d.to.join(';'))];
+  if(d.cc.length)q.push('cc='+encodeURIComponent(d.cc.join(';')));
+  q.push('subject='+encodeURIComponent(d.subject),'body='+encodeURIComponent(d.body));
+  const url='https://outlook.office.com/mail/deeplink/compose?'+q.join('&');
+  const w=window.open(url,'_blank','noopener');
+  notify(w===null?'El navegador bloqueó la ventana: permita ventanas emergentes para este sitio':'Outlook abierto: adjunte el PDF de la SOLPED antes de enviar',w===null);
+}
+// App de correo predeterminada (Outlook de escritorio si es el lector predeterminado)
+function spMailApp(){
+  const d=spMailDatos();spMailGuardarDest();
+  let url='mailto:'+d.to.join(',')+'?subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);
+  if(d.cc.length)url+='&cc='+encodeURIComponent(d.cc.join(','));
+  spMailNav(url);
+  notify('App de correo abierta: adjunte el PDF de la SOLPED antes de enviar');
+}
+function spMailNav(url){window.location.href=url;}
+function spMailCopy(part){
+  const d=spMailDatos(),text=part==='subject'?d.subject:d.body;if(!text)return;
+  const id=part==='subject'?'smCopySubj':'smCopyBody';
+  navigator.clipboard?.writeText(text).then(()=>{
+    const b=document.getElementById(id);
+    if(b){b.classList.add('copied');b.textContent='✓ Copiado';setTimeout(()=>{b.classList.remove('copied');b.textContent=part==='subject'?'📋 Copiar asunto':'📋 Copiar cuerpo';},2000);}
+    notify('Copiado al portapapeles ✓');
+  }).catch(()=>notify('No se pudo copiar',true));
 }
 
 /* ── Fila en Captura ──────────────────────────────── */
