@@ -803,6 +803,7 @@ body.sp-open{overflow:hidden}
           <option value="activoTipo">Tipo de Activo</option>
           <option value="autorizacion">Estatus Autorización</option>
           <option value="pago">Estatus de Pago</option>
+          <option value="folio">Número de Folio</option>
         </select>
       </div>
       <div style="padding:6px 8px;border-bottom:1px solid var(--bd);background:var(--surf2)">
@@ -1818,6 +1819,15 @@ function renderSidebar(){
         const bt=rank(b.general?.activoTipo||'');
         if(at!==bt)return at-bt;
         return a.name.localeCompare(b.name);
+      });
+      break;
+    case 'folio':
+      sorted.sort((a,b)=>{
+        // Número de folio descendente (101, 100, 99…); desempate alfabético
+        const num=n=>{const m=String(n||'').match(/^\s*(\d+)/);return m?parseInt(m[1],10):-1;};
+        const d=num(b.name)-num(a.name);
+        if(d!==0)return d;
+        return String(a.name||'').localeCompare(String(b.name||''));
       });
       break;
     case 'autorizacion':
